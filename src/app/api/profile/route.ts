@@ -3,10 +3,10 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const LEVELS = [
   { level: 1, name: 'Новичок', min: 0, max: 99 },
-  { level: 2, name: 'Искатель', min: 100, max: 249 },
-  { level: 3, name: 'Исследователь', min: 250, max: 499 },
-  { level: 4, name: 'Оправданный', min: 500, max: 999 },
-  { level: 5, name: 'Мастер', min: 1000, max: 1999 },
+  { level: 2, name: 'Активный', min: 100, max: 249 },
+  { level: 3, name: 'Олимпиадник', min: 250, max: 499 },
+  { level: 4, name: 'Ботан', min: 500, max: 999 },
+  { level: 5, name: 'Мастер своего дела', min: 1000, max: 1999 },
   { level: 6, name: 'Элита', min: 2000, max: 4999 },
   { level: 7, name: 'Легенда', min: 5000, max: 999999 },
 ];

@@ -9,12 +9,12 @@ const FACULTIES = [
 ]
 
 const USERS = [
-  { id: 'u1', telegramId: '1001', name: 'Иван Иванов', username: 'ivan_ivanov', role: 'STUDENT', facultyId: 'fac_it', totalXp: 320, level: 3, statusEmoji: '🏃', statusPrefix: 'Исследователь' },
-  { id: 'u2', telegramId: '1002', name: 'Мария Петрова', username: 'maria_p', role: 'STUDENT', facultyId: 'fac_science', totalXp: 1250, level: 5, statusEmoji: '🧠', statusPrefix: 'Мастер' },
-  { id: 'u3', telegramId: '1003', name: 'Алексей Сидоров', username: 'alex_s', role: 'STUDENT', facultyId: 'fac_sport', totalXp: 980, level: 4, statusEmoji: '💪', statusPrefix: 'Оправданный' },
-  { id: 'u4', telegramId: '1004', name: 'Анна Козлова', username: 'anna_k', role: 'STUDENT', facultyId: 'fac_art', totalXp: 280, level: 3, statusEmoji: '🎨', statusPrefix: 'Исследователь' },
-  { id: 'u5', telegramId: '1005', name: 'Дмитрий Новиков', username: 'dima_n', role: 'STUDENT', facultyId: 'fac_it', totalXp: 210, level: 2, statusEmoji: '💻', statusPrefix: 'Искатель' },
-  { id: 'u6', telegramId: '1006', name: 'Елена Смирнова', username: 'lena_s', role: 'STUDENT', facultyId: 'fac_social', totalXp: 450, level: 3, statusEmoji: '🤝', statusPrefix: 'Исследователь' },
+  { id: 'u1', telegramId: '1001', name: 'Иван Иванов', username: 'ivan_ivanov', role: 'STUDENT', facultyId: 'fac_it', totalXp: 320, level: 3, statusEmoji: '🏃', statusPrefix: 'Олимпиадник' },
+  { id: 'u2', telegramId: '1002', name: 'Мария Петрова', username: 'maria_p', role: 'STUDENT', facultyId: 'fac_science', totalXp: 1250, level: 5, statusEmoji: '🧠', statusPrefix: 'Мастер своего дела' },
+  { id: 'u3', telegramId: '1003', name: 'Алексей Сидоров', username: 'alex_s', role: 'STUDENT', facultyId: 'fac_sport', totalXp: 980, level: 4, statusEmoji: '💪', statusPrefix: 'Ботан' },
+  { id: 'u4', telegramId: '1004', name: 'Анна Козлова', username: 'anna_k', role: 'STUDENT', facultyId: 'fac_art', totalXp: 280, level: 3, statusEmoji: '🎨', statusPrefix: 'Олимпиадник' },
+  { id: 'u5', telegramId: '1005', name: 'Дмитрий Новиков', username: 'dima_n', role: 'STUDENT', facultyId: 'fac_it', totalXp: 210, level: 2, statusEmoji: '💻', statusPrefix: 'Активный' },
+  { id: 'u6', telegramId: '1006', name: 'Елена Смирнова', username: 'lena_s', role: 'STUDENT', facultyId: 'fac_social', totalXp: 450, level: 3, statusEmoji: '🤝', statusPrefix: 'Олимпиадник' },
   { id: 'u7', telegramId: '1007', name: 'Ольга Васильева', username: 'olga_v', role: 'ADMIN', facultyId: 'fac_science', totalXp: 0, level: 7, statusEmoji: '⭐', statusPrefix: 'Воспитатель' },
   { id: 'u8', telegramId: '1008', name: 'Павел Морозов', username: 'pavel_m', role: 'ADMIN', facultyId: 'fac_it', totalXp: 0, level: 7, statusEmoji: '🛡️', statusPrefix: 'Админ' },
 ]

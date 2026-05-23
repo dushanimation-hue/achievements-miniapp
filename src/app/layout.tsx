@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Достижения — Платформа достижений",
-  description: "Telegram Mini App для отслеживания достижений учеников",
+  title: "Достижения — Платформа достижений лицея",
+  description: "Telegram Mini App для отслеживания достижений учеников лицея",
   viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
 };
 
@@ -25,12 +25,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru" suppressHydrationWarning>
+    <html lang="ru" class="dark" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#F9FAFB] text-foreground`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0a0a1a] text-foreground`}
       >
         {children}
-        <Toaster />
+        <Toaster theme="dark" />
       </body>
     </html>
   );
