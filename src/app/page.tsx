@@ -66,11 +66,11 @@ const LEAGUES = [
 function getLeagueByRank(totalUsers: number, rank: number): typeof LEAGUES[number] {
   if (totalUsers <= 1) return LEAGUES[0]
   const percentile = (rank - 1) / (totalUsers - 1)
-  if (percentile >= 0.8) return LEAGUES[4] // diamond: top 20%
-  if (percentile >= 0.6) return LEAGUES[3] // platinum: 60-80%
-  if (percentile >= 0.4) return LEAGUES[2] // gold: 40-60%
-  if (percentile >= 0.2) return LEAGUES[1] // silver: 20-40%
-  return LEAGUES[0] // bronze: 0-20%
+  if (percentile >= 0.8) return LEAGUES[4]
+  if (percentile >= 0.6) return LEAGUES[3]
+  if (percentile >= 0.4) return LEAGUES[2]
+  if (percentile >= 0.2) return LEAGUES[1]
+  return LEAGUES[0]
 }
 
 const CATEGORY_MAP: Record<string, { emoji: string; label: string }> = {
@@ -82,20 +82,87 @@ const CATEGORY_MAP: Record<string, { emoji: string; label: string }> = {
 }
 
 const STATUS_CONFIG: Record<string, { emoji: string; label: string; color: string }> = {
-  APPROVED: { emoji: '✅', label: 'Одобрено', color: 'text-emerald-400' },
-  PENDING: { emoji: '⏳', label: 'На проверке', color: 'text-amber-400' },
-  REJECTED: { emoji: '❌', label: 'Отклонено', color: 'text-red-400' },
+  APPROVED: { emoji: '✅', label: 'Одобрено', color: 'text-[#34C759]' },
+  PENDING: { emoji: '⏳', label: 'На проверке', color: 'text-[#FF9F0A]' },
+  REJECTED: { emoji: '❌', label: 'Отклонено', color: 'text-[#FF3B30]' },
 }
 
 type Tab = 'home' | 'add' | 'rating' | 'achievements' | 'profile'
 
 /* ============================================================
+   SVG ICONS (SF Symbols style)
+   ============================================================ */
+
+function IconHome({ active }: { active: boolean }) {
+  return active ? (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <path d="M3 12L5 10M5 10L12 3L19 10M5 10V20C5 20.5523 5.44772 21 6 21H9M19 10L21 12M19 10V20C19 20.5523 18.5523 21 18 21H15M9 21C9 21 9 15 12 15C15 15 15 21 15 21M9 21H15" stroke="#2AABEE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="rgba(42,171,238,0.15)"/>
+    </svg>
+  ) : (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <path d="M3 12L5 10M5 10L12 3L19 10M5 10V20C5 20.5523 5.44772 21 6 21H9M19 10L21 12M19 10V20C19 20.5523 18.5523 21 18 21H15M9 21C9 21 9 15 12 15C15 15 15 21 15 21M9 21H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+}
+
+function IconTrophy({ active }: { active: boolean }) {
+  return active ? (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <path d="M12 17C13.5 17 15 16 15 14H9C9 16 10.5 17 12 17ZM12 17V20M8 20H16M7 4H17V10C17 12.7614 14.7614 15 12 15C9.23858 15 7 12.7614 7 10V4ZM5 6C5 5 5.5 4 7 4M19 6C19 5 18.5 4 17 4" stroke="#2AABEE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="rgba(42,171,238,0.15)"/>
+    </svg>
+  ) : (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <path d="M12 17C13.5 17 15 16 15 14H9C9 16 10.5 17 12 17ZM12 17V20M8 20H16M7 4H17V10C17 12.7614 14.7614 15 12 15C9.23858 15 7 12.7614 7 10V4ZM5 6C5 5 5.5 4 7 4M19 6C19 5 18.5 4 17 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+}
+
+function IconMedal({ active }: { active: boolean }) {
+  return active ? (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="14" r="6" stroke="#2AABEE" strokeWidth="2" fill="rgba(42,171,238,0.15)"/>
+      <path d="M9.5 3L12 8L14.5 3" stroke="#2AABEE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <circle cx="12" cy="14" r="2.5" stroke="#2AABEE" strokeWidth="1.5" fill="rgba(42,171,238,0.3)"/>
+    </svg>
+  ) : (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="14" r="6" stroke="currentColor" strokeWidth="1.5"/>
+      <path d="M9.5 3L12 8L14.5 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <circle cx="12" cy="14" r="2.5" stroke="currentColor" strokeWidth="1"/>
+    </svg>
+  )
+}
+
+function IconPlus() {
+  return (
+    <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+      <circle cx="13" cy="13" r="11" fill="#2AABEE" stroke="rgba(42,171,238,0.3)" strokeWidth="1"/>
+      <path d="M13 8V18M8 13H18" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
+function IconUser({ active }: { active: boolean }) {
+  return active ? (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="8" r="4" stroke="#2AABEE" strokeWidth="2" fill="rgba(42,171,238,0.15)"/>
+      <path d="M4 20C4 16.6863 7.58172 14 12 14C16.4183 14 20 16.6863 20 20" stroke="#2AABEE" strokeWidth="2" strokeLinecap="round" fill="rgba(42,171,238,0.1)"/>
+    </svg>
+  ) : (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.5"/>
+      <path d="M4 20C4 16.6863 7.58172 14 12 14C16.4183 14 20 16.6863 20 20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
+/* ============================================================
    GLASS CARD COMPONENT
    ============================================================ */
 
-function GlassCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+function GlassCard({ children, className = '', elevated = false }: { children: React.ReactNode; className?: string; elevated?: boolean }) {
   return (
-    <div className={`glass-card rounded-2xl p-4 ${className}`}>
+    <div className={`${elevated ? 'glass-card-elevated' : 'glass-card'} p-5 ${className}`}>
       {children}
     </div>
   )
@@ -108,12 +175,12 @@ function GlassCard({ children, className = '' }: { children: React.ReactNode; cl
 function XpProgressBar({ current, max, className = '' }: { current: number; max: number; className?: string }) {
   const pct = max > 0 ? Math.min((current / max) * 100, 100) : 0
   return (
-    <div className={`w-full bg-white/10 rounded-full h-3 overflow-hidden ${className}`}>
+    <div className={`w-full bg-white/8 rounded-full h-2 overflow-hidden ${className}`}>
       <div
-        className="h-full rounded-full transition-all duration-500"
+        className="h-full rounded-full transition-all duration-700 ease-out"
         style={{
           width: `${pct}%`,
-          background: 'linear-gradient(90deg, #10B981, #06B6D4)',
+          background: 'linear-gradient(90deg, #2AABEE, #6C5CE7)',
         }}
       />
     </div>
@@ -123,7 +190,7 @@ function XpProgressBar({ current, max, className = '' }: { current: number; max:
 function StatusBadge({ status }: { status: string }) {
   const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.PENDING
   return (
-    <span className={`inline-flex items-center gap-1 text-xs font-medium ${cfg.color}`}>
+    <span className={`inline-flex items-center gap-1 text-[12px] font-medium ${cfg.color}`}>
       {cfg.emoji} {cfg.label}
     </span>
   )
@@ -132,10 +199,14 @@ function StatusBadge({ status }: { status: string }) {
 function CategoryTag({ category }: { category: string }) {
   const cfg = CATEGORY_MAP[category] || CATEGORY_MAP.OTHER
   return (
-    <span className="inline-flex items-center gap-1 text-xs bg-white/10 text-white/70 px-2 py-0.5 rounded-full">
+    <span className="inline-flex items-center gap-1 text-[11px] bg-white/6 text-white/50 px-2 py-0.5 rounded-full font-medium">
       {cfg.emoji} {cfg.label}
     </span>
   )
+}
+
+function IosSheetHandle() {
+  return <div className="w-9 h-1 bg-white/15 rounded-full mx-auto mb-5" />
 }
 
 /* ============================================================
@@ -237,7 +308,6 @@ export default function Home() {
       const res = await fetch(`/api/rating?${params.toString()}`)
       if (!res.ok) return
       const data = await res.json()
-      // Assign leagues to leaderboard entries
       const lb = (data.leaderboard || []).map((entry: LeaderboardEntry, idx: number) => {
         const league = getLeagueByRank((data.leaderboard || []).length, idx + 1)
         return { ...entry, league: league.id }
@@ -380,126 +450,139 @@ export default function Home() {
 
   const isAdmin = profile?.role === 'ADMIN'
 
-  // Calculate current user league
   const currentUserLeague = leaderboard.length > 0
     ? getLeagueByRank(leaderboard.length, leaderboard.find(e => e.id === userId)?.rank || leaderboard.length)
     : LEAGUES[0]
 
   /* ============================================================
-     RENDER: SCREEN 1 — HOME
+     RENDER: SCREEN 1 — HOME (iOS style)
      ============================================================ */
   const renderHome = () => (
-    <div className="px-4 pb-4 space-y-4">
-      {/* Header */}
-      <div className="pt-2">
-        <h1 className="text-2xl font-bold text-white">
-          Привет, {profile?.name || '...'}!
+    <div className="px-5 pb-6 space-y-5 ios-fade-in">
+      {/* Large title greeting */}
+      <div className="pt-3">
+        <h1 className="ios-large-title">
+          Привет, {profile?.name || '...'}
         </h1>
-        <p className="text-sm text-white/50 mt-0.5">
+        <p className="text-[15px] text-white/40 mt-1 font-medium">
           {profile?.statusEmoji} {profile?.statusPrefix} · {profile?.faculty?.emoji} {profile?.faculty?.name}
         </p>
       </div>
 
-      {/* Level progress card */}
-      <GlassCard className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-cyan-500/10" />
+      {/* Level progress card — hero */}
+      <GlassCard elevated className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#2AABEE]/8 to-[#6C5CE7]/8" />
         <div className="relative">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">🎯</span>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-[#2AABEE]/15 flex items-center justify-center">
+                <span className="text-lg">🎯</span>
+              </div>
               <div>
-                <div className="font-bold text-white">Уровень {profile?.level}</div>
-                <div className="text-xs text-white/50">{profile?.levelName}</div>
+                <div className="text-[17px] font-bold text-white">Уровень {profile?.level}</div>
+                <div className="text-[13px] text-white/40">{profile?.levelName}</div>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-lg font-bold text-emerald-400">{profile?.totalXp} XP</div>
-              <div className="text-xs text-white/40">из {profile?.nextLevelXp || '∞'}</div>
+              <div className="text-[20px] font-bold text-[#2AABEE]">{profile?.totalXp} XP</div>
+              <div className="text-[12px] text-white/30">из {profile?.nextLevelXp || '∞'}</div>
             </div>
           </div>
           <XpProgressBar current={profile?.xpInLevel || 0} max={profile?.xpToNextLevel || 1} />
           {profile?.nextLevelName && (
-            <p className="text-xs text-white/40 mt-1 text-center">
+            <p className="text-[12px] text-white/30 mt-2 text-center">
               До «{profile.nextLevelName}» — ещё {(profile.nextLevelXp || 0) - (profile.totalXp)} XP
             </p>
           )}
         </div>
       </GlassCard>
 
-      {/* League card */}
+      {/* League badge pill */}
       <GlassCard className="relative overflow-hidden">
-        <div className={`absolute inset-0 bg-gradient-to-br ${currentUserLeague.color} opacity-10`} />
+        <div className={`absolute inset-0 bg-gradient-to-br ${currentUserLeague.color} opacity-8`} />
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-3xl">{currentUserLeague.emoji}</span>
+            <span className="text-[28px]">{currentUserLeague.emoji}</span>
             <div>
-              <div className="text-xs text-white/40 uppercase tracking-wider">Лига</div>
-              <div className={`font-bold ${currentUserLeague.textColor}`}>{currentUserLeague.name}</div>
+              <div className="ios-section-header text-[11px]">Лига</div>
+              <div className={`text-[17px] font-bold ${currentUserLeague.textColor}`}>{currentUserLeague.name}</div>
             </div>
           </div>
           <div className="text-right">
-            <div className="text-xs text-white/40">Переход в следующую</div>
-            <div className="text-xs text-white/60">каждую четверть</div>
+            <div className="text-[12px] text-white/30">Переход в следующую</div>
+            <div className="text-[12px] text-white/50 font-medium">каждую четверть</div>
           </div>
         </div>
       </GlassCard>
 
-      {/* Quick actions */}
-      <div className="grid grid-cols-3 gap-2">
+      {/* Quick actions — 3 compact glass buttons */}
+      <div className="grid grid-cols-3 gap-2.5">
         <button
           onClick={() => setCurrentTab('add')}
-          className="glass-card flex flex-col items-center gap-1 p-3 rounded-xl active:scale-95 transition-transform"
+          className="glass-card flex flex-col items-center gap-1.5 py-3.5 px-2 active:scale-95 ios-spring"
         >
-          <span className="text-xl">➕</span>
-          <span className="text-xs text-white/60 font-medium">Добавить</span>
+          <span className="text-[20px]">➕</span>
+          <span className="text-[11px] text-white/45 font-semibold">Добавить</span>
         </button>
         <button
           onClick={() => setCurrentTab('profile')}
-          className="glass-card flex flex-col items-center gap-1 p-3 rounded-xl active:scale-95 transition-transform"
+          className="glass-card flex flex-col items-center gap-1.5 py-3.5 px-2 active:scale-95 ios-spring"
         >
-          <span className="text-xl">📊</span>
-          <span className="text-xs text-white/60 font-medium">Статистика</span>
+          <span className="text-[20px]">📊</span>
+          <span className="text-[11px] text-white/45 font-semibold">Статистика</span>
         </button>
         <button
           onClick={() => setCurrentTab('rating')}
-          className="glass-card flex flex-col items-center gap-1 p-3 rounded-xl active:scale-95 transition-transform"
+          className="glass-card flex flex-col items-center gap-1.5 py-3.5 px-2 active:scale-95 ios-spring"
         >
-          <span className="text-xl">🏆</span>
-          <span className="text-xs text-white/60 font-medium">Рейтинг</span>
+          <span className="text-[20px]">🏆</span>
+          <span className="text-[11px] text-white/45 font-semibold">Рейтинг</span>
         </button>
       </div>
 
-      {/* Recent achievements */}
+      {/* Recent achievements — iOS list style */}
       <div>
-        <h3 className="font-semibold text-white mb-2">Последние достижения</h3>
-        <div className="space-y-2">
-          {recentAchievements.map((a) => (
-            <button
-              key={a.id}
-              onClick={() => setSelectedAchievement(a)}
-              className="w-full text-left glass-card rounded-xl p-3 active:scale-[0.98] transition-transform"
-            >
-              <div className="flex items-center justify-between">
+        <h3 className="ios-section-header mb-3">Последние достижения</h3>
+        <div className="space-y-1.5">
+          {recentAchievements.map((a) => {
+            const catCfg = CATEGORY_MAP[a.category] || CATEGORY_MAP.OTHER
+            return (
+              <button
+                key={a.id}
+                onClick={() => setSelectedAchievement(a)}
+                className="w-full text-left ios-list-item p-3.5 flex items-center gap-3"
+              >
+                {/* Avatar circle with category emoji */}
+                <div className="w-10 h-10 rounded-full bg-white/6 flex items-center justify-center shrink-0 text-[18px]">
+                  {catCfg.emoji}
+                </div>
+                {/* Title + status */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-white truncate">{a.title}</span>
-                    <CategoryTag category={a.category} />
-                  </div>
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="text-[15px] font-medium text-white truncate">{a.title}</div>
+                  <div className="flex items-center gap-2 mt-0.5">
                     <StatusBadge status={a.status} />
-                    {a.status === 'APPROVED' && a.xpAwarded > 0 && (
-                      <span className="text-xs font-medium text-emerald-400">+{a.xpAwarded} XP</span>
-                    )}
                   </div>
                 </div>
-                {a.status === 'REJECTED' && a.reviewComment && (
-                  <span className="text-xs text-red-400 truncate ml-2 max-w-[120px]">{a.reviewComment}</span>
-                )}
-              </div>
-            </button>
-          ))}
+                {/* XP on right */}
+                <div className="text-right shrink-0">
+                  {a.status === 'APPROVED' && a.xpAwarded > 0 && (
+                    <span className="text-[14px] font-bold text-[#34C759]">+{a.xpAwarded}</span>
+                  )}
+                  {a.status === 'REJECTED' && a.reviewComment && (
+                    <span className="text-[11px] text-[#FF3B30]/70 truncate max-w-[80px] block">{a.reviewComment}</span>
+                  )}
+                </div>
+                {/* Chevron */}
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0 opacity-20">
+                  <path d="M5 3L9 7L5 11" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            )
+          })}
           {recentAchievements.length === 0 && (
-            <p className="text-sm text-white/30 text-center py-4">Пока нет достижений</p>
+            <div className="text-center py-8">
+              <p className="text-[15px] text-white/20">Пока нет достижений</p>
+            </div>
           )}
         </div>
       </div>
@@ -507,63 +590,83 @@ export default function Home() {
   )
 
   /* ============================================================
-     RENDER: SCREEN 2 — ADD ACHIEVEMENT
+     RENDER: SCREEN 2 — ADD ACHIEVEMENT (iOS Settings style)
      ============================================================ */
   const renderAddAchievement = () => (
-    <div className="px-4 pb-4 space-y-4">
-      <h2 className="text-xl font-bold text-white pt-2">Добавить достижение</h2>
+    <div className="px-5 pb-6 space-y-5 ios-fade-in">
+      {/* Large title */}
+      <div className="pt-3">
+        <h1 className="ios-large-title">Добавить</h1>
+        <p className="text-[15px] text-white/40 mt-1">Новое достижение</p>
+      </div>
 
-      <GlassCard className="space-y-4">
-        {/* Title */}
-        <div>
-          <label className="text-sm font-medium text-white/70 mb-1 block">Название *</label>
-          <input
-            type="text"
-            value={formTitle}
-            onChange={(e) => setFormTitle(e.target.value)}
-            placeholder="Олимпиада по математике"
-            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-transparent"
-          />
-        </div>
-
-        {/* Description */}
-        <div>
-          <label className="text-sm font-medium text-white/70 mb-1 block">Описание</label>
-          <textarea
-            value={formDesc}
-            onChange={(e) => setFormDesc(e.target.value)}
-            placeholder="Расскажите подробнее..."
-            rows={3}
-            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-transparent resize-none"
-          />
-        </div>
-
-        {/* Category */}
-        <div>
-          <label className="text-sm font-medium text-white/70 mb-2 block">Категория</label>
-          <div className="grid grid-cols-5 gap-2">
-            {Object.entries(CATEGORY_MAP).map(([key, val]) => (
-              <button
-                key={key}
-                onClick={() => setFormCategory(key)}
-                className={`flex flex-col items-center gap-1 p-2 rounded-xl text-xs transition-all ${
-                  formCategory === key
-                    ? 'bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400'
-                    : 'bg-white/5 border-2 border-transparent text-white/60 hover:bg-white/10'
-                }`}
-              >
-                <span className="text-lg">{val.emoji}</span>
-                <span className="font-medium leading-tight text-center">{val.label}</span>
-              </button>
-            ))}
+      {/* Section: Main info */}
+      <div>
+        <h3 className="ios-section-header mb-2 ml-1">Основная информация</h3>
+        <GlassCard className="space-y-0 p-0 overflow-hidden">
+          {/* Title input */}
+          <div className="p-4 border-b border-white/6">
+            <label className="text-[13px] font-medium text-white/40 mb-1.5 block">Название *</label>
+            <input
+              type="text"
+              value={formTitle}
+              onChange={(e) => setFormTitle(e.target.value)}
+              placeholder="Олимпиада по математике"
+              className="glass-input w-full px-4 py-3 text-[15px] text-white placeholder-white/20 bg-transparent border-0 focus:ring-0 focus:shadow-none rounded-xl"
+            />
           </div>
-        </div>
+          {/* Description */}
+          <div className="p-4 border-b border-white/6">
+            <label className="text-[13px] font-medium text-white/40 mb-1.5 block">Описание</label>
+            <textarea
+              value={formDesc}
+              onChange={(e) => setFormDesc(e.target.value)}
+              placeholder="Расскажите подробнее..."
+              rows={3}
+              className="glass-input w-full px-4 py-3 text-[15px] text-white placeholder-white/20 bg-transparent border-0 focus:ring-0 focus:shadow-none resize-none rounded-xl"
+            />
+          </div>
+          {/* Date */}
+          <div className="p-4">
+            <label className="text-[13px] font-medium text-white/40 mb-1.5 block">Дата</label>
+            <input
+              type="date"
+              value={formDate}
+              onChange={(e) => setFormDate(e.target.value)}
+              className="glass-input w-full px-4 py-3 text-[15px] text-white bg-transparent border-0 focus:ring-0 focus:shadow-none [color-scheme:dark] rounded-xl"
+            />
+          </div>
+        </GlassCard>
+      </div>
 
-        {/* XP Slider */}
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <label className="text-sm font-medium text-white/70">Запрашиваемый XP</label>
-            <span className="text-lg font-bold text-emerald-400">{formXp} XP</span>
+      {/* Section: Category — horizontal scroll pills */}
+      <div>
+        <h3 className="ios-section-header mb-2 ml-1">Категория</h3>
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
+          {Object.entries(CATEGORY_MAP).map(([key, val]) => (
+            <button
+              key={key}
+              onClick={() => setFormCategory(key)}
+              className={`shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-full text-[13px] font-medium transition-all ${
+                formCategory === key
+                  ? 'ios-pill-active'
+                  : 'ios-pill'
+              }`}
+            >
+              <span className="text-[15px]">{val.emoji}</span>
+              {val.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Section: XP */}
+      <div>
+        <h3 className="ios-section-header mb-2 ml-1">Запрашиваемый XP</h3>
+        <GlassCard>
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[15px] text-white/50">Количество</span>
+            <span className="text-[22px] font-bold text-[#2AABEE]">{formXp} XP</span>
           </div>
           <input
             type="range"
@@ -571,61 +674,57 @@ export default function Home() {
             max={20}
             value={formXp}
             onChange={(e) => setFormXp(Number(e.target.value))}
-            className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+            className="w-full"
           />
-          <div className="flex justify-between text-xs text-white/30 mt-1">
-            <span>1-4: ежедневные</span>
-            <span>5-9: мероприятия</span>
-            <span>10-19: крупные</span>
+          <div className="flex justify-between text-[11px] text-white/20 mt-2">
+            <span>1–4: ежедневные</span>
+            <span>5–9: мероприятия</span>
+            <span>10–19: крупные</span>
             <span>20: ВСОШ</span>
           </div>
-        </div>
+        </GlassCard>
+      </div>
 
-        {/* File upload placeholder */}
-        <div>
-          <label className="text-sm font-medium text-white/70 mb-1 block">Подтверждение</label>
-          <div className="border-2 border-dashed border-white/10 rounded-xl p-4 text-center">
-            <span className="text-2xl">📎</span>
-            <p className="text-xs text-white/30 mt-1">Загрузка фото (скоро)</p>
+      {/* Section: Upload */}
+      <div>
+        <h3 className="ios-section-header mb-2 ml-1">Подтверждение</h3>
+        <GlassCard className="flex flex-col items-center py-6 border-dashed border-white/8">
+          <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-2">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <path d="M11 14V7M7 10L11 6L15 10" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M4 15V17C4 17.5523 4.44772 18 5 18H17C17.5523 18 18 17.5523 18 17V15" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
           </div>
-        </div>
+          <p className="text-[13px] text-white/20">Загрузка фото (скоро)</p>
+        </GlassCard>
+      </div>
 
-        {/* Date */}
-        <div>
-          <label className="text-sm font-medium text-white/70 mb-1 block">Дата</label>
-          <input
-            type="date"
-            value={formDate}
-            onChange={(e) => setFormDate(e.target.value)}
-            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 [color-scheme:dark]"
-          />
-        </div>
-
-        {/* Comment */}
-        <div>
-          <label className="text-sm font-medium text-white/70 mb-1 block">Комментарий</label>
+      {/* Section: Comment */}
+      <div>
+        <h3 className="ios-section-header mb-2 ml-1">Комментарий</h3>
+        <GlassCard>
           <textarea
             value={formComment}
             onChange={(e) => setFormComment(e.target.value)}
             placeholder="Дополнительная информация..."
             rows={2}
-            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 resize-none"
+            className="glass-input w-full px-4 py-3 text-[15px] text-white placeholder-white/20 bg-transparent border-0 focus:ring-0 focus:shadow-none resize-none rounded-xl"
           />
-        </div>
+        </GlassCard>
+      </div>
 
-        {/* Submit */}
-        <button
-          onClick={handleAddAchievement}
-          className="w-full py-3 bg-gradient-to-r from-emerald-600 to-cyan-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-cyan-500 transition-all text-sm active:scale-[0.98]"
-        >
-          Отправить на проверку
-        </button>
-      </GlassCard>
+      {/* Submit button */}
+      <button
+        onClick={handleAddAchievement}
+        className="ios-button-primary w-full"
+      >
+        Отправить на проверку
+      </button>
     </div>
   )
 
   /* ============================================================
-     RENDER: SCREEN 3 — RATING (with leagues)
+     RENDER: SCREEN 3 — RATING (iOS style)
      ============================================================ */
   const renderRating = () => {
     const filteredLeaderboard = selectedLeague
@@ -633,15 +732,18 @@ export default function Home() {
       : leaderboard
 
     return (
-      <div className="px-4 pb-4 space-y-4">
-        <h2 className="text-xl font-bold text-white pt-2">Рейтинг</h2>
+      <div className="px-5 pb-6 space-y-4 ios-fade-in">
+        {/* Large title */}
+        <div className="pt-3">
+          <h1 className="ios-large-title">Рейтинг</h1>
+        </div>
 
-        {/* League selector */}
-        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+        {/* iOS segmented control for league */}
+        <div className="ios-segmented flex">
           <button
             onClick={() => setSelectedLeague(null)}
-            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-              selectedLeague === null ? 'bg-white/20 text-white' : 'bg-white/5 text-white/50'
+            className={`flex-1 py-2 text-[13px] font-semibold rounded-[10px] transition-all z-10 ${
+              selectedLeague === null ? 'ios-segmented-pill text-white' : 'text-white/35'
             }`}
           >
             Все
@@ -650,8 +752,8 @@ export default function Home() {
             <button
               key={league.id}
               onClick={() => setSelectedLeague(league.id === selectedLeague ? null : league.id)}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                selectedLeague === league.id ? `${league.textColor} bg-white/15` : 'bg-white/5 text-white/50'
+              className={`flex-1 py-2 text-[13px] font-semibold rounded-[10px] transition-all z-10 ${
+                selectedLeague === league.id ? 'ios-segmented-pill text-white' : 'text-white/35'
               }`}
             >
               {league.emoji} {league.name}
@@ -659,8 +761,8 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Period filter */}
-        <div className="flex gap-1.5">
+        {/* Period filter pills */}
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
           {[
             { key: 'all', label: 'Всё время' },
             { key: 'month', label: 'Месяц' },
@@ -670,22 +772,18 @@ export default function Home() {
             <button
               key={p.key}
               onClick={() => setRatingPeriod(p.key)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                ratingPeriod === p.key ? 'bg-white/20 text-white' : 'bg-white/5 text-white/50'
-              }`}
+              className={`shrink-0 ${ratingPeriod === p.key ? 'ios-pill-active' : 'ios-pill'}`}
             >
               {p.label}
             </button>
           ))}
         </div>
 
-        {/* Faculty filter */}
-        <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+        {/* Faculty filter pills */}
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
           <button
             onClick={() => setRatingFaculty('all')}
-            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-              ratingFaculty === 'all' ? 'bg-cyan-500/20 text-cyan-400' : 'bg-white/5 text-white/50'
-            }`}
+            className={`shrink-0 ${ratingFaculty === 'all' ? 'ios-pill-active' : 'ios-pill'}`}
           >
             Все факультеты
           </button>
@@ -702,9 +800,7 @@ export default function Home() {
               <button
                 key={fid}
                 onClick={() => setRatingFaculty(fid)}
-                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                  ratingFaculty === fid ? 'bg-cyan-500/20 text-cyan-400' : 'bg-white/5 text-white/50'
-                }`}
+                className={`shrink-0 ${ratingFaculty === fid ? 'ios-pill-active' : 'ios-pill'}`}
               >
                 {f.emoji} {f.name}
               </button>
@@ -714,64 +810,69 @@ export default function Home() {
 
         {/* Leaderboard */}
         {loading ? (
-          <div className="text-center py-8 text-white/30">Загрузка...</div>
+          <div className="text-center py-12">
+            <p className="text-[15px] text-white/20">Загрузка...</p>
+          </div>
         ) : (
           <div className="space-y-2">
+            {/* Top 3 — special podium cards */}
             {filteredLeaderboard.slice(0, 3).map((entry) => {
               const medals = ['🥇', '🥈', '🥉']
               const league = LEAGUES.find(l => l.id === entry.league) || LEAGUES[0]
               return (
                 <GlassCard
                   key={entry.id}
+                  elevated={entry.rank === 1}
                   className={`relative overflow-hidden ${
                     entry.id === userId ? `ring-1 ${league.borderColor}` : ''
                   }`}
                 >
-                  <div className={`absolute inset-0 bg-gradient-to-r ${league.color} opacity-5`} />
+                  <div className={`absolute inset-0 bg-gradient-to-r ${league.color} opacity-4`} />
                   <div className="relative flex items-center gap-3">
-                    <span className="text-3xl">{medals[entry.rank - 1]}</span>
+                    <span className="text-[28px]">{medals[entry.rank - 1]}</span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-sm">{entry.statusEmoji}</span>
-                        <span className="font-bold text-white truncate">{entry.name}</span>
+                        <span className="text-[14px]">{entry.statusEmoji}</span>
+                        <span className="text-[15px] font-bold text-white truncate">{entry.name}</span>
                       </div>
-                      <div className="text-xs text-white/40">
+                      <div className="text-[12px] text-white/30">
                         {entry.faculty?.emoji} {entry.faculty?.name} · Ур. {entry.level}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="font-bold text-emerald-400">{entry.totalXp} XP</div>
-                      <div className={`text-xs ${league.textColor}`}>{league.emoji} {league.name}</div>
+                    <div className="text-right shrink-0">
+                      <div className="text-[16px] font-bold text-[#2AABEE]">{entry.totalXp} XP</div>
+                      <div className={`text-[11px] ${league.textColor}`}>{league.emoji} {league.name}</div>
                     </div>
                   </div>
                 </GlassCard>
               )
             })}
+            {/* Remaining entries — clean list items */}
             {filteredLeaderboard.slice(3).map((entry) => {
               const league = LEAGUES.find(l => l.id === entry.league) || LEAGUES[0]
               return (
                 <div
                   key={entry.id}
-                  className={`glass-card rounded-xl p-3 flex items-center gap-3 ${
+                  className={`ios-list-item p-3 flex items-center gap-3 ${
                     entry.id === userId ? `ring-1 ${league.borderColor}` : ''
                   }`}
                 >
-                  <span className="text-sm font-bold text-white/30 w-6 text-center">{entry.rank}</span>
-                  <span className="text-sm">{entry.statusEmoji}</span>
-                  <span className="flex-1 text-sm font-medium text-white truncate">{entry.name}</span>
-                  <span className={`text-xs ${league.textColor}`}>{league.emoji}</span>
-                  <span className="text-sm font-bold text-emerald-400">{entry.totalXp} XP</span>
+                  <span className="text-[13px] font-bold text-white/20 w-6 text-center">{entry.rank}</span>
+                  <span className="text-[14px]">{entry.statusEmoji}</span>
+                  <span className="flex-1 text-[15px] font-medium text-white truncate">{entry.name}</span>
+                  <span className={`text-[11px] ${league.textColor}`}>{league.emoji}</span>
+                  <span className="text-[14px] font-bold text-[#2AABEE]">{entry.totalXp} XP</span>
                 </div>
               )
             })}
           </div>
         )}
 
-        {/* User position */}
+        {/* User position — sticky footer */}
         {leaderboard.length > 0 && (
-          <div className="text-center">
-            <span className="text-sm text-white/40">
-              Твоя позиция: #{leaderboard.find((e) => e.id === userId)?.rank || '—'} · {currentUserLeague.emoji} {currentUserLeague.name}
+          <div className="glass-card p-3.5 text-center">
+            <span className="text-[14px] text-white/40">
+              Твоя позиция: <span className="text-[#2AABEE] font-bold">#{leaderboard.find((e) => e.id === userId)?.rank || '—'}</span> · {currentUserLeague.emoji} {currentUserLeague.name}
             </span>
           </div>
         )}
@@ -780,95 +881,106 @@ export default function Home() {
   }
 
   /* ============================================================
-     RENDER: SCREEN 4 — ACHIEVEMENTS (Ачивки)
+     RENDER: SCREEN 4 — ACHIEVEMENTS (iOS style)
      ============================================================ */
   const renderAchievements = () => (
-    <div className="px-4 pb-4 space-y-4">
-      <h2 className="text-xl font-bold text-white pt-2">Ачивки</h2>
+    <div className="px-5 pb-6 space-y-4 ios-fade-in">
+      {/* Large title */}
+      <div className="pt-3">
+        <h1 className="ios-large-title">Ачивки</h1>
+      </div>
 
-      {/* Sub-tabs */}
-      <div className="flex bg-white/5 rounded-xl p-1">
+      {/* iOS segmented control */}
+      <div className="ios-segmented flex">
         <button
           onClick={() => setAchievementTab('list')}
-          className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
-            achievementTab === 'list' ? 'bg-white/10 text-white' : 'text-white/40'
+          className={`flex-1 py-2 text-[13px] font-semibold rounded-[10px] transition-all z-10 ${
+            achievementTab === 'list' ? 'ios-segmented-pill text-white' : 'text-white/35'
           }`}
         >
-          📋 Достижения
+          Достижения
         </button>
         <button
           onClick={() => setAchievementTab('badges')}
-          className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
-            achievementTab === 'badges' ? 'bg-white/10 text-white' : 'text-white/40'
+          className={`flex-1 py-2 text-[13px] font-semibold rounded-[10px] transition-all z-10 ${
+            achievementTab === 'badges' ? 'ios-segmented-pill text-white' : 'text-white/35'
           }`}
         >
-          🏅 Бейджи
+          Бейджи
         </button>
         <button
           onClick={() => setAchievementTab('challenges')}
-          className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
-            achievementTab === 'challenges' ? 'bg-white/10 text-white' : 'text-white/40'
+          className={`flex-1 py-2 text-[13px] font-semibold rounded-[10px] transition-all z-10 ${
+            achievementTab === 'challenges' ? 'ios-segmented-pill text-white' : 'text-white/35'
           }`}
         >
-          ⚡ Челленджи
+          Челленджи
         </button>
       </div>
 
       {achievementTab === 'list' && (
-        <div className="space-y-2">
-          {allAchievements.map((a) => (
-            <button
-              key={a.id}
-              onClick={() => setSelectedAchievement(a)}
-              className="w-full text-left glass-card rounded-xl p-3 active:scale-[0.98] transition-transform"
-            >
-              <div className="flex items-center justify-between">
+        <div className="space-y-1.5">
+          {allAchievements.map((a) => {
+            const catCfg = CATEGORY_MAP[a.category] || CATEGORY_MAP.OTHER
+            return (
+              <button
+                key={a.id}
+                onClick={() => setSelectedAchievement(a)}
+                className="w-full text-left ios-list-item p-3.5 flex items-center gap-3"
+              >
+                <div className="w-10 h-10 rounded-full bg-white/6 flex items-center justify-center shrink-0 text-[18px]">
+                  {catCfg.emoji}
+                </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-white truncate">{a.title}</span>
-                    <CategoryTag category={a.category} />
-                  </div>
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="text-[15px] font-medium text-white truncate">{a.title}</div>
+                  <div className="flex items-center gap-2 mt-0.5">
                     <StatusBadge status={a.status} />
-                    {a.status === 'APPROVED' && a.xpAwarded > 0 && (
-                      <span className="text-xs font-medium text-emerald-400">+{a.xpAwarded} XP</span>
-                    )}
                     {a.status === 'PENDING' && (
-                      <span className="text-xs font-medium text-white/30">запрос: {a.xpRequested} XP</span>
+                      <span className="text-[11px] text-white/20">запрос: {a.xpRequested} XP</span>
                     )}
                   </div>
                   {a.achievementDate && (
-                    <div className="text-xs text-white/20 mt-1">
+                    <div className="text-[11px] text-white/15 mt-0.5">
                       {new Date(a.achievementDate).toLocaleDateString('ru-RU')}
                     </div>
                   )}
                 </div>
-              </div>
-            </button>
-          ))}
+                <div className="text-right shrink-0">
+                  {a.status === 'APPROVED' && a.xpAwarded > 0 && (
+                    <span className="text-[14px] font-bold text-[#34C759]">+{a.xpAwarded}</span>
+                  )}
+                </div>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0 opacity-20">
+                  <path d="M5 3L9 7L5 11" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            )
+          })}
           {allAchievements.length === 0 && (
-            <p className="text-sm text-white/30 text-center py-4">Пока нет достижений</p>
+            <div className="text-center py-8">
+              <p className="text-[15px] text-white/20">Пока нет достижений</p>
+            </div>
           )}
         </div>
       )}
 
       {achievementTab === 'badges' && (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-2.5">
           {badges.map((b) => (
             <GlassCard
               key={b.id}
-              className={`text-center transition-all ${!b.earned ? 'opacity-40' : ''}`}
+              className={`text-center transition-all ${!b.earned ? 'opacity-30' : ''}`}
             >
-              <span className={`text-3xl ${b.earned ? '' : 'grayscale'}`}>{b.emoji}</span>
-              <h4 className="text-sm font-semibold text-white mt-2">{b.name}</h4>
-              <p className="text-xs text-white/40 mt-0.5 leading-tight">{b.description}</p>
+              <span className={`text-[32px] ${b.earned ? '' : 'grayscale'}`}>{b.emoji}</span>
+              <h4 className="text-[13px] font-semibold text-white mt-2">{b.name}</h4>
+              <p className="text-[11px] text-white/30 mt-0.5 leading-tight">{b.description}</p>
               {b.earned && b.earnedAt && (
-                <p className="text-xs text-emerald-400 mt-1">
+                <p className="text-[11px] text-[#34C759] mt-1.5">
                   {new Date(b.earnedAt).toLocaleDateString('ru-RU')}
                 </p>
               )}
               {!b.earned && (
-                <p className="text-xs text-white/20 mt-1">Не получен</p>
+                <p className="text-[11px] text-white/15 mt-1.5">Не получен</p>
               )}
             </GlassCard>
           ))}
@@ -881,28 +993,28 @@ export default function Home() {
             <GlassCard key={ch.id}>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <h4 className="font-semibold text-white">{ch.title}</h4>
-                  <p className="text-xs text-white/40 mt-0.5">{ch.description}</p>
+                  <h4 className="text-[15px] font-semibold text-white">{ch.title}</h4>
+                  <p className="text-[13px] text-white/30 mt-0.5">{ch.description}</p>
                 </div>
-                {ch.completed && <span className="text-xl">✅</span>}
+                {ch.completed && <span className="text-[20px]">✅</span>}
               </div>
               <div className="mt-3">
-                <div className="flex items-center justify-between text-xs text-white/40 mb-1">
+                <div className="flex items-center justify-between text-[12px] text-white/30 mb-1.5">
                   <span>{ch.xpCollected} / {ch.xpTarget} XP</span>
-                  <span className="font-medium text-emerald-400">+{ch.rewardXp} XP награда</span>
+                  <span className="font-semibold text-[#2AABEE]">+{ch.rewardXp} XP награда</span>
                 </div>
                 <XpProgressBar current={ch.xpCollected} max={ch.xpTarget} />
               </div>
               {!ch.isJoined && !ch.completed && (
                 <button
                   onClick={() => handleJoinChallenge(ch.id)}
-                  className="mt-3 w-full py-2 bg-gradient-to-r from-emerald-600 to-cyan-600 text-white text-sm font-medium rounded-xl hover:from-emerald-500 hover:to-cyan-500 transition-all active:scale-[0.98]"
+                  className="mt-3 w-full py-2.5 bg-[#2AABEE] text-white text-[15px] font-semibold rounded-xl transition-all active:scale-[0.97]"
                 >
                   Присоединиться
                 </button>
               )}
               {ch.isJoined && !ch.completed && (
-                <div className="mt-2 text-xs text-amber-400 font-medium text-center">
+                <div className="mt-2 text-[13px] text-[#FF9F0A] font-medium text-center">
                   В процессе — ещё {ch.xpTarget - ch.xpCollected} XP
                 </div>
               )}
@@ -914,158 +1026,166 @@ export default function Home() {
   )
 
   /* ============================================================
-     RENDER: SCREEN 5 — PROFILE
+     RENDER: SCREEN 5 — PROFILE (iOS / Telegram style)
      ============================================================ */
   const renderProfile = () => (
-    <div className="px-4 pb-4 space-y-4">
-      {/* Avatar + Name */}
-      <div className="text-center pt-4">
-        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 backdrop-blur-sm flex items-center justify-center mx-auto text-4xl border border-white/10">
+    <div className="px-5 pb-6 space-y-5 ios-fade-in">
+      {/* Telegram-style profile header */}
+      <div className="text-center pt-6">
+        <div className="w-[72px] h-[72px] rounded-full bg-gradient-to-br from-[#2AABEE]/20 to-[#6C5CE7]/20 flex items-center justify-center mx-auto text-[36px] border border-white/8 shadow-lg shadow-[#2AABEE]/10">
           {profile?.statusEmoji || '👤'}
         </div>
-        <h2 className="text-xl font-bold text-white mt-2">{profile?.name}</h2>
-        <p className="text-sm text-white/40">@{profile?.username}</p>
-        <div className="flex items-center justify-center gap-2 mt-1">
-          <span className="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-medium">
+        <h2 className="text-[22px] font-bold text-white mt-3">{profile?.name}</h2>
+        <p className="text-[14px] text-white/30 mt-0.5">@{profile?.username}</p>
+        <div className="flex items-center justify-center gap-2 mt-2">
+          <span className="text-[12px] bg-[#2AABEE]/15 text-[#2AABEE] px-3 py-1 rounded-full font-semibold">
             Ур. {profile?.level} — {profile?.levelName}
           </span>
           {isAdmin && (
-            <span className="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full font-medium">
+            <span className="text-[12px] bg-[#FF3B30]/12 text-[#FF3B30] px-3 py-1 rounded-full font-semibold">
               Админ
             </span>
           )}
         </div>
         {profile?.faculty && (
-          <span className="inline-flex items-center gap-1 text-xs bg-white/5 border border-white/10 px-3 py-1 rounded-full mt-2 text-white/60">
+          <span className="inline-flex items-center gap-1 text-[12px] bg-white/5 border border-white/6 px-3 py-1 rounded-full mt-2 text-white/40 font-medium">
             {profile.faculty.emoji} {profile.faculty.name}
           </span>
         )}
       </div>
 
-      {/* Level card */}
+      {/* Level progress card */}
       <GlassCard>
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-2.5">
           <div>
-            <span className="text-lg font-bold text-white">Уровень {profile?.level}</span>
-            <span className="text-sm text-white/50 ml-2">{profile?.levelName}</span>
+            <span className="text-[17px] font-bold text-white">Уровень {profile?.level}</span>
+            <span className="text-[14px] text-white/35 ml-2">{profile?.levelName}</span>
           </div>
-          <span className="text-xl font-bold text-emerald-400">{profile?.totalXp} XP</span>
+          <span className="text-[20px] font-bold text-[#2AABEE]">{profile?.totalXp} XP</span>
         </div>
         <XpProgressBar current={profile?.xpInLevel || 0} max={profile?.xpToNextLevel || 1} />
       </GlassCard>
 
-      {/* Statistics */}
-      <GlassCard>
-        <h3 className="font-semibold text-white mb-3">Статистика</h3>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white/5 rounded-xl p-3 text-center">
-            <div className="text-2xl font-bold text-white">{achievementCounts.total}</div>
-            <div className="text-xs text-white/40">Всего</div>
-          </div>
-          <div className="bg-emerald-500/10 rounded-xl p-3 text-center">
-            <div className="text-2xl font-bold text-emerald-400">{achievementCounts.APPROVED}</div>
-            <div className="text-xs text-white/40">Одобрено</div>
-          </div>
-          <div className="bg-amber-500/10 rounded-xl p-3 text-center">
-            <div className="text-2xl font-bold text-amber-400">{achievementCounts.PENDING}</div>
-            <div className="text-xs text-white/40">На проверке</div>
-          </div>
-          <div className="bg-red-500/10 rounded-xl p-3 text-center">
-            <div className="text-2xl font-bold text-red-400">{achievementCounts.REJECTED}</div>
-            <div className="text-xs text-white/40">Отклонено</div>
-          </div>
+      {/* Stats — 2x2 grid with glass cards */}
+      <div>
+        <h3 className="ios-section-header mb-2 ml-1">Статистика</h3>
+        <div className="grid grid-cols-2 gap-2.5">
+          <GlassCard className="text-center py-3.5">
+            <div className="text-[24px] font-bold text-white">{achievementCounts.total}</div>
+            <div className="text-[12px] text-white/30 mt-0.5">Всего</div>
+          </GlassCard>
+          <GlassCard className="text-center py-3.5">
+            <div className="text-[24px] font-bold text-[#34C759]">{achievementCounts.APPROVED}</div>
+            <div className="text-[12px] text-white/30 mt-0.5">Одобрено</div>
+          </GlassCard>
+          <GlassCard className="text-center py-3.5">
+            <div className="text-[24px] font-bold text-[#FF9F0A]">{achievementCounts.PENDING}</div>
+            <div className="text-[12px] text-white/30 mt-0.5">На проверке</div>
+          </GlassCard>
+          <GlassCard className="text-center py-3.5">
+            <div className="text-[24px] font-bold text-[#FF3B30]">{achievementCounts.REJECTED}</div>
+            <div className="text-[12px] text-white/30 mt-0.5">Отклонено</div>
+          </GlassCard>
         </div>
-      </GlassCard>
+      </div>
 
-      {/* Level roadmap */}
-      <GlassCard>
-        <h3 className="font-semibold text-white mb-3">Путь уровней</h3>
-        <div className="space-y-2">
-          {levelRoadmap.map((lvl) => {
+      {/* Level roadmap — vertical timeline */}
+      <div>
+        <h3 className="ios-section-header mb-2 ml-1">Путь уровней</h3>
+        <GlassCard className="p-0 overflow-hidden">
+          {levelRoadmap.map((lvl, idx) => {
             const isCurrent = lvl.level === profile?.level
             const isPassed = (profile?.level || 0) > lvl.level
             return (
               <div
                 key={lvl.level}
-                className={`flex items-center gap-3 p-2 rounded-xl transition-colors ${
-                  isCurrent ? 'bg-emerald-500/15 ring-1 ring-emerald-500/50' : isPassed ? 'opacity-40' : ''
-                }`}
+                className={`flex items-center gap-3 px-4 py-3 ${
+                  idx < levelRoadmap.length - 1 ? 'border-b border-white/4' : ''
+                } ${isCurrent ? 'bg-[#2AABEE]/8' : isPassed ? 'opacity-30' : ''}`}
               >
-                <span className="text-lg">{isPassed ? '✅' : isCurrent ? '🎯' : '🔒'}</span>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                  isCurrent ? 'bg-[#2AABEE]/20' : isPassed ? 'bg-[#34C759]/15' : 'bg-white/5'
+                }`}>
+                  <span className="text-[14px]">{isPassed ? '✅' : isCurrent ? '🎯' : '🔒'}</span>
+                </div>
                 <div className="flex-1">
-                  <div className="text-sm font-medium text-white">
+                  <div className="text-[15px] font-medium text-white">
                     Ур. {lvl.level}: {lvl.name}
                   </div>
-                  <div className="text-xs text-white/30">{lvl.min}–{lvl.max === 999999 ? '∞' : lvl.max} XP</div>
+                  <div className="text-[12px] text-white/20">{lvl.min}–{lvl.max === 999999 ? '∞' : lvl.max} XP</div>
                 </div>
                 {isCurrent && (
-                  <span className="text-xs font-medium text-emerald-400">Вы здесь</span>
+                  <span className="text-[12px] font-semibold text-[#2AABEE]">Вы здесь</span>
                 )}
               </div>
             )
           })}
-        </div>
-      </GlassCard>
+        </GlassCard>
+      </div>
 
-      {/* XP Dynamics */}
-      <GlassCard>
-        <h3 className="font-semibold text-white mb-3">XP по месяцам</h3>
-        <div className="flex items-end gap-2 h-24">
-          {[
-            { m: 'Янв', xp: 0 },
-            { m: 'Фев', xp: 0 },
-            { m: 'Мар', xp: 8 },
-            { m: 'Апр', xp: 20 },
-            { m: 'Май', xp: profile?.totalXp || 0 },
-          ].map((item, idx) => {
-            const maxVal = Math.max(...[0, 0, 8, 20, profile?.totalXp || 0])
-            const height = maxVal > 0 ? (item.xp / maxVal) * 100 : 0
-            return (
-              <div key={idx} className="flex-1 flex flex-col items-center gap-1">
-                <div
-                  className="w-full rounded-t-lg"
-                  style={{
-                    height: `${Math.max(height, 4)}%`,
-                    background: 'linear-gradient(180deg, #10B981, #06B6D4)',
-                    minHeight: '4px',
-                  }}
-                />
-                <span className="text-xs text-white/30">{item.m}</span>
-              </div>
-            )
-          })}
-        </div>
-      </GlassCard>
-
-      {/* My badges */}
-      <GlassCard>
-        <h3 className="font-semibold text-white mb-3">Мои бейджи</h3>
-        {userBadges.length > 0 ? (
-          <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
-            {userBadges.map((b) => (
-              <div key={b.id} className="shrink-0 text-center w-16">
-                <span className="text-2xl">{b.emoji}</span>
-                <p className="text-xs text-white/50 mt-0.5 leading-tight truncate">{b.name}</p>
-              </div>
-            ))}
+      {/* XP Dynamics mini chart */}
+      <div>
+        <h3 className="ios-section-header mb-2 ml-1">XP по месяцам</h3>
+        <GlassCard>
+          <div className="flex items-end gap-3 h-20">
+            {[
+              { m: 'Янв', xp: 0 },
+              { m: 'Фев', xp: 0 },
+              { m: 'Мар', xp: 8 },
+              { m: 'Апр', xp: 20 },
+              { m: 'Май', xp: profile?.totalXp || 0 },
+            ].map((item, idx) => {
+              const maxVal = Math.max(...[0, 0, 8, 20, profile?.totalXp || 0])
+              const height = maxVal > 0 ? (item.xp / maxVal) * 100 : 0
+              return (
+                <div key={idx} className="flex-1 flex flex-col items-center gap-1.5">
+                  <div
+                    className="w-full rounded-lg transition-all duration-500"
+                    style={{
+                      height: `${Math.max(height, 5)}%`,
+                      background: 'linear-gradient(180deg, #2AABEE, #6C5CE7)',
+                      minHeight: '4px',
+                    }}
+                  />
+                  <span className="text-[10px] text-white/20 font-medium">{item.m}</span>
+                </div>
+              )
+            })}
           </div>
-        ) : (
-          <p className="text-sm text-white/30 text-center py-2">Пока нет бейджей</p>
-        )}
-      </GlassCard>
+        </GlassCard>
+      </div>
 
-      {/* Admin switch */}
+      {/* My badges — horizontal scroll */}
+      <div>
+        <h3 className="ios-section-header mb-2 ml-1">Мои бейджи</h3>
+        <GlassCard>
+          {userBadges.length > 0 ? (
+            <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1">
+              {userBadges.map((b) => (
+                <div key={b.id} className="shrink-0 text-center w-14">
+                  <span className="text-[24px]">{b.emoji}</span>
+                  <p className="text-[11px] text-white/35 mt-0.5 leading-tight truncate font-medium">{b.name}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-[14px] text-white/15 text-center py-2">Пока нет бейджей</p>
+          )}
+        </GlassCard>
+      </div>
+
+      {/* Admin switch & user switch */}
       <div className="pt-2 space-y-2">
         <button
           onClick={switchUser}
-          className="w-full py-2 text-xs text-white/30 hover:text-white/50 transition-colors"
+          className="w-full py-2.5 text-[13px] text-white/20 hover:text-white/35 transition-colors font-medium"
         >
           Переключить пользователя ({userId === 'u1' ? 'Иван' : 'Ольга'})
         </button>
         {isAdmin && (
           <button
             onClick={() => setShowAdmin(!showAdmin)}
-            className="w-full py-2 bg-red-500/10 text-red-400 text-sm font-medium rounded-xl hover:bg-red-500/20 transition-colors"
+            className="w-full py-2.5 bg-[#FF3B30]/8 text-[#FF3B30] text-[15px] font-semibold rounded-2xl hover:bg-[#FF3B30]/12 transition-colors"
           >
             {showAdmin ? 'Закрыть админ-панель' : 'Открыть админ-панель'}
           </button>
@@ -1075,66 +1195,86 @@ export default function Home() {
   )
 
   /* ============================================================
-     RENDER: ACHIEVEMENT DETAIL MODAL
+     RENDER: ACHIEVEMENT DETAIL MODAL (iOS bottom sheet)
      ============================================================ */
   const renderAchievementDetail = () => {
     if (!selectedAchievement) return null
     const a = selectedAchievement
+    const catCfg = CATEGORY_MAP[a.category] || CATEGORY_MAP.OTHER
     return (
       <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={() => setSelectedAchievement(null)}>
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
         <div
-          className="relative w-full max-w-lg glass-card rounded-t-3xl p-6 max-h-[80vh] overflow-y-auto"
+          className="relative w-full max-w-lg ios-sheet ios-sheet-up p-6 max-h-[80vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-4" />
-          <div className="flex items-start gap-3 mb-4">
+          <IosSheetHandle />
+
+          {/* Close button top-right */}
+          <button
+            onClick={() => setSelectedAchievement(null)}
+            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/8 flex items-center justify-center"
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M2 2L10 10M10 2L2 10" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          </button>
+
+          {/* Header */}
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-12 h-12 rounded-full bg-white/6 flex items-center justify-center text-[24px]">
+              {catCfg.emoji}
+            </div>
             <div className="flex-1">
-              <h3 className="text-lg font-bold text-white">{a.title}</h3>
+              <h3 className="text-[19px] font-bold text-white">{a.title}</h3>
               <div className="flex items-center gap-2 mt-1">
                 <StatusBadge status={a.status} />
                 <CategoryTag category={a.category} />
               </div>
             </div>
           </div>
+
           {a.description && (
-            <p className="text-sm text-white/60 mb-3">{a.description}</p>
+            <p className="text-[15px] text-white/45 mb-5 leading-relaxed">{a.description}</p>
           )}
-          <div className="space-y-2 mb-4">
+
+          {/* Detail rows */}
+          <div className="space-y-0 mb-5">
             {a.status === 'APPROVED' && (
-              <div className="flex justify-between text-sm">
-                <span className="text-white/40">Начислено XP</span>
-                <span className="text-emerald-400 font-bold">+{a.xpAwarded} XP</span>
+              <div className="flex justify-between py-3 border-b border-white/4 text-[15px]">
+                <span className="text-white/30">Начислено XP</span>
+                <span className="text-[#34C759] font-bold">+{a.xpAwarded} XP</span>
               </div>
             )}
             {a.status === 'PENDING' && (
-              <div className="flex justify-between text-sm">
-                <span className="text-white/40">Запрошено XP</span>
-                <span className="text-amber-400 font-bold">{a.xpRequested} XP</span>
+              <div className="flex justify-between py-3 border-b border-white/4 text-[15px]">
+                <span className="text-white/30">Запрошено XP</span>
+                <span className="text-[#FF9F0A] font-bold">{a.xpRequested} XP</span>
               </div>
             )}
             {a.achievementDate && (
-              <div className="flex justify-between text-sm">
-                <span className="text-white/40">Дата</span>
-                <span className="text-white/60">{new Date(a.achievementDate).toLocaleDateString('ru-RU')}</span>
+              <div className="flex justify-between py-3 border-b border-white/4 text-[15px]">
+                <span className="text-white/30">Дата</span>
+                <span className="text-white/50">{new Date(a.achievementDate).toLocaleDateString('ru-RU')}</span>
               </div>
             )}
             {a.comment && (
-              <div className="flex justify-between text-sm">
-                <span className="text-white/40">Комментарий</span>
-                <span className="text-white/60 text-right max-w-[200px]">{a.comment}</span>
+              <div className="flex justify-between py-3 border-b border-white/4 text-[15px]">
+                <span className="text-white/30">Комментарий</span>
+                <span className="text-white/50 text-right max-w-[200px]">{a.comment}</span>
               </div>
             )}
             {a.reviewComment && (
-              <div className="flex justify-between text-sm">
-                <span className="text-white/40">Отзыв</span>
-                <span className="text-white/60 text-right max-w-[200px]">{a.reviewComment}</span>
+              <div className="flex justify-between py-3 text-[15px]">
+                <span className="text-white/30">Отзыв</span>
+                <span className="text-white/50 text-right max-w-[200px]">{a.reviewComment}</span>
               </div>
             )}
           </div>
+
           <button
             onClick={() => setSelectedAchievement(null)}
-            className="w-full py-2 bg-white/5 text-white/60 text-sm font-medium rounded-xl hover:bg-white/10 transition-colors"
+            className="w-full py-3 bg-white/5 text-white/45 text-[15px] font-semibold rounded-2xl hover:bg-white/8 transition-colors"
           >
             Закрыть
           </button>
@@ -1144,60 +1284,58 @@ export default function Home() {
   }
 
   /* ============================================================
-     RENDER: ADMIN PANEL
+     RENDER: ADMIN PANEL (iOS bottom sheet)
      ============================================================ */
   const renderAdmin = () => (
     <div className="fixed inset-0 z-40 flex items-end justify-center" onClick={() => setShowAdmin(false)}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
       <div
-        className="relative w-full max-w-lg glass-card rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto"
+        className="relative w-full max-w-lg ios-sheet ios-sheet-up p-6 max-h-[85vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-4" />
-        <h3 className="text-lg font-bold text-white mb-4">Админ-панель</h3>
+        <IosSheetHandle />
+        <h3 className="text-[22px] font-bold text-white mb-5">Админ-панель</h3>
 
         {/* Stats */}
         {adminStats && (
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            <div className="bg-white/5 rounded-xl p-3 text-center">
-              <div className="text-2xl font-bold text-white">{String(adminStats.totalUsers || 0)}</div>
-              <div className="text-xs text-white/40">Пользователей</div>
-            </div>
-            <div className="bg-white/5 rounded-xl p-3 text-center">
-              <div className="text-2xl font-bold text-emerald-400">{String(adminStats.totalAchievements || 0)}</div>
-              <div className="text-xs text-white/40">Достижений</div>
-            </div>
+          <div className="grid grid-cols-2 gap-2.5 mb-5">
+            <GlassCard className="text-center py-3.5">
+              <div className="text-[24px] font-bold text-white">{String(adminStats.totalUsers || 0)}</div>
+              <div className="text-[12px] text-white/30 mt-0.5">Пользователей</div>
+            </GlassCard>
+            <GlassCard className="text-center py-3.5">
+              <div className="text-[24px] font-bold text-[#34C759]">{String(adminStats.totalAchievements || 0)}</div>
+              <div className="text-[12px] text-white/30 mt-0.5">Достижений</div>
+            </GlassCard>
           </div>
         )}
 
         {/* Pending achievements */}
-        <h4 className="text-sm font-semibold text-white mb-2">На проверке ({pendingAchievements.length})</h4>
+        <h4 className="ios-section-header mb-2">На проверке ({pendingAchievements.length})</h4>
         <div className="space-y-2">
           {pendingAchievements.map((a) => (
-            <div key={a.id} className="bg-white/5 rounded-xl p-3">
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-white">{a.title}</div>
-                  <div className="text-xs text-white/40 mt-0.5">{a.description}</div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <CategoryTag category={a.category} />
-                    <span className="text-xs text-amber-400">{a.xpRequested} XP</span>
-                  </div>
-                  <div className="text-xs text-white/30 mt-1">
-                    от {a.user?.name || 'Неизвестный'} · {a.achievementDate ? new Date(a.achievementDate).toLocaleDateString('ru-RU') : '—'}
-                  </div>
+            <div key={a.id} className="glass-card p-4">
+              <div className="flex-1 min-w-0 mb-3">
+                <div className="text-[15px] font-medium text-white">{a.title}</div>
+                <div className="text-[13px] text-white/30 mt-0.5">{a.description}</div>
+                <div className="flex items-center gap-2 mt-1.5">
+                  <CategoryTag category={a.category} />
+                  <span className="text-[12px] text-[#FF9F0A] font-semibold">{a.xpRequested} XP</span>
+                </div>
+                <div className="text-[12px] text-white/20 mt-1">
+                  от {a.user?.name || 'Неизвестный'} · {a.achievementDate ? new Date(a.achievementDate).toLocaleDateString('ru-RU') : '—'}
                 </div>
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => handleModerate(a.id, 'approve', a.xpRequested)}
-                  className="flex-1 py-2 bg-emerald-500/20 text-emerald-400 text-xs font-medium rounded-lg hover:bg-emerald-500/30 transition-colors"
+                  className="flex-1 py-2.5 bg-[#34C759]/12 text-[#34C759] text-[14px] font-semibold rounded-xl hover:bg-[#34C759]/20 transition-colors"
                 >
-                  Одобрить (+{a.xpRequested} XP)
+                  Одобрить
                 </button>
                 <button
                   onClick={() => handleModerate(a.id, 'reject', undefined, undefined, 'Отклонено')}
-                  className="flex-1 py-2 bg-red-500/20 text-red-400 text-xs font-medium rounded-lg hover:bg-red-500/30 transition-colors"
+                  className="flex-1 py-2.5 bg-[#FF3B30]/12 text-[#FF3B30] text-[14px] font-semibold rounded-xl hover:bg-[#FF3B30]/20 transition-colors"
                 >
                   Отклонить
                 </button>
@@ -1205,13 +1343,15 @@ export default function Home() {
             </div>
           ))}
           {pendingAchievements.length === 0 && (
-            <p className="text-sm text-white/30 text-center py-4">Нет достижений на проверке</p>
+            <div className="text-center py-6">
+              <p className="text-[14px] text-white/15">Нет достижений на проверке</p>
+            </div>
           )}
         </div>
 
         <button
           onClick={() => setShowAdmin(false)}
-          className="w-full py-2 mt-4 bg-white/5 text-white/60 text-sm font-medium rounded-xl hover:bg-white/10 transition-colors"
+          className="w-full py-3 mt-5 bg-white/5 text-white/40 text-[15px] font-semibold rounded-2xl hover:bg-white/8 transition-colors"
         >
           Закрыть
         </button>
@@ -1220,20 +1360,30 @@ export default function Home() {
   )
 
   /* ============================================================
-     RENDER: BOTTOM NAVIGATION
+     RENDER: BOTTOM NAVIGATION (Telegram iOS style)
      ============================================================ */
-  const TAB_CONFIG: { key: Tab; emoji: string; label: string }[] = [
-    { key: 'home', emoji: '🏠', label: 'Главная' },
-    { key: 'add', emoji: '➕', label: 'Добавить' },
-    { key: 'rating', emoji: '🏆', label: 'Рейтинг' },
-    { key: 'achievements', emoji: '🏅', label: 'Ачивки' },
-    { key: 'profile', emoji: '👤', label: 'Профиль' },
+  const TAB_CONFIG: { key: Tab; label: string }[] = [
+    { key: 'home', label: 'Главная' },
+    { key: 'achievements', label: 'Ачивки' },
+    { key: 'add', label: '' },
+    { key: 'rating', label: 'Рейтинг' },
+    { key: 'profile', label: 'Профиль' },
   ]
+
+  const renderTabIcon = (key: Tab, active: boolean) => {
+    switch (key) {
+      case 'home': return <IconHome active={active} />
+      case 'achievements': return <IconMedal active={active} />
+      case 'add': return <IconPlus />
+      case 'rating': return <IconTrophy active={active} />
+      case 'profile': return <IconUser active={active} />
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a1a] flex flex-col">
       {/* Main content */}
-      <main className="flex-1 overflow-y-auto pb-20">
+      <main className="flex-1 overflow-y-auto pb-24">
         {currentTab === 'home' && renderHome()}
         {currentTab === 'add' && renderAddAchievement()}
         {currentTab === 'rating' && renderRating()}
@@ -1241,24 +1391,34 @@ export default function Home() {
         {currentTab === 'profile' && renderProfile()}
       </main>
 
-      {/* Bottom Navigation */}
+      {/* Bottom Navigation — Telegram iOS style frosted glass */}
       <nav className="fixed bottom-0 left-0 right-0 z-30 safe-area-bottom">
         <div className="max-w-lg mx-auto">
-          <div className="glass-nav flex items-center justify-around px-2 py-1">
-            {TAB_CONFIG.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => { setCurrentTab(tab.key); if (tab.key !== 'profile') setShowAdmin(false) }}
-                className={`flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl transition-all ${
-                  currentTab === tab.key
-                    ? 'text-emerald-400 scale-105'
-                    : 'text-white/30 hover:text-white/50'
-                }`}
-              >
-                <span className="text-lg">{tab.emoji}</span>
-                <span className="text-[10px] font-medium">{tab.label}</span>
-              </button>
-            ))}
+          <div className="glass-nav flex items-end justify-around px-1 pt-1.5 pb-2">
+            {TAB_CONFIG.map((tab) => {
+              const isActive = currentTab === tab.key
+              const isAddButton = tab.key === 'add'
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => { setCurrentTab(tab.key); if (tab.key !== 'profile') setShowAdmin(false) }}
+                  className={`flex flex-col items-center gap-0.5 py-1 px-2 rounded-xl transition-all ${
+                    isAddButton ? '-mt-3' : ''
+                  }`}
+                >
+                  <div className={`${isAddButton ? '' : isActive ? 'scale-110' : ''} transition-transform duration-200`}>
+                    {renderTabIcon(tab.key, isActive)}
+                  </div>
+                  {!isAddButton && (
+                    <span className={`text-[10px] font-medium transition-colors ${
+                      isActive ? 'text-[#2AABEE]' : 'text-white/25'
+                    }`}>
+                      {tab.label}
+                    </span>
+                  )}
+                </button>
+              )
+            })}
           </div>
         </div>
       </nav>
