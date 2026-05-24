@@ -6,6 +6,7 @@ export async function GET() {
     // Clear existing data
     await db.challengeParticipant.deleteMany();
     await db.userBadge.deleteMany();
+    await db.achievementBadge.deleteMany();
     await db.achievement.deleteMany();
     await db.badge.deleteMany();
     await db.challenge.deleteMany();
@@ -13,29 +14,31 @@ export async function GET() {
     await db.faculty.deleteMany();
 
     // Create Faculties
-    const itFaculty = await db.faculty.create({ data: { name: 'IT', emoji: '💻', color: '#3B82F6' } });
-    const sportFaculty = await db.faculty.create({ data: { name: 'Спорт', emoji: '⚽', color: '#10B981' } });
-    const artFaculty = await db.faculty.create({ data: { name: 'Творчество', emoji: '🎨', color: '#F59E0B' } });
-    const scienceFaculty = await db.faculty.create({ data: { name: 'Наука', emoji: '🔬', color: '#8B5CF6' } });
-    const volFaculty = await db.faculty.create({ data: { name: 'Волонтёрство', emoji: '🤝', color: '#EF4444' } });
+    const itFaculty = await db.faculty.create({ data: { id: 'fac_it', name: 'IT', emoji: '💻', color: '#3B82F6' } });
+    const sportFaculty = await db.faculty.create({ data: { id: 'fac_sport', name: 'Спорт', emoji: '⚽', color: '#10B981' } });
+    const artFaculty = await db.faculty.create({ data: { id: 'fac_art', name: 'Творчество', emoji: '🎨', color: '#F59E0B' } });
+    const scienceFaculty = await db.faculty.create({ data: { id: 'fac_science', name: 'Наука', emoji: '🔬', color: '#8B5CF6' } });
+    const volFaculty = await db.faculty.create({ data: { id: 'fac_social', name: 'Общество', emoji: '🤝', color: '#EF4444' } });
 
     // Create Users
     const admin = await db.user.create({
       data: {
+        id: 'u7',
         telegramId: 'admin1',
-        name: 'Мария Петрова',
-        username: 'maria_admin',
+        name: 'Ольга Васильева',
+        username: 'olga_v',
         role: 'ADMIN',
-        facultyId: itFaculty.id,
-        totalXp: 1250,
-        level: 5,
-        statusEmoji: '👑',
-        statusText: 'Легенда',
+        facultyId: scienceFaculty.id,
+        totalXp: 0,
+        level: 7,
+        statusEmoji: '⭐',
+        statusPrefix: 'Воспитатель',
       },
     });
 
     const currentUser = await db.user.create({
       data: {
+        id: 'u1',
         telegramId: 'user1',
         name: 'Иван Иванов',
         username: 'ivan_i',
@@ -44,13 +47,29 @@ export async function GET() {
         totalXp: 320,
         level: 3,
         statusEmoji: '🔥',
-        statusText: 'Исследователь',
+        statusPrefix: 'Олимпиадник',
       },
     });
 
     const user2 = await db.user.create({
       data: {
+        id: 'u2',
         telegramId: 'user2',
+        name: 'Мария Петрова',
+        username: 'maria_p',
+        role: 'STUDENT',
+        facultyId: scienceFaculty.id,
+        totalXp: 1250,
+        level: 5,
+        statusEmoji: '🧠',
+        statusPrefix: 'Мастер своего дела',
+      },
+    });
+
+    const user3 = await db.user.create({
+      data: {
+        id: 'u3',
+        telegramId: 'user3',
         name: 'Алексей Сидоров',
         username: 'alex_s',
         role: 'STUDENT',
@@ -58,210 +77,179 @@ export async function GET() {
         totalXp: 980,
         level: 4,
         statusEmoji: '💪',
-        statusText: 'Мастер',
+        statusPrefix: 'Ботан',
       },
     });
 
-    const user3 = await db.user.create({
+    const user4 = await db.user.create({
       data: {
-        telegramId: 'user3',
+        id: 'u4',
+        telegramId: 'user4',
         name: 'Анна Козлова',
         username: 'anna_k',
         role: 'STUDENT',
         facultyId: artFaculty.id,
         totalXp: 280,
         level: 3,
-        statusEmoji: '✨',
-        statusText: 'Исследователь',
+        statusEmoji: '🎨',
+        statusPrefix: 'Олимпиадник',
       },
     });
 
-    const user4 = await db.user.create({
+    const user5 = await db.user.create({
       data: {
-        telegramId: 'user4',
+        id: 'u5',
+        telegramId: 'user5',
         name: 'Дмитрий Новиков',
         username: 'dima_n',
         role: 'STUDENT',
-        facultyId: scienceFaculty.id,
+        facultyId: itFaculty.id,
         totalXp: 210,
         level: 2,
-        statusEmoji: '🔬',
-        statusText: 'Ученик',
+        statusEmoji: '💻',
+        statusPrefix: 'Активный',
+      },
+    });
+
+    const user6 = await db.user.create({
+      data: {
+        id: 'u6',
+        telegramId: 'user6',
+        name: 'Елена Смирнова',
+        username: 'lena_s',
+        role: 'STUDENT',
+        facultyId: volFaculty.id,
+        totalXp: 450,
+        level: 3,
+        statusEmoji: '🤝',
+        statusPrefix: 'Олимпиадник',
       },
     });
 
     // Create Badges
-    const badge1 = await db.badge.create({ data: { name: 'Первое место', emoji: '🥇', description: 'Занять 1 место в рейтинге', conditionType: 'RANK_FIRST', conditionValue: 1 } });
-    const badge2 = await db.badge.create({ data: { name: 'Серебро', emoji: '🥈', description: 'Занять 2 место в рейтинге', conditionType: 'RANK_SECOND', conditionValue: 2 } });
-    const badge3 = await db.badge.create({ data: { name: 'Бронза', emoji: '🥉', description: 'Занять 3 место в рейтинге', conditionType: 'RANK_THIRD', conditionValue: 3 } });
-    const badge4 = await db.badge.create({ data: { name: 'Первый шаг', emoji: '🏅', description: 'Получить первое достижение', conditionType: 'FIRST_ACHIEVEMENT', conditionValue: 1 } });
-    const badge5 = await db.badge.create({ data: { name: 'Многорукий', emoji: '🤹', description: 'Достижения в 3+ категориях', conditionType: 'DIRECTION_BALANCE', conditionValue: 3 } });
-    const badge6 = await db.badge.create({ data: { name: 'Огонь', emoji: '🔥', description: '100+ XP за месяц', conditionType: 'XP_THRESHOLD', conditionValue: 100 } });
+    const badge1 = await db.badge.create({ data: { id: 'b1', name: 'Первый шаг', emoji: '🌱', description: 'Загрузить первое достижение', conditionType: 'FIRST_ACHIEVEMENT', conditionValue: 1 } });
+    const badge2 = await db.badge.create({ data: { id: 'b2', name: 'Лидер', emoji: '👑', description: '1 место в рейтинге', conditionType: 'RANK_FIRST', conditionValue: 1 } });
+    const badge3 = await db.badge.create({ data: { id: 'b3', name: 'Олимпийский резерв', emoji: '🧠', description: '500+ XP в Знании', conditionType: 'XP_THRESHOLD_KNOWLEDGE', conditionValue: 500 } });
+    const badge4 = await db.badge.create({ data: { id: 'b4', name: 'Железная воля', emoji: '💪', description: '300+ XP в Воле', conditionType: 'XP_THRESHOLD_WILL', conditionValue: 300 } });
+    const badge5 = await db.badge.create({ data: { id: 'b5', name: 'Многорукий', emoji: '🦑', description: 'Достижения в 4+ категориях', conditionType: 'MULTI_CATEGORY', conditionValue: 4 } });
+    const badge6 = await db.badge.create({ data: { id: 'b6', name: 'Наставник', emoji: '🤝', description: '100+ XP в Сообществе', conditionType: 'XP_THRESHOLD_COMMUNITY', conditionValue: 100 } });
 
-    // Give Иван badges: 🥉, 🏅, 🤹
+    // Give badges
     await db.userBadge.createMany({
       data: [
-        { userId: currentUser.id, badgeId: badge3.id },
-        { userId: currentUser.id, badgeId: badge4.id },
-        { userId: currentUser.id, badgeId: badge5.id },
+        { id: 'ub1', userId: currentUser.id, badgeId: badge1.id },
+        { id: 'ub2', userId: currentUser.id, badgeId: badge5.id },
+        { id: 'ub3', userId: currentUser.id, badgeId: badge6.id },
+        { id: 'ub4', userId: user2.id, badgeId: badge1.id },
+        { id: 'ub5', userId: user2.id, badgeId: badge2.id },
+        { id: 'ub6', userId: user2.id, badgeId: badge3.id },
+        { id: 'ub7', userId: user3.id, badgeId: badge1.id },
+        { id: 'ub8', userId: user3.id, badgeId: badge4.id },
+        { id: 'ub9', userId: user4.id, badgeId: badge1.id },
       ],
     });
 
-    // Create Achievements for Иван
+    // Create Achievements
     await db.achievement.createMany({
       data: [
         {
-          userId: currentUser.id,
-          title: 'Олимпиада по математике',
-          description: 'Участие в олимпиаде по математике',
-          category: 'Учёба',
-          direction: 'Знание',
-          xpAwarded: 15,
-          status: 'APPROVED',
-          achievementDate: '2025-04-15',
-          reviewedBy: admin.id,
-          reviewedAt: new Date('2025-04-16'),
+          id: 'a1', userId: currentUser.id, title: 'Олимпиада по математике', description: 'Занял 1 место в школьной олимпиаде',
+          category: 'STUDY', direction: 'KNOWLEDGE', achievementType: 'OLYMPIAD', achievementLevel: 'SCHOOL', placement: 1,
+          xpRequested: 2, xpAwarded: 2, status: 'APPROVED', achievementDate: '2026-05-15',
+          reviewedBy: admin.id, reviewedAt: new Date('2026-05-16'),
         },
         {
-          userId: currentUser.id,
-          title: 'Конкурс рисунков',
-          description: 'Участие в конкурсе рисунков',
-          category: 'Творчество',
-          direction: 'Навыки',
-          xpAwarded: 10,
-          status: 'PENDING',
-          achievementDate: '2025-05-10',
+          id: 'a2', userId: currentUser.id, title: 'Конкурс чтецов', description: 'Участие в районном конкурсе чтецов',
+          category: 'ART', direction: 'SKILLS', achievementType: 'CREATIVE', achievementLevel: 'DISTRICT', placement: 0,
+          xpRequested: 1, xpAwarded: 0, status: 'PENDING', achievementDate: '2026-05-10',
         },
         {
-          userId: currentUser.id,
-          title: 'Чтение 5 книг за месяц',
-          description: 'Прочитал 5 книг за месяц',
-          category: 'Учёба',
-          direction: 'Знание',
-          xpAwarded: 8,
-          status: 'REJECTED',
-          achievementDate: '2025-03-20',
-          reviewedBy: admin.id,
-          reviewComment: 'Не хватает подтверждения',
-          reviewedAt: new Date('2025-03-22'),
+          id: 'a3', userId: currentUser.id, title: 'Чтение 5 книг за месяц', description: 'Прочитал 5 книг за апрель',
+          category: 'OTHER', direction: 'KNOWLEDGE', achievementType: 'FREE_FORM',
+          xpRequested: 8, xpAwarded: 0, status: 'REJECTED', achievementDate: '2026-05-05',
+          reviewComment: 'Нужно указать названия книг', reviewedBy: admin.id, reviewedAt: new Date('2026-05-06'),
         },
         {
-          userId: currentUser.id,
-          title: 'Чемпионат по бегу',
-          description: 'Участие в чемпионате по бегу',
-          category: 'Спорт',
-          direction: 'Воля',
-          xpAwarded: 20,
-          status: 'APPROVED',
-          achievementDate: '2025-05-01',
-          reviewedBy: admin.id,
-          reviewedAt: new Date('2025-05-02'),
+          id: 'a4', userId: currentUser.id, title: 'Чемпионат по плаванию', description: '2 место в городских соревнованиях',
+          category: 'SPORT', direction: 'WILL', achievementType: 'SPORT', achievementLevel: 'CITY', placement: 2,
+          xpRequested: 6, xpAwarded: 6, status: 'APPROVED', achievementDate: '2026-05-01',
+          reviewedBy: admin.id, reviewedAt: new Date('2026-05-02'),
         },
         {
-          userId: currentUser.id,
-          title: 'Волонтёр в приюте',
-          description: 'Работал волонтёром в приюте для животных',
-          category: 'Общество',
-          direction: 'Сообщество',
-          xpAwarded: 12,
-          status: 'APPROVED',
-          achievementDate: '2025-05-05',
-          reviewedBy: admin.id,
-          reviewedAt: new Date('2025-05-06'),
+          id: 'a5', userId: currentUser.id, title: 'Волонтёр в приюте', description: 'Помогал в приюте для животных',
+          category: 'COMMUNITY', direction: 'COMMUNITY', achievementType: 'FREE_FORM',
+          xpRequested: 10, xpAwarded: 10, status: 'APPROVED', achievementDate: '2026-04-28',
+          reviewedBy: admin.id, reviewedAt: new Date('2026-04-29'),
         },
         {
-          userId: currentUser.id,
-          title: 'Помощь первоклассникам',
-          description: 'Помогал первоклассникам с адаптацией',
-          category: 'Общество',
-          direction: 'Нравственность',
-          xpAwarded: 5,
-          status: 'APPROVED',
-          achievementDate: '2025-04-28',
-          reviewedBy: admin.id,
-          reviewedAt: new Date('2025-04-29'),
+          id: 'a6', userId: currentUser.id, title: 'ВСОШ по информатике', description: 'Участник регионального этапа ВСОШ',
+          category: 'STUDY', direction: 'KNOWLEDGE', achievementType: 'OLYMPIAD', achievementLevel: 'REGIONAL', placement: 0,
+          xpRequested: 4, xpAwarded: 4, status: 'APPROVED', achievementDate: '2026-04-20',
+          reviewedBy: admin.id, reviewedAt: new Date('2026-04-21'),
+        },
+        {
+          id: 'a7', userId: user2.id, title: 'Победитель ВСОШ по физике', description: '1 место на Всероссийской олимпиаде',
+          category: 'STUDY', direction: 'KNOWLEDGE', achievementType: 'OLYMPIAD', achievementLevel: 'ALL_RUSSIAN', placement: 1,
+          xpRequested: 20, xpAwarded: 20, status: 'APPROVED', achievementDate: '2026-04-15',
+          reviewedBy: admin.id, reviewedAt: new Date('2026-04-16'),
+        },
+        {
+          id: 'a8', userId: user3.id, title: 'Чемпионат по лёгкой атлетике', description: '1 место в региональных соревнованиях',
+          category: 'SPORT', direction: 'WILL', achievementType: 'SPORT', achievementLevel: 'REGIONAL', placement: 1,
+          xpRequested: 12, xpAwarded: 12, status: 'APPROVED', achievementDate: '2026-05-10',
+          reviewedBy: admin.id, reviewedAt: new Date('2026-05-11'),
+        },
+        {
+          id: 'a9', userId: user4.id, title: 'Фестиваль танца', description: '3 место в городском фестивале',
+          category: 'ART', direction: 'SKILLS', achievementType: 'CREATIVE', achievementLevel: 'CITY', placement: 3,
+          xpRequested: 4, xpAwarded: 4, status: 'APPROVED', achievementDate: '2026-05-05',
+          reviewedBy: admin.id, reviewedAt: new Date('2026-05-06'),
+        },
+        {
+          id: 'a10', userId: user5.id, title: 'Хакатон Code Battle', description: '2 место на хакатоне среди школьников',
+          category: 'STUDY', direction: 'SKILLS', achievementType: 'OLYMPIAD', achievementLevel: 'CITY', placement: 2,
+          xpRequested: 6, xpAwarded: 6, status: 'APPROVED', achievementDate: '2026-05-12',
+          reviewedBy: admin.id, reviewedAt: new Date('2026-05-13'),
+        },
+        {
+          id: 'a11', userId: user6.id, title: 'Благотворительный концерт', description: 'Организовала концерт для сбора средств',
+          category: 'COMMUNITY', direction: 'MORALITY', achievementType: 'FREE_FORM',
+          xpRequested: 14, xpAwarded: 0, status: 'PENDING', achievementDate: '2026-05-20',
+        },
+        {
+          id: 'a12', userId: user5.id, title: 'Проект "Эко-монитор"', description: 'Разработал прототип мониторинга экологии',
+          category: 'OTHER', direction: 'SKILLS', achievementType: 'FREE_FORM',
+          xpRequested: 18, xpAwarded: 0, status: 'PENDING', achievementDate: '2026-05-22',
         },
       ],
     });
 
     // Create Challenges
-    const challenge1 = await db.challenge.create({
-      data: {
-        title: 'Майский марафон',
-        description: 'Наберите 50 XP за май! Выполняйте любые достижения и получайте награду.',
-        direction: 'Все',
-        xpTarget: 50,
-        rewardXp: 20,
-        startDate: new Date('2025-05-01'),
-        endDate: new Date('2025-05-31'),
-        isActive: true,
-      },
-    });
-
-    const challenge2 = await db.challenge.create({
-      data: {
-        title: 'Всестороннее развитие',
-        description: 'Наберите 30 XP в разных направлениях для всестороннего развития.',
-        direction: 'Все',
-        xpTarget: 30,
-        rewardXp: 15,
-        startDate: new Date('2025-05-15'),
-        endDate: new Date('2025-06-30'),
-        isActive: true,
-      },
-    });
-
-    const challenge3 = await db.challenge.create({
-      data: {
-        title: 'Командный дух',
-        description: 'Наберите 100 XP в направлении Сообщество вместе с командой!',
-        direction: 'Сообщество',
-        xpTarget: 100,
-        rewardXp: 50,
-        startDate: new Date('2025-05-01'),
-        endDate: new Date('2025-06-15'),
-        isActive: true,
-      },
-    });
-
-    // Иван participates in all 3 challenges
-    await db.challengeParticipant.createMany({
+    await db.challenge.createMany({
       data: [
-        { userId: currentUser.id, challengeId: challenge1.id, xpCollected: 35 },
-        { userId: currentUser.id, challengeId: challenge2.id, xpCollected: 28 },
-        { userId: currentUser.id, challengeId: challenge3.id, xpCollected: 17 },
+        {
+          id: 'ch1', title: 'Майский марафон', description: 'Собери 50 XP за май! Все направления засчитываются.',
+          direction: 'ALL', xpTarget: 50, rewardXp: 20, startDate: new Date('2026-05-01'), endDate: new Date('2026-05-31'), isActive: true,
+        },
+        {
+          id: 'ch2', title: 'Всестороннее развитие', description: 'Получи XP минимум в 4 направлениях за месяц',
+          direction: 'ALL', xpTarget: 40, rewardXp: 30, startDate: new Date('2026-05-01'), endDate: new Date('2026-05-31'), isActive: true,
+        },
+        {
+          id: 'ch3', title: 'Командный дух', description: 'Факультет суммарно набирает 2000 XP',
+          direction: 'ALL', xpTarget: 2000, rewardXp: 50, startDate: new Date('2026-05-01'), endDate: new Date('2026-06-01'), isActive: true,
+        },
       ],
     });
 
-    // Give some achievements to other users for leaderboard richness
-    await db.achievement.create({
-      data: {
-        userId: user2.id,
-        title: 'Марафон',
-        description: 'Пробежал марафон',
-        category: 'Спорт',
-        direction: 'Воля',
-        xpAwarded: 20,
-        status: 'APPROVED',
-        achievementDate: '2025-05-10',
-        reviewedBy: admin.id,
-        reviewedAt: new Date('2025-05-11'),
-      },
-    });
-
-    await db.achievement.create({
-      data: {
-        userId: user3.id,
-        title: 'Выставка картин',
-        description: 'Участвовал в выставке',
-        category: 'Творчество',
-        direction: 'Навыки',
-        xpAwarded: 15,
-        status: 'APPROVED',
-        achievementDate: '2025-05-08',
-        reviewedBy: admin.id,
-        reviewedAt: new Date('2025-05-09'),
-      },
+    // Challenge participants
+    await db.challengeParticipant.createMany({
+      data: [
+        { id: 'cp1', userId: currentUser.id, challengeId: 'ch1', xpCollected: 22 },
+        { id: 'cp2', userId: currentUser.id, challengeId: 'ch2', xpCollected: 15 },
+        { id: 'cp3', userId: user2.id, challengeId: 'ch1', xpCollected: 50, completed: true, completedAt: new Date('2026-05-20') },
+        { id: 'cp4', userId: user3.id, challengeId: 'ch1', xpCollected: 12 },
+      ],
     });
 
     return NextResponse.json({ success: true, message: 'Seeded!' });

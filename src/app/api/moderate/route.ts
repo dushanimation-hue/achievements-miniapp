@@ -35,7 +35,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     if (action === 'approve') {
-      const awardedXp = xpAwarded || achievement.xpRequested;
+      const awardedXp = xpAwarded ?? achievement.xpRequested;
 
       const updated = await db.achievement.update({
         where: { id: achievementId },

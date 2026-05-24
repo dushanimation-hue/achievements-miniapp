@@ -47,6 +47,9 @@ model Achievement {
   description    String?
   category       String
   direction      String?
+  achievementType  String?  @default("SPORT")   // SPORT, CREATIVE, OLYMPIAD, FREE_FORM
+  achievementLevel String?  @default("SCHOOL")  // SCHOOL, DISTRICT, CITY, REGIONAL, ALL_RUSSIAN, INTERNATIONAL
+  placement      Int?     @default(1)         // 1=1st, 2=2nd, 3=3rd, 0=participant
   xpRequested    Int
   xpAwarded      Int      @default(0)
   status         String   @default("PENDING")
