@@ -3,15 +3,11 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    const direction = request.nextUrl.searchParams.get('direction');
-    const facultyId = request.nextUrl.searchParams.get('facultyId');
     const period = request.nextUrl.searchParams.get('period') || 'all';
     const leagueFilter = request.nextUrl.searchParams.get('league');
+    const direction = request.nextUrl.searchParams.get('direction');
 
     const where: Record<string, unknown> = {};
-    if (facultyId && facultyId !== 'all') {
-      where.facultyId = facultyId;
-    }
     if (leagueFilter && leagueFilter !== 'all') {
       where.league = leagueFilter;
     }
@@ -40,7 +36,6 @@ export async function GET(request: NextRequest) {
     const users = await db.user.findMany({
       where,
       include: {
-        faculty: true,
         achievements: {
           where: achievementWhere,
         },
@@ -48,9 +43,10 @@ export async function GET(request: NextRequest) {
       orderBy: { totalXp: 'desc' },
     });
 
-    const leaderboard = users.map((u) => {
-      const periodXp = u.achievements.reduce((sum, a) => sum + a.xpAwarded, 0);
+    const leaderboard = users.map((u, idx) => {
+      const periodXp = u.achievements.reduce((sum: number, a: { xpAwarded: number }) => sum + a.xpAwarded, 0);
       return {
+        rank: idx + 1,
         id: u.id,
         name: u.name,
         username: u.username,
@@ -59,7 +55,6 @@ export async function GET(request: NextRequest) {
         statusEmoji: u.statusEmoji,
         statusPrefix: u.statusPrefix,
         league: u.league,
-        faculty: u.faculty,
         achievementCount: u.achievements.length,
       };
     });

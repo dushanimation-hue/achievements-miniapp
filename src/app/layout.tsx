@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "Достижения — Платформа достижений лицея",
@@ -26,6 +27,10 @@ export default function RootLayout({
       <body className="antialiased bg-[#08080f] text-foreground">
         {children}
         <Toaster theme="dark" />
+        <Script
+          src="https://telegram.org/js/telegram-web-app.js"
+          strategy="beforeInteractive"
+        />
       </body>
     </html>
   );

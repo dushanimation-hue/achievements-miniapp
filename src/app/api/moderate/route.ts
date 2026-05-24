@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
       where: { status: status.toUpperCase() },
       orderBy: { createdAt: 'desc' },
       include: {
-        user: { select: { id: true, name: true, username: true, faculty: true, statusEmoji: true } },
+        user: { select: { id: true, name: true, username: true, statusEmoji: true } },
       },
     });
 
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
-    const { achievementId, action, xpAwarded, direction, reviewComment, adminUserId } = body;
+    const { achievementId, action, xpAwarded, direction, reviewComment, adminUserId, directions } = body;
 
     if (!achievementId || !action || !adminUserId) {
       return NextResponse.json({ error: 'achievementId, action, adminUserId required' }, { status: 400 });
@@ -36,13 +36,15 @@ export async function PATCH(request: NextRequest) {
 
     if (action === 'approve') {
       const awardedXp = xpAwarded ?? achievement.xpRequested;
+      // Support multiple directions (comma-separated) or single direction
+      const finalDirection = direction || directions || achievement.direction;
 
       const updated = await db.achievement.update({
         where: { id: achievementId },
         data: {
           status: 'APPROVED',
           xpAwarded: awardedXp,
-          direction: direction || achievement.direction,
+          direction: finalDirection,
           reviewComment: reviewComment || null,
           reviewedBy: adminUserId,
           reviewedAt: new Date(),
@@ -56,11 +58,16 @@ export async function PATCH(request: NextRequest) {
 
       return NextResponse.json({ achievement: updated });
     } else if (action === 'reject') {
+      // Require rejection reason
+      if (!reviewComment || reviewComment.trim() === '') {
+        return NextResponse.json({ error: 'Причина отклонения обязательна' }, { status: 400 });
+      }
+
       const updated = await db.achievement.update({
         where: { id: achievementId },
         data: {
           status: 'REJECTED',
-          reviewComment: reviewComment || 'Отклонено модератором',
+          reviewComment: reviewComment.trim(),
           reviewedBy: adminUserId,
           reviewedAt: new Date(),
         },

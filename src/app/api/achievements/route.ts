@@ -11,7 +11,7 @@ const LEVEL_XP_BASE: Record<string, number> = {
   INTERNATIONAL: 25,
 };
 
-// Placement multiplier: 1st=100%, 2nd=80%, 3rd=60%, participant=30%
+// Placement multiplier
 const PLACEMENT_MULTIPLIER: Record<number, number> = {
   1: 1.0,
   2: 0.8,
@@ -19,8 +19,23 @@ const PLACEMENT_MULTIPLIER: Record<number, number> = {
   0: 0.3,
 };
 
-function calculateXp(level: string, placement: number): number {
+// Result status multiplier
+const RESULT_STATUS_MULTIPLIER: Record<string, number> = {
+  PARTICIPANT: 0.3,
+  PRIZEWINNER: 0.6,
+  WINNER: 0.8,
+  ABSOLUTE_WINNER: 1.0,
+  LAUREATE_1: 0.9,
+  LAUREATE_2: 0.7,
+  LAUREATE_3: 0.5,
+};
+
+function calculateXp(level: string, resultType: string, placement: number, resultStatus: string): number {
   const base = LEVEL_XP_BASE[level] || 2;
+  if (resultType === 'STATUS' && resultStatus) {
+    const multiplier = RESULT_STATUS_MULTIPLIER[resultStatus] ?? 0.3;
+    return Math.max(1, Math.round(base * multiplier));
+  }
   const multiplier = PLACEMENT_MULTIPLIER[placement] ?? 0.3;
   return Math.max(1, Math.round(base * multiplier));
 }
@@ -67,8 +82,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       userId, title, description, category, direction,
-      achievementType, achievementLevel, placement,
-      xpRequested, achievementDate, comment
+      achievementType, achievementLevel, resultType, placement, resultStatus,
+      xpRequested, achievementDate, comment, fileUrl
     } = body;
 
     if (!userId || !title || !achievementType) {
@@ -103,12 +118,14 @@ export async function POST(request: NextRequest) {
 
     // Calculate XP automatically for non-free-form types
     let finalXpRequested: number;
+    const finalResultType = resultType || 'PLACEMENT';
     if (achievementType === 'FREE_FORM') {
       finalXpRequested = xpRequested || 5;
     } else {
       const level = achievementLevel || 'SCHOOL';
       const place = placement ?? 1;
-      finalXpRequested = calculateXp(level, place);
+      const status = resultStatus || '';
+      finalXpRequested = calculateXp(level, finalResultType, place, status);
     }
 
     const achievement = await db.achievement.create({
@@ -120,10 +137,13 @@ export async function POST(request: NextRequest) {
         direction: finalDirection,
         achievementType,
         achievementLevel: achievementLevel || null,
-        placement: placement ?? null,
+        resultType: achievementType !== 'FREE_FORM' ? finalResultType : null,
+        placement: achievementType !== 'FREE_FORM' ? (placement ?? null) : null,
+        resultStatus: achievementType !== 'FREE_FORM' && finalResultType === 'STATUS' ? (resultStatus || null) : null,
         xpRequested: finalXpRequested,
         xpAwarded: 0,
         status: 'PENDING',
+        fileUrl: fileUrl || null,
         achievementDate: achievementDate || null,
         comment: comment || null,
       },

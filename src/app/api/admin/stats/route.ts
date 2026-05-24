@@ -17,12 +17,6 @@ export async function GET() {
     const activeChallenges = await db.challenge.count({ where: { isActive: true } });
     const totalParticipants = await db.challengeParticipant.count();
 
-    const faculties = await db.faculty.findMany({
-      include: {
-        _count: { select: { users: true } },
-      },
-    });
-
     return NextResponse.json({
       users: { total: totalUsers, students: studentCount, admins: adminCount },
       achievements: {
@@ -33,12 +27,6 @@ export async function GET() {
       },
       badges: { total: totalBadges, awarded: totalUserBadges },
       challenges: { active: activeChallenges, participants: totalParticipants },
-      faculties: faculties.map((f) => ({
-        id: f.id,
-        name: f.name,
-        emoji: f.emoji,
-        userCount: f._count.users,
-      })),
     });
   } catch (error) {
     console.error('Stats error:', error);

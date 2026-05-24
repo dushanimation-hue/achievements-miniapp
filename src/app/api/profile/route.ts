@@ -28,7 +28,6 @@ export async function GET(request: NextRequest) {
     const user = await db.user.findUnique({
       where: { id: userId },
       include: {
-        faculty: true,
         achievements: {
           orderBy: { createdAt: 'desc' },
           include: {
@@ -69,8 +68,8 @@ export async function GET(request: NextRequest) {
     user.achievements
       .filter((a) => a.status === 'APPROVED' && a.direction)
       .forEach((a) => {
-        const dirName = directionMap[a.direction] || a.direction;
-        if (dirName in xpByDirection) {
+        const dirName = a.direction ? (directionMap[a.direction] || a.direction) : null;
+        if (dirName && dirName in xpByDirection) {
           xpByDirection[dirName] += a.xpAwarded;
         }
       });
@@ -83,10 +82,13 @@ export async function GET(request: NextRequest) {
       direction: a.direction,
       achievementType: a.achievementType,
       achievementLevel: a.achievementLevel,
+      resultType: a.resultType,
       placement: a.placement,
+      resultStatus: a.resultStatus,
       xpRequested: a.xpRequested,
       xpAwarded: a.xpAwarded,
       status: a.status,
+      fileUrl: a.fileUrl,
       achievementDate: a.achievementDate,
       comment: a.comment,
       reviewComment: a.reviewComment,
@@ -113,7 +115,6 @@ export async function GET(request: NextRequest) {
         statusEmoji: user.statusEmoji,
         statusPrefix: user.statusPrefix,
         league: user.league,
-        faculty: user.faculty,
       },
       achievementCounts,
       xpByDirection,

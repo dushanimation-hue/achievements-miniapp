@@ -16,8 +16,6 @@ model User {
   username     String?
   avatarUrl    String?
   role         String   @default("STUDENT")
-  facultyId    String?
-  faculty      Faculty? @relation(fields: [facultyId], references: [id])
   totalXp      Int      @default(0)
   level        Int      @default(1)
   league       String   @default("bronze")
@@ -32,16 +30,6 @@ model User {
   reviewedAchievements  Achievement[] @relation("ReviewedAchievements")
 }
 
-model Faculty {
-  id        String @id @default(cuid())
-  name      String
-  emoji     String
-  color     String
-  users     User[]
-
-  @@map("faculties")
-}
-
 model Achievement {
   id             String   @id @default(cuid())
   userId         String
@@ -52,7 +40,9 @@ model Achievement {
   direction      String?
   achievementType  String?  @default("SPORT")
   achievementLevel String?  @default("SCHOOL")
+  resultType     String?  @default("PLACEMENT")
   placement      Int?     @default(1)
+  resultStatus   String?
   xpRequested    Int
   xpAwarded      Int      @default(0)
   status         String   @default("PENDING")

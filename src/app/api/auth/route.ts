@@ -11,7 +11,6 @@ export async function POST(request: NextRequest) {
 
     const user = await db.user.findFirst({
       where: { login },
-      include: { faculty: true },
     });
 
     if (!user || user.password !== password) {
@@ -24,7 +23,7 @@ export async function POST(request: NextRequest) {
         name: user.name,
         login: user.login,
         role: user.role,
-        faculty: user.faculty,
+        faculty: null,
       },
     });
   } catch (error) {

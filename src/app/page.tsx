@@ -1,40 +1,41 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { toast } from 'sonner'
 
 /* ============================================================
    TYPES
    ============================================================ */
 
-interface Faculty { id: string; name: string; emoji: string; color: string }
 interface UserProfile {
   id: string; name: string; username: string | null; role: string;
   totalXp: number; level: number; levelName: string; xpInLevel: number;
   xpToNextLevel: number; nextLevelXp: number | null; nextLevelName: string | null;
-  statusEmoji: string; statusPrefix: string; faculty: Faculty | null;
+  statusEmoji: string; statusPrefix: string; faculty: null;
   league: string;
 }
 interface Achievement {
   id: string; title: string; description: string | null; category: string;
   direction: string | null; achievementType: string | null;
-  achievementLevel: string | null; placement: number | null;
+  achievementLevel: string | null; resultType: string | null;
+  placement: number | null; resultStatus: string | null;
   xpRequested: number; xpAwarded: number;
-  status: string; achievementDate: string | null; comment: string | null;
+  status: string; fileUrl: string | null;
+  achievementDate: string | null; comment: string | null;
   reviewComment: string | null; reviewedBy: string | null; reviewedAt: string | null;
   createdAt: string;
-  user?: { id: string; name: string; username: string | null; statusEmoji: string; faculty?: Faculty | null }
+  user?: { id: string; name: string; username: string | null; statusEmoji: string }
 }
 interface LeaderboardEntry {
   rank: number; id: string; name: string; username: string | null;
   totalXp: number; level: number; statusEmoji: string; statusPrefix: string;
-  faculty: Faculty | null; achievementCount: number; league: string;
+  faculty: null; achievementCount: number; league: string;
 }
 interface LevelInfo { level: number; name: string; min: number; max: number }
-interface AuthUser { id: string; name: string; login: string; role: string; faculty: Faculty | null }
+interface AuthUser { id: string; name: string; login: string; role: string; faculty: null }
 
 /* ============================================================
-   CONSTANTS — Updated thresholds
+   CONSTANTS
    ============================================================ */
 
 const LEVELS: LevelInfo[] = [
@@ -80,12 +81,22 @@ const PLACEMENTS: Record<number, { label: string; multiplier: number }> = {
   0: { label: 'Участник', multiplier: 0.3 },
 }
 
-const DIRECTIONS: Record<string, { label: string }> = {
-  KNOWLEDGE: { label: 'Знание' },
-  WILL: { label: 'Воля' },
-  SKILLS: { label: 'Навыки' },
-  COMMUNITY: { label: 'Сообщество' },
-  MORALITY: { label: 'Нравственность' },
+const RESULT_STATUSES: Record<string, { label: string; multiplier: number }> = {
+  PARTICIPANT: { label: 'Участник', multiplier: 0.3 },
+  PRIZEWINNER: { label: 'Призёр', multiplier: 0.6 },
+  WINNER: { label: 'Победитель', multiplier: 0.8 },
+  ABSOLUTE_WINNER: { label: 'Абсолютный победитель', multiplier: 1.0 },
+  LAUREATE_1: { label: 'Лауреат 1 степени', multiplier: 0.9 },
+  LAUREATE_2: { label: 'Лауреат 2 степени', multiplier: 0.7 },
+  LAUREATE_3: { label: 'Лауреат 3 степени', multiplier: 0.5 },
+}
+
+const DIRECTIONS: Record<string, { label: string; color: string }> = {
+  KNOWLEDGE: { label: 'Знание', color: '#007AFF' },
+  WILL: { label: 'Воля', color: '#FF9F0A' },
+  SKILLS: { label: 'Навыки', color: '#5856D6' },
+  COMMUNITY: { label: 'Сообщество', color: '#34C759' },
+  MORALITY: { label: 'Нравственность', color: '#AF52DE' },
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; dotColor: string }> = {
@@ -94,15 +105,33 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; dotColor: st
   REJECTED: { label: 'Отклонено', color: 'text-[#FF3B30]', dotColor: 'bg-[#FF3B30]' },
 }
 
-type Tab = 'home' | 'achievements' | 'rating' | 'profile'
+type Tab = 'home' | 'achievements' | 'milestones' | 'rating' | 'profile'
 type AchievementType = 'SPORT' | 'CREATIVE' | 'OLYMPIAD' | 'FREE_FORM' | ''
 type AchievementLevel = 'SCHOOL' | 'DISTRICT' | 'CITY' | 'REGIONAL' | 'ALL_RUSSIAN' | 'INTERNATIONAL' | ''
+type ResultTypeMode = 'PLACEMENT' | 'STATUS'
 
-function calculateAutoXp(level: AchievementLevel, placement: number): number {
+function getMultiplier(resultType: string | null, placement: number | null, resultStatus: string | null): number {
+  if (resultType === 'STATUS' && resultStatus) {
+    return RESULT_STATUSES[resultStatus]?.multiplier ?? 0.3
+  }
+  return PLACEMENTS[placement ?? 0]?.multiplier ?? 0.3
+}
+
+function calculateAutoXp(level: AchievementLevel, resultType: ResultTypeMode, placement: number, resultStatus: string): number {
   if (!level) return 1
   const base = ACHIEVEMENT_LEVELS[level]?.baseXp || 2
-  const mult = PLACEMENTS[placement]?.multiplier ?? 0.3
+  const mult = getMultiplier(resultType, placement, resultStatus)
   return Math.max(1, Math.round(base * mult))
+}
+
+function getResultLabel(a: Achievement): string {
+  if (a.resultType === 'STATUS' && a.resultStatus) {
+    return RESULT_STATUSES[a.resultStatus]?.label || a.resultStatus
+  }
+  if (a.placement !== null && a.placement !== undefined) {
+    return PLACEMENTS[a.placement]?.label || `${a.placement} место`
+  }
+  return ''
 }
 
 /* ============================================================
@@ -129,6 +158,20 @@ function IconAchievements({ active }: { active: boolean }) {
         strokeLinecap="round" strokeLinejoin="round" />
       <circle cx="12" cy="14" r="2.5" stroke={active ? '#007AFF' : 'currentColor'} strokeWidth={active ? 1.5 : 1}
         fill={active ? 'rgba(0,122,255,0.2)' : 'none'} />
+    </svg>
+  )
+}
+
+function IconMilestones({ active }: { active: boolean }) {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <path d="M4 20H20" stroke={active ? '#007AFF' : 'currentColor'} strokeWidth={active ? 2 : 1.5} strokeLinecap="round" />
+      <path d="M7 20V14" stroke={active ? '#007AFF' : 'currentColor'} strokeWidth={active ? 2 : 1.5} strokeLinecap="round" />
+      <path d="M12 20V10" stroke={active ? '#007AFF' : 'currentColor'} strokeWidth={active ? 2 : 1.5} strokeLinecap="round" />
+      <path d="M17 20V6" stroke={active ? '#007AFF' : 'currentColor'} strokeWidth={active ? 2 : 1.5} strokeLinecap="round" />
+      <circle cx="7" cy="13" r="1.5" fill={active ? '#007AFF' : 'currentColor'} />
+      <circle cx="12" cy="9" r="1.5" fill={active ? '#007AFF' : 'currentColor'} />
+      <circle cx="17" cy="5" r="1.5" fill={active ? '#007AFF' : 'currentColor'} />
     </svg>
   )
 }
@@ -257,6 +300,25 @@ function IconCrown() {
   )
 }
 
+function IconCamera() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <path d="M23 19C23 19.5304 22.7893 20.0391 22.4142 20.4142C22.0391 20.7893 21.5304 21 21 21H3C2.46957 21 1.96086 20.7893 1.58579 20.4142C1.21071 20.0391 1 19.5304 1 19V8C1 7.46957 1.21071 6.96086 1.58579 6.58579C1.96086 6.21071 2.46957 6 3 6H7L9 3H15L17 6H21C21.5304 6 22.0391 6.21071 22.4142 6.58579C22.7893 6.96086 23 7.46957 23 8V19Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="12" cy="13" r="4" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  )
+}
+
+function IconImage() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M6 16L9 13L12 16L16 11L21 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 function AchievementTypeIcon({ type }: { type: string | null }) {
   switch (type) {
     case 'SPORT': return <IconSport />
@@ -280,13 +342,13 @@ function GlassCard({ children, className = '', elevated = false, pro = false }: 
   )
 }
 
-function XpProgressBar({ current, max, className = '' }: { current: number; max: number; className?: string }) {
+function XpProgressBar({ current, max, className = '', gradient = 'linear-gradient(90deg, #007AFF, #5856D6)' }: { current: number; max: number; className?: string; gradient?: string }) {
   const pct = max > 0 ? Math.min((current / max) * 100, 100) : 0
   return (
     <div className={`w-full bg-white/6 rounded-full h-1.5 overflow-hidden ${className}`}>
       <div
         className="h-full rounded-full transition-all duration-700 ease-out"
-        style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #007AFF, #5856D6)' }}
+        style={{ width: `${pct}%`, background: gradient }}
       />
     </div>
   )
@@ -329,7 +391,7 @@ function getAvatarColor(name: string): string {
 }
 
 /* ============================================================
-   LOGIN SCREEN
+   LOGIN SCREEN — Only shown in browser mode (no Telegram)
    ============================================================ */
 
 function LoginScreen({ onLogin }: { onLogin: (user: AuthUser) => void }) {
@@ -359,13 +421,11 @@ function LoginScreen({ onLogin }: { onLogin: (user: AuthUser) => void }) {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-5 relative overflow-hidden">
-      {/* Background orbs for glassmorphism */}
       <div className="bg-orb bg-orb-1" />
       <div className="bg-orb bg-orb-2" />
       <div className="bg-orb bg-orb-3" />
 
       <div className="glass-login p-8 w-full max-w-sm relative z-10">
-        {/* Logo area */}
         <div className="text-center mb-8">
           <div className="w-14 h-14 rounded-2xl bg-[#007AFF]/10 border border-[#007AFF]/20 flex items-center justify-center mx-auto mb-4">
             <IconShield />
@@ -374,7 +434,6 @@ function LoginScreen({ onLogin }: { onLogin: (user: AuthUser) => void }) {
           <p className="text-[14px] text-white/30 mt-1.5">Платформа лицея</p>
         </div>
 
-        {/* Form */}
         <div className="space-y-3.5">
           <div>
             <label className="text-[12px] font-medium text-white/30 mb-1.5 block uppercase tracking-wider">Логин</label>
@@ -398,7 +457,6 @@ function LoginScreen({ onLogin }: { onLogin: (user: AuthUser) => void }) {
           </button>
         </div>
 
-        {/* Demo credentials */}
         <div className="mt-6 pt-5 border-t border-white/6">
           <p className="text-[11px] text-white/20 text-center uppercase tracking-wider mb-3">Демо-доступ</p>
           <div className="grid grid-cols-2 gap-2">
@@ -426,6 +484,7 @@ function LoginScreen({ onLogin }: { onLogin: (user: AuthUser) => void }) {
 export default function Home() {
   const [authUser, setAuthUser] = useState<AuthUser | null>(null)
   const [authChecked, setAuthChecked] = useState(false)
+  const [isTelegram, setIsTelegram] = useState(false)
   const [currentTab, setCurrentTab] = useState<Tab>('home')
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [recentAchievements, setRecentAchievements] = useState<Achievement[]>([])
@@ -440,10 +499,15 @@ export default function Home() {
   const [formTitle, setFormTitle] = useState('')
   const [formDesc, setFormDesc] = useState('')
   const [formLevel, setFormLevel] = useState<AchievementLevel>('')
+  const [formResultType, setFormResultType] = useState<ResultTypeMode>('PLACEMENT')
   const [formPlacement, setFormPlacement] = useState(1)
+  const [formResultStatus, setFormResultStatus] = useState('PARTICIPANT')
   const [formXp, setFormXp] = useState(5)
   const [formDate, setFormDate] = useState('')
   const [formComment, setFormComment] = useState('')
+  const [formFileUrl, setFormFileUrl] = useState<string | null>(null)
+  const [formFilePreview, setFormFilePreview] = useState<string | null>(null)
+  const [uploadingFile, setUploadingFile] = useState(false)
   const [formAchievementFilter, setFormAchievementFilter] = useState('all')
 
   // Achievement detail modal
@@ -453,23 +517,59 @@ export default function Home() {
   const [showAdmin, setShowAdmin] = useState(false)
   const [pendingAchievements, setPendingAchievements] = useState<Achievement[]>([])
   const [adminStats, setAdminStats] = useState<Record<string, unknown> | null>(null)
-  const [adminDirection, setAdminDirection] = useState('')
+  const [adminDirections, setAdminDirections] = useState<Record<string, boolean>>({})
   const [adminXp, setAdminXp] = useState(0)
+  const [adminRejectReasons, setAdminRejectReasons] = useState<Record<string, string>>({})
 
   // Rating filters
-  const [ratingFaculty, setRatingFaculty] = useState('all')
-  const [ratingPeriod, setRatingPeriod] = useState('all')
   const [selectedLeague, setSelectedLeague] = useState<string | null>(null)
+
+  // File input ref
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const userId = authUser?.id || ''
 
-  // Auth check on mount
+  // Auth check on mount — Telegram auto-login or localStorage
   useEffect(() => {
-    const stored = localStorage.getItem('auth_user')
-    if (stored) {
-      try { setAuthUser(JSON.parse(stored)) } catch {}
+    const init = async () => {
+      // Check Telegram WebApp
+      const tg = (window as unknown as { Telegram?: { WebApp?: { initDataUnsafe?: { user?: { id: number; first_name: string; last_name?: string; username?: string; photo_url?: string } } } } }).Telegram
+      const tgUser = tg?.WebApp?.initDataUnsafe?.user
+
+      if (tgUser) {
+        setIsTelegram(true)
+        try {
+          const res = await fetch('/api/auth/telegram', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              telegramId: String(tgUser.id),
+              firstName: tgUser.first_name,
+              lastName: tgUser.last_name || '',
+              username: tgUser.username || '',
+              photoUrl: tgUser.photo_url || '',
+            }),
+          })
+          const data = await res.json()
+          if (res.ok && data.user) {
+            setAuthUser(data.user)
+            localStorage.setItem('auth_user', JSON.stringify(data.user))
+            setAuthChecked(true)
+            return
+          }
+        } catch (e) {
+          console.error('Telegram auth error:', e)
+        }
+      }
+
+      // Fallback: check localStorage
+      const stored = localStorage.getItem('auth_user')
+      if (stored) {
+        try { setAuthUser(JSON.parse(stored)) } catch { /* ignore */ }
+      }
+      setAuthChecked(true)
     }
-    setAuthChecked(true)
+    init()
   }, [])
 
   const handleLogin = (user: AuthUser) => {
@@ -513,8 +613,6 @@ export default function Home() {
     setLoading(true)
     try {
       const params = new URLSearchParams()
-      if (ratingFaculty && ratingFaculty !== 'all') params.set('facultyId', ratingFaculty)
-      if (ratingPeriod && ratingPeriod !== 'all') params.set('period', ratingPeriod)
       if (selectedLeague && selectedLeague !== 'all') params.set('league', selectedLeague)
       const res = await fetch(`/api/rating?${params.toString()}`)
       if (!res.ok) return
@@ -525,7 +623,7 @@ export default function Home() {
     } finally {
       setLoading(false)
     }
-  }, [ratingFaculty, ratingPeriod, selectedLeague])
+  }, [selectedLeague])
 
   const fetchPending = useCallback(async () => {
     try {
@@ -562,14 +660,40 @@ export default function Home() {
   // Auto-calculate XP
   useEffect(() => {
     if (formAchievementType && formAchievementType !== 'FREE_FORM' && formLevel) {
-      setFormXp(calculateAutoXp(formLevel, formPlacement))
+      setFormXp(calculateAutoXp(formLevel, formResultType, formPlacement, formResultStatus))
     }
-  }, [formAchievementType, formLevel, formPlacement])
+  }, [formAchievementType, formLevel, formResultType, formPlacement, formResultStatus])
 
   const resetForm = () => {
     setFormAchievementType(''); setFormTitle(''); setFormDesc('')
-    setFormLevel(''); setFormPlacement(1); setFormXp(5)
+    setFormLevel(''); setFormResultType('PLACEMENT'); setFormPlacement(1)
+    setFormResultStatus('PARTICIPANT'); setFormXp(5)
     setFormDate(''); setFormComment('')
+    setFormFileUrl(null); setFormFilePreview(null)
+  }
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Файл слишком большой (макс. 10 МБ)')
+      return
+    }
+    setUploadingFile(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch('/api/upload', { method: 'POST', body: formData })
+      if (!res.ok) { toast.error('Ошибка загрузки файла'); return }
+      const data = await res.json()
+      setFormFileUrl(data.url)
+      setFormFilePreview(data.url)
+      toast.success('Файл загружен')
+    } catch {
+      toast.error('Ошибка загрузки')
+    } finally {
+      setUploadingFile(false)
+    }
   }
 
   const handleAddAchievement = async () => {
@@ -588,10 +712,13 @@ export default function Home() {
         description: formDesc || null,
         achievementType: formAchievementType,
         achievementLevel: formAchievementType !== 'FREE_FORM' ? formLevel : null,
-        placement: formAchievementType !== 'FREE_FORM' ? formPlacement : null,
+        resultType: formAchievementType !== 'FREE_FORM' ? formResultType : null,
+        placement: formAchievementType !== 'FREE_FORM' && formResultType === 'PLACEMENT' ? formPlacement : null,
+        resultStatus: formAchievementType !== 'FREE_FORM' && formResultType === 'STATUS' ? formResultStatus : null,
         xpRequested: formXp,
         achievementDate: formDate || null,
         comment: formComment || null,
+        fileUrl: formFileUrl || null,
       }
       const res = await fetch('/api/achievements', {
         method: 'POST',
@@ -609,17 +736,22 @@ export default function Home() {
     }
   }
 
-  const handleModerate = async (achievementId: string, action: 'approve' | 'reject', xpAwarded?: number, direction?: string, reviewComment?: string) => {
+  const handleModerate = async (achievementId: string, action: 'approve' | 'reject', xpAwarded?: number, directions?: string, reviewComment?: string) => {
+    if (action === 'reject' && (!reviewComment || !reviewComment.trim())) {
+      toast.error('Укажите причину отклонения')
+      return
+    }
     try {
       const res = await fetch('/api/moderate', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          achievementId, action, xpAwarded, direction, reviewComment, adminUserId: userId,
+          achievementId, action, xpAwarded, directions, reviewComment: action === 'reject' ? reviewComment : undefined, adminUserId: userId,
         }),
       })
       if (!res.ok) return
       toast.success(action === 'approve' ? 'Достижение одобрено' : 'Достижение отклонено')
+      setAdminRejectReasons(prev => { const next = { ...prev }; delete next[achievementId]; return next })
       fetchPending(); fetchAdminStats(); fetchProfile(); fetchAchievements()
     } catch {
       toast.error('Ошибка')
@@ -634,11 +766,24 @@ export default function Home() {
     ? allAchievements
     : allAchievements.filter(a => a.achievementType === formAchievementFilter)
 
+  // Direction XP computed from approved achievements
+  const directionXp: Record<string, number> = {}
+  Object.keys(DIRECTIONS).forEach(d => { directionXp[d] = 0 })
+  allAchievements.filter(a => a.status === 'APPROVED' && a.direction).forEach(a => {
+    const dirs = a.direction!.split(',')
+    dirs.forEach(d => {
+      const trimmed = d.trim()
+      if (directionXp[trimmed] !== undefined) {
+        directionXp[trimmed] += a.xpAwarded
+      }
+    })
+  })
+
   /* ============================================================
      AUTH GATE
      ============================================================ */
   if (!authChecked) return null
-  if (!authUser) return <LoginScreen onLogin={handleLogin} />
+  if (!authUser && !isTelegram) return <LoginScreen onLogin={handleLogin} />
 
   /* ============================================================
      RENDER: HOME
@@ -657,7 +802,7 @@ export default function Home() {
         </button>
       </div>
 
-      {/* Level card — Professional credit-card style */}
+      {/* Level card */}
       <div className="level-card-pro p-5 relative">
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
@@ -774,12 +919,12 @@ export default function Home() {
   )
 
   /* ============================================================
-     RENDER: ACHIEVEMENTS LIST
+     RENDER: ACHIEVEMENTS (Ачивки) LIST
      ============================================================ */
   const renderAchievements = () => (
     <div className="px-5 pb-6 space-y-4 ios-fade-in">
       <div className="pt-3 flex items-center justify-between">
-        <h1 className="ios-large-title">Достижения</h1>
+        <h1 className="ios-large-title">Ачивки</h1>
         <button onClick={() => setShowAddSheet(true)}
           className="w-9 h-9 rounded-xl bg-[#007AFF] flex items-center justify-center active:scale-95 ios-spring">
           <IconPlus size={18} />
@@ -817,7 +962,7 @@ export default function Home() {
                 {a.achievementLevel && a.achievementType !== 'FREE_FORM' && (
                   <span className="text-[10px] text-white/20">
                     {ACHIEVEMENT_LEVELS[a.achievementLevel]?.label || a.achievementLevel}
-                    {a.placement !== null && a.placement !== undefined && a.placement > 0 && ` · ${a.placement} место`}
+                    {getResultLabel(a) && ` · ${getResultLabel(a)}`}
                   </span>
                 )}
               </div>
@@ -838,14 +983,167 @@ export default function Home() {
             <div className="w-14 h-14 rounded-2xl bg-white/4 flex items-center justify-center mx-auto mb-3">
               <IconAchievements active={false} />
             </div>
-            <p className="text-[14px] text-white/20 font-medium">Пока нет достижений</p>
+            <p className="text-[14px] text-white/20 font-medium">Пока нет ачивок</p>
             <button onClick={() => setShowAddSheet(true)}
-              className="mt-3 text-[13px] text-[#007AFF] font-semibold">Добавить первое</button>
+              className="mt-3 text-[13px] text-[#007AFF] font-semibold">Добавить первую</button>
           </div>
         )}
       </div>
     </div>
   )
+
+  /* ============================================================
+     RENDER: MILESTONES (Достижения) TAB
+     ============================================================ */
+  const renderMilestones = () => {
+    const totalDirXp = Object.values(directionXp).reduce((s, v) => s + v, 0) || 1
+
+    return (
+      <div className="px-5 pb-6 space-y-5 ios-fade-in">
+        <div className="pt-3">
+          <h1 className="ios-large-title">Достижения</h1>
+          <p className="text-[14px] text-white/30 mt-1">Прогресс и статистика</p>
+        </div>
+
+        {/* Level progress card */}
+        <div className="level-card-pro p-5 relative">
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#007AFF]/12 border border-[#007AFF]/20 flex items-center justify-center">
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                    <path d="M10 2L12.5 7.5L18 8.5L14 12.5L15 18L10 15.5L5 18L6 12.5L2 8.5L7.5 7.5L10 2Z" fill="#007AFF" stroke="#007AFF" strokeWidth="0.5" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-[12px] text-white/30 font-medium uppercase tracking-wider">Уровень</div>
+                  <div className="text-[18px] font-bold text-white">{profile?.level} · {profile?.levelName}</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-[22px] font-bold text-[#007AFF] tabular-nums">{profile?.totalXp}</div>
+                <div className="text-[11px] text-white/25 font-medium">XP</div>
+              </div>
+            </div>
+            <XpProgressBar current={profile?.xpInLevel || 0} max={profile?.xpToNextLevel || 1} />
+            {profile?.nextLevelName && (
+              <p className="text-[11px] text-white/25 mt-2 text-center">
+                До «{profile.nextLevelName}» — ещё {Math.max(0, (profile.nextLevelXp || 0) - (profile.totalXp))} XP
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* XP by direction */}
+        <div>
+          <h3 className="ios-section-header mb-3">XP по направлениям</h3>
+          <div className="space-y-2.5">
+            {Object.entries(DIRECTIONS).map(([key, dir]) => {
+              const xp = directionXp[key] || 0
+              const pct = Math.min((xp / totalDirXp) * 100, 100)
+              return (
+                <GlassCard key={key} className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ background: dir.color }} />
+                      <span className="text-[13px] font-semibold text-white">{dir.label}</span>
+                    </div>
+                    <span className="text-[14px] font-bold tabular-nums" style={{ color: dir.color }}>{xp} XP</span>
+                  </div>
+                  <div className="w-full bg-white/6 rounded-full h-2 overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-700 ease-out"
+                      style={{
+                        width: `${Math.max(pct, xp > 0 ? 4 : 0)}%`,
+                        background: `linear-gradient(90deg, ${dir.color}, ${dir.color}88)`
+                      }}
+                    />
+                  </div>
+                </GlassCard>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Statistics grid */}
+        <div>
+          <h3 className="ios-section-header mb-3">Статистика</h3>
+          <div className="grid grid-cols-2 gap-2">
+            <GlassCard className="p-4">
+              <div className="ios-section-header text-[9px]">Всего</div>
+              <div className="text-[22px] font-bold text-white mt-1.5 tabular-nums">{achievementCounts.total}</div>
+            </GlassCard>
+            <GlassCard className="p-4">
+              <div className="ios-section-header text-[9px]">Одобрено</div>
+              <div className="text-[22px] font-bold text-[#34C759] mt-1.5 tabular-nums">{achievementCounts.APPROVED}</div>
+            </GlassCard>
+            <GlassCard className="p-4">
+              <div className="ios-section-header text-[9px]">На проверке</div>
+              <div className="text-[22px] font-bold text-[#FF9F0A] mt-1.5 tabular-nums">{achievementCounts.PENDING}</div>
+            </GlassCard>
+            <GlassCard className="p-4">
+              <div className="ios-section-header text-[9px]">Отклонено</div>
+              <div className="text-[22px] font-bold text-[#FF3B30] mt-1.5 tabular-nums">{achievementCounts.REJECTED}</div>
+            </GlassCard>
+          </div>
+          {/* Visual stats bar */}
+          {achievementCounts.total > 0 && (
+            <div className="mt-3 flex rounded-full overflow-hidden h-2">
+              {achievementCounts.APPROVED > 0 && (
+                <div className="bg-[#34C759] transition-all duration-500" style={{ width: `${(achievementCounts.APPROVED / achievementCounts.total) * 100}%` }} />
+              )}
+              {achievementCounts.PENDING > 0 && (
+                <div className="bg-[#FF9F0A] transition-all duration-500" style={{ width: `${(achievementCounts.PENDING / achievementCounts.total) * 100}%` }} />
+              )}
+              {achievementCounts.REJECTED > 0 && (
+                <div className="bg-[#FF3B30] transition-all duration-500" style={{ width: `${(achievementCounts.REJECTED / achievementCounts.total) * 100}%` }} />
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Level roadmap */}
+        <div>
+          <h3 className="ios-section-header mb-3">Путь уровней</h3>
+          <div className="space-y-0">
+            {LEVELS.map((lv, idx) => {
+              const isCurrentLevel = profile?.level === lv.level
+              const isPastLevel = (profile?.level || 1) > lv.level
+              const isLast = idx === LEVELS.length - 1
+              return (
+                <div key={lv.level} className="flex items-start gap-3">
+                  {/* Vertical line + dot */}
+                  <div className="flex flex-col items-center">
+                    <div className={`w-3.5 h-3.5 rounded-full border-2 shrink-0 ${isCurrentLevel ? 'border-[#007AFF] bg-[#007AFF]' : isPastLevel ? 'border-[#34C759] bg-[#34C759]' : 'border-white/15 bg-transparent'}`} />
+                    {!isLast && (
+                      <div className={`w-0.5 h-8 ${isPastLevel ? 'bg-[#34C759]/40' : 'bg-white/6'}`} />
+                    )}
+                  </div>
+                  {/* Content */}
+                  <div className={`pb-4 ${isCurrentLevel ? '-mt-0.5' : ''}`}>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[14px] font-semibold ${isCurrentLevel ? 'text-[#007AFF]' : isPastLevel ? 'text-[#34C759]' : 'text-white/30'}`}>
+                        Ур. {lv.level}
+                      </span>
+                      <span className={`text-[13px] ${isCurrentLevel ? 'text-white font-semibold' : isPastLevel ? 'text-white/50' : 'text-white/20'}`}>
+                        {lv.name}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-white/20">{lv.min}–{isLast ? '...' : lv.max} XP</span>
+                    {isCurrentLevel && (
+                      <div className="mt-1.5">
+                        <XpProgressBar current={profile?.xpInLevel || 0} max={profile?.xpToNextLevel || 1} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   /* ============================================================
      RENDER: RATING — With Top-3 Podium
@@ -854,14 +1152,7 @@ export default function Home() {
     const top3 = leaderboard.slice(0, 3)
     const rest = leaderboard.slice(3)
     const podiumOrder = top3.length >= 3 ? [top3[1], top3[0], top3[2]] : top3.length === 2 ? [top3[1], top3[0]] : top3
-
-    const podiumHeights = ['h-20', 'h-28', 'h-16']
-    const podiumColors = [
-      'from-[#C0C0C0]/20 to-[#C0C0C0]/5 border-[#C0C0C0]/20',
-      'from-[#FFD700]/25 to-[#FFD700]/5 border-[#FFD700]/25',
-      'from-[#CD7F32]/20 to-[#CD7F32]/5 border-[#CD7F32]/20',
-    ]
-    const podiumRanks = [2, 1, 3]
+    const podiumRanks = top3.length >= 3 ? [2, 1, 3] : top3.length === 2 ? [2, 1] : top3.map((_, i) => i + 1)
 
     return (
       <div className="px-5 pb-6 space-y-4 ios-fade-in">
@@ -869,7 +1160,7 @@ export default function Home() {
           <h1 className="ios-large-title">Рейтинг</h1>
         </div>
 
-        {/* League filter — text only, no emoji */}
+        {/* League filter */}
         <div className="flex gap-2">
           {[
             { key: null, label: 'Все' },
@@ -901,8 +1192,7 @@ export default function Home() {
               const avatarGrad = getAvatarColor(entry.name)
               return (
                 <div key={entry.id} className="flex flex-col items-center" style={{ width: actualRank === 1 ? '120px' : '100px' }}>
-                  {/* Avatar + Name */}
-                  <div className={`relative mb-2 ${actualRank === 1 ? 'order-1' : 'order-1'}`}>
+                  <div className="relative mb-2">
                     {actualRank === 1 && (
                       <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
                         <IconCrown />
@@ -918,7 +1208,6 @@ export default function Home() {
                     </div>
                     <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded ${entryLeague.cssClass}`}>{entryLeague.name}</span>
                   </div>
-                  {/* Podium block */}
                   <div className={`w-full bg-gradient-to-t ${colorClass} border rounded-t-xl flex flex-col items-center justify-start pt-2 ${heightClass}`}>
                     <div className={`text-[20px] font-black ${actualRank === 1 ? 'text-[#FFD700]' : actualRank === 2 ? 'text-[#C0C0C0]' : 'text-[#CD7F32]'}`}>
                       {actualRank}
@@ -932,181 +1221,106 @@ export default function Home() {
         )}
 
         {/* Rest of leaderboard */}
-        <div className="space-y-1.5 max-h-[50vh] overflow-y-auto">
-          {loading && <div className="text-center py-8 text-white/20 text-[14px]">Загрузка...</div>}
-          {!loading && rest.map((entry) => {
-            const entryLeague = getLeague(entry.league)
-            const isMe = entry.id === userId
-            const initials = getInitials(entry.name)
-            const avatarGrad = getAvatarColor(entry.name)
-            return (
-              <div key={entry.id} className={`glass-card p-3.5 flex items-center gap-3 ${isMe ? 'border-[#007AFF]/20 bg-[#007AFF]/6' : ''}`}>
-                <div className="w-8 text-[15px] font-bold text-center tabular-nums text-white/20">
-                  {entry.rank}
-                </div>
-                <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${avatarGrad} flex items-center justify-center text-white font-bold text-[11px] shrink-0 ${isMe ? 'ring-2 ring-[#007AFF]/40' : ''}`}>
-                  {initials}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[14px] font-medium text-white truncate">
-                    {entry.name}
-                    {isMe && <span className="text-[#007AFF] ml-1.5 text-[11px] font-semibold">ВЫ</span>}
+        {!loading && rest.length > 0 && (
+          <div className="space-y-1.5">
+            {rest.map((entry) => {
+              const isMe = entry.id === userId
+              const entryLeague = getLeague(entry.league)
+              const initials = getInitials(entry.name)
+              const avatarGrad = getAvatarColor(entry.name)
+              return (
+                <div key={entry.id}
+                  className={`ios-list-item p-3 flex items-center gap-3 ${isMe ? 'ring-1 ring-[#007AFF]/20' : ''}`}>
+                  <span className="text-[13px] font-bold text-white/25 w-6 text-center tabular-nums">{entry.rank}</span>
+                  <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${avatarGrad} flex items-center justify-center text-white font-bold text-[12px] shrink-0`}>
+                    {initials}
                   </div>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${entryLeague.cssClass}`}>{entryLeague.name}</span>
-                    <span className="text-[10px] text-white/20">Ур. {entry.level}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className={`text-[14px] font-medium truncate ${isMe ? 'text-[#007AFF]' : 'text-white'}`}>{entry.name}</div>
+                    <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded ${entryLeague.cssClass}`}>{entryLeague.name}</span>
                   </div>
+                  <div className="text-[14px] font-bold text-white/50 tabular-nums">{entry.totalXp}</div>
                 </div>
-                <div className="text-right shrink-0">
-                  <div className="text-[14px] font-bold text-white tabular-nums">{entry.totalXp}</div>
-                  <div className="text-[10px] text-white/20">XP</div>
-                </div>
-              </div>
-            )
-          })}
-          {!loading && leaderboard.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-[14px] text-white/15">Нет данных</p>
-            </div>
-          )}
-        </div>
+              )
+            })}
+          </div>
+        )}
+
+        {loading && (
+          <div className="text-center py-12">
+            <div className="w-8 h-8 border-2 border-white/10 border-t-[#007AFF] rounded-full animate-spin mx-auto" />
+          </div>
+        )}
+
+        {!loading && leaderboard.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-[14px] text-white/20">Рейтинг пуст</p>
+          </div>
+        )}
       </div>
     )
   }
 
   /* ============================================================
-     RENDER: PROFILE — Dark mobile app style
+     RENDER: PROFILE
      ============================================================ */
-  const renderProfile = () => {
-    const initials = getInitials(profile?.name || '')
-    const avatarGrad = getAvatarColor(profile?.name || '')
-    const currentLevel = profile?.level || 1
-    const xpInLevel = profile?.xpInLevel || 0
-    const xpToNext = profile?.xpToNextLevel || 1
-    const levelProgress = xpToNext > 0 ? Math.min((xpInLevel / xpToNext) * 100, 100) : 0
-
-    return (
-      <div className="px-5 pb-6 space-y-5 ios-fade-in">
-        {/* Profile Header */}
-        <div className="pt-3 flex flex-col items-center text-center">
-          <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${avatarGrad} flex items-center justify-center text-white font-bold text-[24px] border-2 border-white/10 mb-3`}>
-            {initials}
-          </div>
-          <h1 className="text-[20px] font-bold text-white">{profile?.name}</h1>
-          <div className="mt-1.5">
-            <span className={`text-[12px] font-bold px-3 py-1 rounded-lg ${userLeague.cssClass}`}>{userLeague.name}</span>
-          </div>
-        </div>
-
-        {/* Stats row — 3 columns */}
-        <div className="grid grid-cols-3 gap-2">
-          <GlassCard className="p-4 text-center">
-            <div className="text-[22px] font-bold text-[#007AFF] tabular-nums">{profile?.totalXp}</div>
-            <div className="text-[10px] text-white/25 mt-0.5 font-medium uppercase tracking-wider">Всего XP</div>
-          </GlassCard>
-          <GlassCard className="p-4 text-center">
-            <div className="text-[22px] font-bold text-white tabular-nums">{achievementCounts.APPROVED}</div>
-            <div className="text-[10px] text-white/25 mt-0.5 font-medium uppercase tracking-wider">Достижений</div>
-          </GlassCard>
-          <GlassCard className="p-4 text-center">
-            <div className="text-[22px] font-bold text-white tabular-nums">{profile?.level}</div>
-            <div className="text-[10px] text-white/25 mt-0.5 font-medium uppercase tracking-wider">Уровень</div>
-          </GlassCard>
-        </div>
-
-        {/* Level Progress Card — Blue gradient */}
-        <div className="relative overflow-hidden rounded-2xl p-5"
-          style={{ background: 'linear-gradient(135deg, rgba(0,122,255,0.25) 0%, rgba(88,86,214,0.15) 100%)', border: '1px solid rgba(0,122,255,0.2)' }}>
-          <div className="relative z-10">
-            <div className="text-[11px] text-white/40 font-semibold uppercase tracking-wider">
-              УРОВЕНЬ {profile?.level} · {profile?.levelName}
-            </div>
-            <div className="mt-3">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[12px] text-white/50 tabular-nums">{xpInLevel} / {xpInLevel + (xpToNext - xpInLevel)} XP</span>
-                <span className="text-[12px] text-[#007AFF] font-bold tabular-nums">{Math.round(levelProgress)}%</span>
-              </div>
-              <div className="w-full bg-white/10 rounded-full h-2.5 overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-700 ease-out"
-                  style={{ width: `${levelProgress}%`, background: 'linear-gradient(90deg, #007AFF, #5856D6)' }}
-                />
-              </div>
-            </div>
-            <div className="mt-3 flex items-center justify-between">
-              {profile?.nextLevelName && (
-                <span className="text-[11px] text-white/30">
-                  До «{profile.nextLevelName}» — ещё {Math.max(0, (profile.nextLevelXp || 0) - (profile.totalXp))} XP
-                </span>
-              )}
-              <button onClick={() => {}} className="text-[12px] text-[#007AFF] font-semibold flex items-center gap-1 ml-auto">
-                Подробнее <IconChevron size={10} />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Level Roadmap */}
-        <div>
-          <h3 className="ios-section-header mb-3">Путь уровней</h3>
-          <div className="space-y-1.5">
-            {LEVELS.map((l) => {
-              const isCurrent = l.level === currentLevel
-              const isPassed = l.level < currentLevel
-              return (
-                <div key={l.level} className={`flex items-center gap-3 p-3 rounded-xl ${
-                  isCurrent
-                    ? 'bg-[#007AFF]/8 border border-[#007AFF]/15'
-                    : isPassed
-                      ? 'bg-white/2'
-                      : 'bg-white/1'
-                }`}>
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-[13px] font-bold ${
-                    isCurrent
-                      ? 'bg-[#007AFF]/15 text-[#007AFF]'
-                      : isPassed
-                        ? 'bg-[#34C759]/10 text-[#34C759]'
-                        : 'bg-white/4 text-white/15'
-                  }`}>
-                    {isPassed ? (
-                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                        <path d="M3 8L7 12L13 4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    ) : isCurrent ? (
-                      <svg width="10" height="14" viewBox="0 0 10 16" fill="none">
-                        <path d="M1 2L5 8L1 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    ) : (
-                      <svg width="10" height="14" viewBox="0 0 10 16" fill="none">
-                        <circle cx="5" cy="8" r="3" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                      </svg>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <div className={`text-[13px] font-medium ${isCurrent ? 'text-white' : 'text-white/30'}`}>{l.name}</div>
-                    <div className="text-[10px] text-white/15">{l.min}–{l.max === 999999 ? '...' : l.max} XP</div>
-                  </div>
-                  {isCurrent && (
-                    <span className="text-[10px] text-[#007AFF] font-semibold px-2 py-0.5 rounded-full bg-[#007AFF]/10">Текущий</span>
-                  )}
-                  {isPassed && (
-                    <span className="text-[10px] text-[#34C759] font-semibold px-2 py-0.5 rounded-full bg-[#34C759]/10">Пройден</span>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Logout */}
-        <button onClick={handleLogout}
-          className="w-full glass-card py-3.5 flex items-center justify-center gap-2 text-[#FF3B30]/70 text-[14px] font-semibold active:scale-[0.97] ios-spring">
-          <IconLogout />
-          Выйти
-        </button>
+  const renderProfile = () => (
+    <div className="px-5 pb-6 space-y-5 ios-fade-in">
+      <div className="pt-3">
+        <h1 className="ios-large-title">Профиль</h1>
       </div>
-    )
-  }
+
+      {/* Avatar + Name */}
+      <div className="flex flex-col items-center">
+        <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${getAvatarColor(profile?.name || '')} flex items-center justify-center text-white font-bold text-[28px] mb-3`}>
+          {getInitials(profile?.name || '')}
+        </div>
+        <h2 className="text-[20px] font-bold text-white">{profile?.name}</h2>
+        {profile?.username && <p className="text-[14px] text-white/30">@{profile.username}</p>}
+        <div className="flex items-center gap-2 mt-2">
+          <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg ${userLeague.cssClass}`}>{userLeague.name}</span>
+          <span className="text-[12px] text-white/30">Ур. {profile?.level} · {profile?.levelName}</span>
+        </div>
+      </div>
+
+      {/* Stats cards */}
+      <div className="grid grid-cols-3 gap-2">
+        <GlassCard className="p-4 text-center">
+          <div className="text-[20px] font-bold text-[#007AFF] tabular-nums">{profile?.totalXp}</div>
+          <div className="text-[10px] text-white/25 mt-0.5">XP</div>
+        </GlassCard>
+        <GlassCard className="p-4 text-center">
+          <div className="text-[20px] font-bold text-[#34C759] tabular-nums">{achievementCounts.APPROVED}</div>
+          <div className="text-[10px] text-white/25 mt-0.5">Одобрено</div>
+        </GlassCard>
+        <GlassCard className="p-4 text-center">
+          <div className="text-[20px] font-bold text-white tabular-nums">{achievementCounts.total}</div>
+          <div className="text-[10px] text-white/25 mt-0.5">Всего</div>
+        </GlassCard>
+      </div>
+
+      {/* Direction XP breakdown */}
+      <div>
+        <h3 className="ios-section-header mb-3">Направления</h3>
+        <div className="space-y-2">
+          {Object.entries(DIRECTIONS).map(([key, dir]) => (
+            <div key={key} className="flex items-center gap-3 ios-list-item p-3">
+              <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: dir.color }} />
+              <span className="text-[13px] font-medium text-white flex-1">{dir.label}</span>
+              <span className="text-[13px] font-bold tabular-nums" style={{ color: dir.color }}>{directionXp[key] || 0} XP</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Logout */}
+      <button onClick={handleLogout}
+        className="w-full glass-card flex items-center justify-center gap-2 py-3 px-4 active:scale-[0.97] ios-spring text-[#FF3B30]">
+        <IconLogout />
+        <span className="text-[14px] font-semibold">Выйти</span>
+      </button>
+    </div>
+  )
 
   /* ============================================================
      RENDER: ADD ACHIEVEMENT SHEET
@@ -1114,142 +1328,149 @@ export default function Home() {
   const renderAddSheet = () => {
     if (!showAddSheet) return null
     return (
-      <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={() => { setShowAddSheet(false); resetForm() }}>
+      <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={() => setShowAddSheet(false)}>
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-        <div className="relative w-full max-w-lg ios-sheet ios-sheet-up max-h-[90vh] overflow-y-auto"
+        <div className="relative w-full max-w-lg ios-sheet ios-sheet-up safe-area-bottom max-h-[90vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}>
-          <div className="p-6">
+          <div className="p-5">
             <IosSheetHandle />
 
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-[20px] font-bold text-white">Новое достижение</h3>
-              <button onClick={() => { setShowAddSheet(false); resetForm() }}
-                className="w-8 h-8 rounded-full bg-white/6 flex items-center justify-center text-white/30">
-                <IconClose />
-              </button>
-            </div>
+            <h2 className="text-[18px] font-bold text-white mb-5">Новое достижение</h2>
 
-            {/* Step 1: Choose type */}
-            {!formAchievementType && (
-              <div className="space-y-2 ios-fade-in">
-                <p className="text-[13px] text-white/30 mb-3">Выберите тип</p>
-                {Object.entries(ACHIEVEMENT_TYPES).map(([key, val]) => (
-                  <button key={key} onClick={() => setFormAchievementType(key as AchievementType)}
-                    className="w-full text-left glass-card p-4 flex items-center gap-4 active:scale-[0.98] ios-spring">
-                    <div className="w-10 h-10 rounded-xl bg-white/4 flex items-center justify-center shrink-0">
-                      {key === 'SPORT' && <IconSport />}
-                      {key === 'CREATIVE' && <IconCreative />}
-                      {key === 'OLYMPIAD' && <IconOlympiad />}
-                      {key === 'FREE_FORM' && <IconFreeForm />}
-                    </div>
-                    <div className="text-[15px] font-semibold text-white">{val.label}</div>
-                    <div className="ml-auto text-white/10"><IconChevron /></div>
-                  </button>
-                ))}
+            <div className="space-y-4">
+              {/* Title */}
+              <div>
+                <label className="text-[12px] font-medium text-white/30 mb-1.5 block uppercase tracking-wider">Название</label>
+                <input type="text" value={formTitle} onChange={(e) => setFormTitle(e.target.value)}
+                  placeholder="Название достижения"
+                  className="glass-input w-full px-4 py-3 text-[15px] text-white placeholder-white/20 bg-transparent focus:ring-0 focus:shadow-none" />
               </div>
-            )}
 
-            {/* Step 2: Form */}
-            {formAchievementType && (
-              <div className="space-y-4 ios-fade-in">
-                <div className="flex items-center gap-3 mb-1">
-                  <button onClick={() => { setFormAchievementType(''); setFormLevel(''); setFormPlacement(1) }}
-                    className="text-[12px] text-[#007AFF] font-medium">Изменить тип</button>
-                  <span className="text-[12px] text-white/20">{ACHIEVEMENT_TYPES[formAchievementType]?.label}</span>
+              {/* Description */}
+              <div>
+                <label className="text-[12px] font-medium text-white/30 mb-1.5 block uppercase tracking-wider">Описание</label>
+                <textarea value={formDesc} onChange={(e) => setFormDesc(e.target.value)}
+                  placeholder="Опишите достижение"
+                  rows={2}
+                  className="glass-input w-full px-4 py-3 text-[15px] text-white placeholder-white/20 bg-transparent focus:ring-0 focus:shadow-none resize-none" />
+              </div>
+
+              {/* Achievement type */}
+              <div>
+                <label className="text-[12px] font-medium text-white/30 mb-1.5 block uppercase tracking-wider">Тип</label>
+                <div className="flex gap-1.5 flex-wrap">
+                  {Object.entries(ACHIEVEMENT_TYPES).map(([key, val]) => (
+                    <button key={key} onClick={() => setFormAchievementType(key as AchievementType)}
+                      className={`ios-pill ${formAchievementType === key ? 'ios-pill-active' : ''}`}>
+                      {val.label}
+                    </button>
+                  ))}
                 </div>
+              </div>
 
-                <div>
-                  <label className="text-[12px] font-medium text-white/30 mb-1.5 block">Название *</label>
-                  <input type="text" value={formTitle} onChange={(e) => setFormTitle(e.target.value)}
-                    placeholder={formAchievementType === 'SPORT' ? 'Соревнования по плаванию' : formAchievementType === 'CREATIVE' ? 'Конкурс чтецов' : formAchievementType === 'OLYMPIAD' ? 'ВСОШ по математике' : 'Моё достижение'}
-                    className="glass-input w-full px-4 py-3 text-[14px] text-white placeholder-white/15 bg-transparent border-0 focus:ring-0 focus:shadow-none" />
-                </div>
+              {/* Level + Result (only for non-FREE_FORM) */}
+              {formAchievementType && formAchievementType !== 'FREE_FORM' && (
+                <>
+                  {/* Level */}
+                  <div>
+                    <label className="text-[12px] font-medium text-white/30 mb-1.5 block uppercase tracking-wider">Уровень</label>
+                    <div className="flex gap-1.5 flex-wrap">
+                      {Object.entries(ACHIEVEMENT_LEVELS).map(([key, val]) => (
+                        <button key={key} onClick={() => setFormLevel(key as AchievementLevel)}
+                          className={`ios-pill ${formLevel === key ? 'ios-pill-active' : ''}`}>
+                          {val.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-                <div>
-                  <label className="text-[12px] font-medium text-white/30 mb-1.5 block">Описание</label>
-                  <textarea value={formDesc} onChange={(e) => setFormDesc(e.target.value)}
-                    placeholder="Расскажите подробнее..." rows={2}
-                    className="glass-input w-full px-4 py-3 text-[14px] text-white placeholder-white/15 bg-transparent border-0 focus:ring-0 focus:shadow-none resize-none" />
-                </div>
-
-                {formAchievementType !== 'FREE_FORM' && (
-                  <>
-                    <div>
-                      <label className="text-[12px] font-medium text-white/30 mb-2 block">Уровень</label>
-                      <div className="grid grid-cols-3 gap-1.5">
-                        {Object.entries(ACHIEVEMENT_LEVELS).map(([key, val]) => (
-                          <button key={key} onClick={() => setFormLevel(key as AchievementLevel)}
-                            className={`py-2 px-2 rounded-xl text-[12px] font-medium transition-all ${
-                              formLevel === key
-                                ? 'bg-[#007AFF]/12 border border-[#007AFF]/25 text-[#007AFF]'
-                                : 'bg-white/3 border border-white/5 text-white/35'
-                            }`}>
-                            <div>{val.label}</div>
-                            <div className="text-[9px] opacity-50 mt-0.5">до {val.baseXp} XP</div>
-                          </button>
-                        ))}
-                      </div>
+                  {/* Result type toggle */}
+                  <div>
+                    <label className="text-[12px] font-medium text-white/30 mb-1.5 block uppercase tracking-wider">Результат</label>
+                    <div className="ios-segmented flex p-0.5 mb-3">
+                      <button onClick={() => setFormResultType('PLACEMENT')}
+                        className={`flex-1 py-2 text-[13px] font-semibold rounded-[10px] transition-all ${formResultType === 'PLACEMENT' ? 'ios-segmented-pill text-white' : 'text-white/30'}`}>
+                        По месту
+                      </button>
+                      <button onClick={() => setFormResultType('STATUS')}
+                        className={`flex-1 py-2 text-[13px] font-semibold rounded-[10px] transition-all ${formResultType === 'STATUS' ? 'ios-segmented-pill text-white' : 'text-white/30'}`}>
+                        По статусу
+                      </button>
                     </div>
 
-                    <div>
-                      <label className="text-[12px] font-medium text-white/30 mb-2 block">Место</label>
-                      <div className="grid grid-cols-4 gap-1.5">
+                    {formResultType === 'PLACEMENT' ? (
+                      <div className="flex gap-1.5 flex-wrap">
                         {Object.entries(PLACEMENTS).map(([key, val]) => (
                           <button key={key} onClick={() => setFormPlacement(Number(key))}
-                            className={`py-2 px-2 rounded-xl text-[12px] font-medium transition-all ${
-                              formPlacement === Number(key)
-                                ? 'bg-[#007AFF]/12 border border-[#007AFF]/25 text-[#007AFF]'
-                                : 'bg-white/3 border border-white/5 text-white/35'
-                            }`}>
+                            className={`ios-pill ${formPlacement === Number(key) ? 'ios-pill-active' : ''}`}>
                             {val.label}
                           </button>
                         ))}
                       </div>
-                    </div>
-
-                    {formLevel && (
-                      <GlassCard className="p-4">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[13px] text-white/30">Расчётное XP</span>
-                          <span className="text-[18px] font-bold text-[#007AFF]">{formXp} XP</span>
-                        </div>
-                        <div className="text-[10px] text-white/15 mt-1">
-                          {ACHIEVEMENT_LEVELS[formLevel]?.label} · {PLACEMENTS[formPlacement]?.label} · {ACHIEVEMENT_LEVELS[formLevel]?.baseXp} × {PLACEMENTS[formPlacement]?.multiplier}
-                        </div>
-                      </GlassCard>
+                    ) : (
+                      <div className="flex gap-1.5 flex-wrap">
+                        {Object.entries(RESULT_STATUSES).map(([key, val]) => (
+                          <button key={key} onClick={() => setFormResultStatus(key)}
+                            className={`ios-pill ${formResultStatus === key ? 'ios-pill-active' : ''}`}>
+                            {val.label}
+                          </button>
+                        ))}
+                      </div>
                     )}
-                  </>
-                )}
+                  </div>
+                </>
+              )}
 
-                {formAchievementType === 'FREE_FORM' && (
-                  <div>
-                    <label className="text-[12px] font-medium text-white/30 mb-1.5 block">Запрашиваемое XP</label>
-                    <input type="number" value={formXp} onChange={(e) => setFormXp(Number(e.target.value))}
-                      min={1} max={100}
-                      className="glass-input w-full px-4 py-3 text-[14px] text-white bg-transparent border-0 focus:ring-0 focus:shadow-none" />
-                    <p className="text-[10px] text-white/15 mt-1">Администратор рассмотрит и подтвердит</p>
+              {/* XP */}
+              <div>
+                <label className="text-[12px] font-medium text-white/30 mb-1.5 block uppercase tracking-wider">XP</label>
+                <input type="number" value={formXp} onChange={(e) => setFormXp(Math.max(1, Number(e.target.value)))}
+                  className="glass-input w-full px-4 py-3 text-[15px] text-white bg-transparent focus:ring-0 focus:shadow-none"
+                  min={1} />
+              </div>
+
+              {/* Date */}
+              <div>
+                <label className="text-[12px] font-medium text-white/30 mb-1.5 block uppercase tracking-wider">Дата</label>
+                <input type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)}
+                  className="glass-input w-full px-4 py-3 text-[15px] text-white bg-transparent focus:ring-0 focus:shadow-none" />
+              </div>
+
+              {/* Photo upload */}
+              <div>
+                <label className="text-[12px] font-medium text-white/30 mb-1.5 block uppercase tracking-wider">Фото диплома</label>
+                <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
+                {!formFilePreview ? (
+                  <button onClick={() => fileInputRef.current?.click()} disabled={uploadingFile}
+                    className="glass-card w-full flex items-center justify-center gap-2 py-4 text-white/30 hover:bg-white/6 transition-colors disabled:opacity-50">
+                    <IconCamera />
+                    <span className="text-[13px] font-medium">{uploadingFile ? 'Загрузка...' : 'Загрузить фото'}</span>
+                  </button>
+                ) : (
+                  <div className="relative glass-card p-2">
+                    <img src={formFilePreview} alt="Диплом" className="w-full max-h-40 object-contain rounded-lg" />
+                    <button onClick={() => { setFormFileUrl(null); setFormFilePreview(null) }}
+                      className="absolute top-3 right-3 w-7 h-7 rounded-full bg-black/60 flex items-center justify-center text-white/60 hover:text-white transition-colors">
+                      <IconClose size={12} />
+                    </button>
                   </div>
                 )}
-
-                <div>
-                  <label className="text-[12px] font-medium text-white/30 mb-1.5 block">Дата</label>
-                  <input type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)}
-                    className="glass-input w-full px-4 py-3 text-[14px] text-white bg-transparent border-0 focus:ring-0 focus:shadow-none" />
-                </div>
-
-                <div>
-                  <label className="text-[12px] font-medium text-white/30 mb-1.5 block">Комментарий</label>
-                  <textarea value={formComment} onChange={(e) => setFormComment(e.target.value)}
-                    placeholder="Дополнительная информация..." rows={2}
-                    className="glass-input w-full px-4 py-3 text-[14px] text-white placeholder-white/15 bg-transparent border-0 focus:ring-0 focus:shadow-none resize-none" />
-                </div>
-
-                <button onClick={handleAddAchievement}
-                  className="ios-button-primary w-full mt-2">
-                  Отправить на проверку
-                </button>
               </div>
-            )}
+
+              {/* Comment */}
+              <div>
+                <label className="text-[12px] font-medium text-white/30 mb-1.5 block uppercase tracking-wider">Комментарий</label>
+                <textarea value={formComment} onChange={(e) => setFormComment(e.target.value)}
+                  placeholder="Дополнительная информация"
+                  rows={2}
+                  className="glass-input w-full px-4 py-3 text-[15px] text-white placeholder-white/20 bg-transparent focus:ring-0 focus:shadow-none resize-none" />
+              </div>
+
+              {/* Submit */}
+              <button onClick={handleAddAchievement} className="ios-button-primary w-full">
+                Отправить на проверку
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1257,7 +1478,7 @@ export default function Home() {
   }
 
   /* ============================================================
-     RENDER: ACHIEVEMENT DETAIL
+     RENDER: ACHIEVEMENT DETAIL MODAL
      ============================================================ */
   const renderDetailModal = () => {
     if (!selectedAchievement) return null
@@ -1265,63 +1486,92 @@ export default function Home() {
     return (
       <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={() => setSelectedAchievement(null)}>
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-        <div className="relative w-full max-w-lg ios-sheet ios-sheet-up max-h-[80vh] overflow-y-auto"
+        <div className="relative w-full max-w-lg ios-sheet ios-sheet-up safe-area-bottom max-h-[85vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}>
-          <div className="p-6">
+          <div className="p-5">
             <IosSheetHandle />
-            <div className="flex items-start gap-4 mb-5">
-              <div className="w-12 h-12 rounded-xl bg-white/4 flex items-center justify-center shrink-0">
+
+            <div className="flex items-start gap-3 mb-4">
+              <div className="w-11 h-11 rounded-xl bg-white/4 flex items-center justify-center shrink-0">
                 <AchievementTypeIcon type={a.achievementType} />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-[18px] font-bold text-white">{a.title}</h3>
+                <h2 className="text-[18px] font-bold text-white">{a.title}</h2>
                 <div className="flex items-center gap-2 mt-1">
                   <StatusDot status={a.status} />
-                  {a.achievementType && <span className="text-[11px] text-white/20">{ACHIEVEMENT_TYPES[a.achievementType]?.label}</span>}
+                  {a.achievementLevel && a.achievementType !== 'FREE_FORM' && (
+                    <span className="text-[11px] text-white/25">
+                      {ACHIEVEMENT_LEVELS[a.achievementLevel]?.label}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
 
-            {a.description && <p className="text-[14px] text-white/40 mb-4">{a.description}</p>}
+            {/* Photo */}
+            {a.fileUrl && (
+              <div className="mb-4 glass-card p-2">
+                <img src={a.fileUrl} alt="Диплом" className="w-full max-h-48 object-contain rounded-lg" />
+              </div>
+            )}
 
+            {/* Details */}
             <div className="space-y-2.5">
+              {a.description && (
+                <div>
+                  <div className="ios-section-header text-[9px] mb-1">Описание</div>
+                  <p className="text-[14px] text-white/60">{a.description}</p>
+                </div>
+              )}
+              {a.achievementType && (
+                <div className="flex justify-between">
+                  <span className="text-[12px] text-white/25">Тип</span>
+                  <span className="text-[12px] text-white/60">{ACHIEVEMENT_TYPES[a.achievementType]?.label}</span>
+                </div>
+              )}
               {a.achievementLevel && a.achievementType !== 'FREE_FORM' && (
-                <div className="flex justify-between text-[13px]">
-                  <span className="text-white/25">Уровень</span>
-                  <span className="text-white/60">{ACHIEVEMENT_LEVELS[a.achievementLevel]?.label}</span>
+                <div className="flex justify-between">
+                  <span className="text-[12px] text-white/25">Уровень</span>
+                  <span className="text-[12px] text-white/60">{ACHIEVEMENT_LEVELS[a.achievementLevel]?.label}</span>
                 </div>
               )}
-              {a.placement !== null && a.placement !== undefined && a.achievementType !== 'FREE_FORM' && (
-                <div className="flex justify-between text-[13px]">
-                  <span className="text-white/25">Место</span>
-                  <span className="text-white/60">{PLACEMENTS[a.placement]?.label || `Участник`}</span>
+              {a.achievementType !== 'FREE_FORM' && getResultLabel(a) && (
+                <div className="flex justify-between">
+                  <span className="text-[12px] text-white/25">Результат</span>
+                  <span className="text-[12px] text-white/60">{getResultLabel(a)}</span>
                 </div>
               )}
-              {a.direction && (
-                <div className="flex justify-between text-[13px]">
-                  <span className="text-white/25">Направление</span>
-                  <span className="text-white/60">{DIRECTIONS[a.direction]?.label || a.direction}</span>
-                </div>
-              )}
-              <div className="flex justify-between text-[13px]">
-                <span className="text-white/25">Запрошено XP</span>
-                <span className="text-white/60">{a.xpRequested}</span>
+              <div className="flex justify-between">
+                <span className="text-[12px] text-white/25">XP запрошено</span>
+                <span className="text-[12px] text-white/60">{a.xpRequested}</span>
               </div>
               {a.status === 'APPROVED' && (
-                <div className="flex justify-between text-[13px]">
-                  <span className="text-white/25">Начислено XP</span>
-                  <span className="text-[#34C759] font-bold">+{a.xpAwarded}</span>
+                <div className="flex justify-between">
+                  <span className="text-[12px] text-white/25">XP начислено</span>
+                  <span className="text-[12px] text-[#34C759] font-semibold">+{a.xpAwarded}</span>
                 </div>
               )}
               {a.achievementDate && (
-                <div className="flex justify-between text-[13px]">
-                  <span className="text-white/25">Дата</span>
-                  <span className="text-white/60">{a.achievementDate}</span>
+                <div className="flex justify-between">
+                  <span className="text-[12px] text-white/25">Дата</span>
+                  <span className="text-[12px] text-white/60">{new Date(a.achievementDate).toLocaleDateString('ru-RU')}</span>
+                </div>
+              )}
+              {a.direction && (
+                <div className="flex justify-between">
+                  <span className="text-[12px] text-white/25">Направление</span>
+                  <span className="text-[12px] text-white/60">{a.direction.split(',').map(d => DIRECTIONS[d.trim()]?.label || d.trim()).join(', ')}</span>
+                </div>
+              )}
+              {a.comment && (
+                <div>
+                  <div className="ios-section-header text-[9px] mb-1">Комментарий</div>
+                  <p className="text-[13px] text-white/50">{a.comment}</p>
                 </div>
               )}
               {a.reviewComment && (
-                <div className="mt-3 p-3 rounded-xl bg-white/3 border border-white/5">
-                  <p className="text-[11px] text-white/20 mb-1">Комментарий модератора</p>
+                <div>
+                  <div className="ios-section-header text-[9px] mb-1">Комментарий модератора</div>
                   <p className="text-[13px] text-white/50">{a.reviewComment}</p>
                 </div>
               )}
@@ -1336,83 +1586,121 @@ export default function Home() {
      RENDER: ADMIN PANEL
      ============================================================ */
   const renderAdmin = () => {
-    if (!isAdmin || !showAdmin) return null
+    if (!showAdmin) return null
     return (
       <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={() => setShowAdmin(false)}>
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-        <div className="relative w-full max-w-lg ios-sheet ios-sheet-up max-h-[90vh] overflow-y-auto"
+        <div className="relative w-full max-w-lg ios-sheet ios-sheet-up safe-area-bottom max-h-[90vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}>
-          <div className="p-6">
+          <div className="p-5">
             <IosSheetHandle />
+
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-[20px] font-bold text-white">Модерация</h3>
-              <button onClick={() => setShowAdmin(false)}
-                className="w-8 h-8 rounded-full bg-white/6 flex items-center justify-center text-white/30">
-                <IconClose />
-              </button>
+              <h2 className="text-[18px] font-bold text-white">Модерация</h2>
+              {pendingAchievements.length > 0 && (
+                <span className="px-2.5 py-1 rounded-full bg-[#FF9F0A]/15 text-[12px] font-bold text-[#FF9F0A]">{pendingAchievements.length}</span>
+              )}
             </div>
 
             {pendingAchievements.length === 0 ? (
-              <div className="text-center py-10">
-                <p className="text-[14px] text-white/15">Нет достижений для проверки</p>
+              <div className="text-center py-12">
+                <IconShield />
+                <p className="text-[14px] text-white/20 mt-3">Нет достижений на проверке</p>
               </div>
             ) : (
-              <div className="space-y-3 max-h-[70vh] overflow-y-auto">
-                {pendingAchievements.map((a) => (
-                  <div key={a.id} className="glass-card p-4 space-y-3">
-                    <div className="flex items-start gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-white/4 flex items-center justify-center shrink-0">
-                        <AchievementTypeIcon type={a.achievementType} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[14px] font-medium text-white">{a.title}</div>
-                        <div className="text-[12px] text-white/25 mt-0.5">{a.description}</div>
-                        <div className="text-[11px] text-white/15 mt-1">
-                          {a.user?.name} · Запрос: {a.xpRequested} XP
-                          {a.achievementLevel && ` · ${ACHIEVEMENT_LEVELS[a.achievementLevel]?.label}`}
-                          {a.placement !== null && a.placement !== undefined && ` · ${PLACEMENTS[a.placement]?.label}`}
+              <div className="space-y-4">
+                {pendingAchievements.map((a) => {
+                  const currentRejectReason = adminRejectReasons[a.id] || ''
+                  return (
+                    <div key={a.id} className="glass-card p-4 space-y-3">
+                      {/* Header */}
+                      <div className="flex items-start gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-white/4 flex items-center justify-center shrink-0">
+                          <AchievementTypeIcon type={a.achievementType} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[14px] font-semibold text-white">{a.title}</div>
+                          <div className="text-[12px] text-white/30">
+                            {a.user?.name || 'Неизвестный'}
+                            {a.achievementLevel && ` · ${ACHIEVEMENT_LEVELS[a.achievementLevel]?.label}`}
+                            {getResultLabel(a) && ` · ${getResultLabel(a)}`}
+                          </div>
+                          <div className="text-[12px] text-white/20">XP запрошено: {a.xpRequested}</div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Direction selector */}
-                    <div>
-                      <label className="text-[11px] text-white/25 mb-1.5 block">Направление</label>
-                      <div className="flex flex-wrap gap-1">
-                        {Object.entries(DIRECTIONS).map(([key, val]) => (
-                          <button key={key} onClick={() => setAdminDirection(key)}
-                            className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${
-                              adminDirection === key
-                                ? 'bg-[#007AFF]/12 border border-[#007AFF]/20 text-[#007AFF]'
-                                : 'bg-white/3 border border-white/5 text-white/30'
-                            }`}>
-                            {val.label}
-                          </button>
-                        ))}
+                      {/* Photo */}
+                      {a.fileUrl && (
+                        <div className="glass-card p-1.5">
+                          <img src={a.fileUrl} alt="Диплом" className="w-full max-h-32 object-contain rounded-lg" />
+                        </div>
+                      )}
+
+                      {/* Description */}
+                      {a.description && (
+                        <p className="text-[13px] text-white/40">{a.description}</p>
+                      )}
+                      {a.comment && (
+                        <p className="text-[13px] text-white/30 italic">«{a.comment}»</p>
+                      )}
+
+                      {/* XP to award */}
+                      <div>
+                        <label className="text-[11px] font-medium text-white/25 mb-1 block uppercase tracking-wider">XP начислить</label>
+                        <input type="number" value={adminXp || a.xpRequested}
+                          onChange={(e) => setAdminXp(Number(e.target.value))}
+                          className="glass-input w-full px-3 py-2 text-[14px] text-white bg-transparent focus:ring-0 focus:shadow-none"
+                          min={0} />
+                      </div>
+
+                      {/* Directions — multiple selection */}
+                      <div>
+                        <label className="text-[11px] font-medium text-white/25 mb-1.5 block uppercase tracking-wider">Направления</label>
+                        <div className="flex gap-1.5 flex-wrap">
+                          {Object.entries(DIRECTIONS).map(([key, dir]) => (
+                            <button key={key}
+                              onClick={() => setAdminDirections(prev => ({ ...prev, [key]: !prev[key] }))}
+                              className={`ios-pill flex items-center gap-1.5 ${adminDirections[key] ? 'ios-pill-active' : ''}`}>
+                              <span className="w-2 h-2 rounded-full" style={{ background: dir.color }} />
+                              {dir.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Rejection reason */}
+                      <div>
+                        <label className="text-[11px] font-medium text-white/25 mb-1 block uppercase tracking-wider">Причина отклонения (обязательно)</label>
+                        <input type="text" value={currentRejectReason}
+                          onChange={(e) => setAdminRejectReasons(prev => ({ ...prev, [a.id]: e.target.value }))}
+                          placeholder="Укажите причину отклонения"
+                          className="glass-input w-full px-3 py-2 text-[14px] text-white placeholder-white/15 bg-transparent focus:ring-0 focus:shadow-none" />
+                      </div>
+
+                      {/* Action buttons */}
+                      <div className="flex gap-2">
+                        <button onClick={() => {
+                          const selectedDirs = Object.entries(adminDirections).filter(([, v]) => v).map(([k]) => k).join(',')
+                          handleModerate(a.id, 'approve', adminXp || a.xpRequested, selectedDirs || undefined)
+                        }}
+                          className="flex-1 py-2.5 rounded-xl bg-[#34C759]/15 text-[#34C759] text-[13px] font-semibold flex items-center justify-center gap-1.5 active:scale-95 ios-spring">
+                          <IconCheck /> Одобрить
+                        </button>
+                        <button onClick={() => {
+                          if (!currentRejectReason.trim()) {
+                            toast.error('Укажите причину отклонения')
+                            return
+                          }
+                          const selectedDirs = Object.entries(adminDirections).filter(([, v]) => v).map(([k]) => k).join(',')
+                          handleModerate(a.id, 'reject', undefined, selectedDirs || undefined, currentRejectReason)
+                        }}
+                          className="flex-1 py-2.5 rounded-xl bg-[#FF3B30]/15 text-[#FF3B30] text-[13px] font-semibold flex items-center justify-center gap-1.5 active:scale-95 ios-spring">
+                          <IconClose size={12} /> Отклонить
+                        </button>
                       </div>
                     </div>
-
-                    {/* XP override */}
-                    <div>
-                      <label className="text-[11px] text-white/25 mb-1.5 block">Начислить XP</label>
-                      <input type="number" value={adminXp || a.xpRequested}
-                        onChange={(e) => setAdminXp(Number(e.target.value))}
-                        className="glass-input w-full px-3 py-2 text-[13px] text-white bg-transparent border-0 focus:ring-0 focus:shadow-none" />
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex gap-2">
-                      <button onClick={() => handleModerate(a.id, 'approve', adminXp || a.xpRequested, adminDirection || undefined)}
-                        className="flex-1 py-2.5 bg-[#34C759]/12 text-[#34C759] text-[13px] font-semibold rounded-xl active:scale-[0.97] transition-transform">
-                        Одобрить
-                      </button>
-                      <button onClick={() => handleModerate(a.id, 'reject', 0, undefined, 'Отклонено модератором')}
-                        className="flex-1 py-2.5 bg-[#FF3B30]/12 text-[#FF3B30] text-[13px] font-semibold rounded-xl active:scale-[0.97] transition-transform">
-                        Отклонить
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </div>
@@ -1422,45 +1710,41 @@ export default function Home() {
   }
 
   /* ============================================================
-     MAIN RENDER
+     RENDER: MAIN
      ============================================================ */
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden">
-      {/* Background decorative orbs — CRITICAL for glassmorphism visibility */}
+    <div className="min-h-screen relative overflow-hidden bg-[#08080f]">
       <div className="bg-orb bg-orb-1" />
       <div className="bg-orb bg-orb-2" />
       <div className="bg-orb bg-orb-3" />
-      <div className="bg-orb bg-orb-4" />
 
-      {/* Content */}
-      <main className="flex-1 relative z-10 pb-20">
+      <div className="relative z-10 max-w-lg mx-auto pb-24">
         {currentTab === 'home' && renderHome()}
         {currentTab === 'achievements' && renderAchievements()}
+        {currentTab === 'milestones' && renderMilestones()}
         {currentTab === 'rating' && renderRating()}
         {currentTab === 'profile' && renderProfile()}
-      </main>
+      </div>
 
-      {/* Bottom navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 glass-nav safe-area-bottom">
-        <div className="max-w-lg mx-auto flex items-center justify-around py-2">
+      {/* 5-tab bottom navigation */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 glass-nav safe-area-bottom">
+        <div className="max-w-lg mx-auto flex">
           {([
-            { tab: 'home' as Tab, label: 'Главная', icon: IconHome },
-            { tab: 'achievements' as Tab, label: 'Достижения', icon: IconAchievements },
-            { tab: 'rating' as Tab, label: 'Рейтинг', icon: IconTrophy },
-            { tab: 'profile' as Tab, label: 'Профиль', icon: IconUser },
-          ]).map(({ tab, label, icon: Icon }) => (
-            <button key={tab} onClick={() => setCurrentTab(tab)}
-              className="flex flex-col items-center gap-0.5 py-1 px-3 min-w-[64px]">
-              <Icon active={currentTab === tab} />
-              <span className={`text-[10px] font-medium transition-colors ${
-                currentTab === tab ? 'text-[#007AFF]' : 'text-white/25'
-              }`}>{label}</span>
+            { key: 'home' as Tab, label: 'Главная', Icon: IconHome },
+            { key: 'achievements' as Tab, label: 'Ачивки', Icon: IconAchievements },
+            { key: 'milestones' as Tab, label: 'Достижения', Icon: IconMilestones },
+            { key: 'rating' as Tab, label: 'Рейтинг', Icon: IconTrophy },
+            { key: 'profile' as Tab, label: 'Профиль', Icon: IconUser },
+          ]).map(({ key, label, Icon }) => (
+            <button key={key} onClick={() => setCurrentTab(key)}
+              className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 transition-colors ${currentTab === key ? 'text-[#007AFF]' : 'text-white/25'}`}>
+              <Icon active={currentTab === key} />
+              <span className="text-[9px] font-medium">{label}</span>
             </button>
           ))}
         </div>
-      </nav>
+      </div>
 
-      {/* Modals */}
       {renderAddSheet()}
       {renderDetailModal()}
       {renderAdmin()}
