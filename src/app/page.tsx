@@ -537,10 +537,7 @@ export default function Home() {
 
   // Auth check on mount — Telegram auto-login or localStorage
   useEffect(() => {
-    const init = async () => {
-      // Small delay to ensure Telegram WebApp script is initialized
-      await new Promise(r => setTimeout(r, 100))
-
+    const tryTelegramAuth = async (): Promise<boolean> => {
       const tgWindow = window as unknown as {
         Telegram?: {
           WebApp?: {
@@ -554,42 +551,68 @@ export default function Home() {
       const tg = tgWindow.Telegram
       const tgWebApp = tg?.WebApp
 
+      if (!tgWebApp) {
+        console.log('[TG] Telegram WebApp SDK not found on window')
+        return false
+      }
+
       // Signal Telegram that the app is ready
-      if (tgWebApp?.ready) {
-        try { tgWebApp.ready() } catch {}
-      }
-      if (tgWebApp?.expand) {
-        try { tgWebApp.expand() } catch {}
+      try { tgWebApp.ready?.() } catch {}
+      try { tgWebApp.expand?.() } catch {}
+
+      const tgUser = tgWebApp.initDataUnsafe?.user
+      const hasInitData = tgWebApp.initData && tgWebApp.initData.length > 0
+
+      console.log('[TG] initData present:', hasInitData, 'user:', tgUser ? { id: tgUser.id, name: tgUser.first_name } : null)
+
+      if (!tgUser && !hasInitData) {
+        console.log('[TG] No Telegram user data available')
+        return false
       }
 
-      const tgUser = tgWebApp?.initDataUnsafe?.user
-      const hasInitData = tgWebApp?.initData && tgWebApp.initData.length > 0
-
-      if (tgUser || hasInitData) {
-        setIsTelegram(true)
-        try {
-          const res = await fetch('/api/auth/telegram', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              telegramId: String(tgUser?.id || 'tg_' + Date.now()),
-              firstName: tgUser?.first_name || 'Telegram',
-              lastName: tgUser?.last_name || '',
-              username: tgUser?.username || '',
-              photoUrl: tgUser?.photo_url || '',
-              initData: tgWebApp?.initData || '',
-            }),
-          })
-          const data = await res.json()
-          if (res.ok && data.user) {
-            setAuthUser(data.user)
-            localStorage.setItem('auth_user', JSON.stringify(data.user))
-            setAuthChecked(true)
-            return
-          }
-        } catch (e) {
-          console.error('Telegram auth error:', e)
+      setIsTelegram(true)
+      try {
+        const res = await fetch('/api/auth/telegram', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            telegramId: String(tgUser?.id || 'tg_' + Date.now()),
+            firstName: tgUser?.first_name || 'Telegram',
+            lastName: tgUser?.last_name || '',
+            username: tgUser?.username || '',
+            photoUrl: tgUser?.photo_url || '',
+            initData: tgWebApp.initData || '',
+          }),
+        })
+        const data = await res.json()
+        if (res.ok && data.user) {
+          console.log('[TG] Auth successful:', data.user.name)
+          setAuthUser(data.user)
+          localStorage.setItem('auth_user', JSON.stringify(data.user))
+          return true
+        } else {
+          console.error('[TG] Auth failed:', data.error)
         }
+      } catch (e) {
+        console.error('[TG] Auth error:', e)
+      }
+      return false
+    }
+
+    const init = async () => {
+      // Wait for Telegram WebApp script to load (multiple attempts)
+      let tgAuthed = false
+      for (let i = 0; i < 5; i++) {
+        await new Promise(r => setTimeout(r, 200))
+        tgAuthed = await tryTelegramAuth()
+        if (tgAuthed) break
+        // If window.Telegram doesn't exist at all after first try, stop retrying
+        if (!(window as any).Telegram) break
+      }
+
+      if (tgAuthed) {
+        setAuthChecked(true)
+        return
       }
 
       // Fallback: check localStorage
@@ -747,11 +770,15 @@ export default function Home() {
       toast.error('Выберите уровень достижения')
       return
     }
+    if (!userId) {
+      toast.error('Ошибка авторизации. Перевойдите в аккаунт.')
+      return
+    }
     try {
       const body: Record<string, unknown> = {
         userId,
-        title: formTitle,
-        description: formDesc || null,
+        title: formTitle.trim(),
+        description: formDesc?.trim() || null,
         achievementType: formAchievementType,
         achievementLevel: formAchievementType !== 'FREE_FORM' ? formLevel : null,
         resultType: formAchievementType !== 'FREE_FORM' ? formResultType : null,
@@ -759,7 +786,7 @@ export default function Home() {
         resultStatus: formAchievementType !== 'FREE_FORM' && formResultType === 'STATUS' ? formResultStatus : null,
         xpRequested: formXp,
         achievementDate: formDate || null,
-        comment: formComment || null,
+        comment: formComment?.trim() || null,
         fileUrl: formFileUrl || null,
       }
       const res = await fetch('/api/achievements', {
@@ -767,14 +794,20 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
-      if (!res.ok) { toast.error('Ошибка при создании'); return }
+      const data = await res.json()
+      if (!res.ok) {
+        console.error('Achievement creation error:', data)
+        toast.error(data.error || 'Ошибка при создании достижения')
+        return
+      }
       toast.success('Достижение отправлено на проверку!')
       resetForm()
       setShowAddSheet(false)
       fetchProfile()
       fetchAchievements()
-    } catch {
-      toast.error('Ошибка сети')
+    } catch (e) {
+      console.error('Achievement creation network error:', e)
+      toast.error('Ошибка сети. Попробуйте ещё раз.')
     }
   }
 
@@ -800,7 +833,7 @@ export default function Home() {
     }
   }
 
-  const isAdmin = profile?.role === 'ADMIN'
+  const isAdmin = authUser?.role === 'ADMIN' || profile?.role === 'ADMIN'
   const userLeague = getLeague(profile?.league || 'bronze')
 
   // Filtered achievements
@@ -895,7 +928,7 @@ export default function Home() {
 
       {/* Quick actions */}
       <div className="grid grid-cols-2 gap-2">
-        <button onClick={() => { setCurrentTab('achievements'); setTimeout(() => setShowAddSheet(true), 100) }}
+        <button onClick={() => { setCurrentTab('milestones'); setTimeout(() => setShowAddSheet(true), 100) }}
           className="glass-card flex items-center gap-3 py-3 px-4 active:scale-[0.97] ios-spring">
           <div className="w-9 h-9 rounded-xl bg-[#007AFF]/10 border border-[#007AFF]/15 flex items-center justify-center">
             <IconPlus size={16} />
@@ -929,7 +962,7 @@ export default function Home() {
       <div>
         <div className="flex items-center justify-between mb-3">
           <h3 className="ios-section-header">Последние достижения</h3>
-          <button onClick={() => setCurrentTab('achievements')} className="text-[13px] text-[#007AFF] font-medium">Все</button>
+          <button onClick={() => setCurrentTab('milestones')} className="text-[13px] text-[#007AFF] font-medium">Все</button>
         </div>
         <div className="space-y-1.5">
           {recentAchievements.map((a) => (
@@ -961,9 +994,102 @@ export default function Home() {
   )
 
   /* ============================================================
-     RENDER: ACHIEVEMENTS (Ачивки) LIST
+     RENDER: ACHIEVEMENTS TAB (now labeled "Ачивки" — Badge Cards)
      ============================================================ */
-  const renderAchievements = () => (
+  const renderAchievements = () => {
+    const earnedCount = badges.filter(b => b.earned).length
+
+    // Define badge card colors for visual variety
+    const badgeColors = [
+      { bg: 'bg-[#FF9F0A]/10', border: 'border-[#FF9F0A]/20', glow: 'shadow-[#FF9F0A]/10' },
+      { bg: 'bg-[#5856D6]/10', border: 'border-[#5856D6]/20', glow: 'shadow-[#5856D6]/10' },
+      { bg: 'bg-[#007AFF]/10', border: 'border-[#007AFF]/20', glow: 'shadow-[#007AFF]/10' },
+      { bg: 'bg-[#34C759]/10', border: 'border-[#34C759]/20', glow: 'shadow-[#34C759]/10' },
+      { bg: 'bg-[#AF52DE]/10', border: 'border-[#AF52DE]/20', glow: 'shadow-[#AF52DE]/10' },
+      { bg: 'bg-[#FF3B30]/10', border: 'border-[#FF3B30]/20', glow: 'shadow-[#FF3B30]/10' },
+    ]
+
+    return (
+      <div className="px-5 pb-6 space-y-5 ios-fade-in">
+        <div className="pt-3">
+          <h1 className="ios-large-title">Ачивки</h1>
+          <p className="text-[14px] text-white/30 mt-1">
+            Получены {earnedCount} из {badges.length}
+          </p>
+        </div>
+
+        {/* Progress bar */}
+        {badges.length > 0 && (
+          <div className="glass-card p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[12px] text-white/30 font-medium uppercase tracking-wider">Прогресс</span>
+              <span className="text-[13px] font-bold text-[#FF9F0A]">{earnedCount}/{badges.length}</span>
+            </div>
+            <XpProgressBar
+              current={earnedCount}
+              max={badges.length}
+              gradient="linear-gradient(90deg, #FF9F0A, #FF3B30, #AF52DE)"
+            />
+          </div>
+        )}
+
+        {/* Badge cards grid */}
+        <div className="grid grid-cols-2 gap-3">
+          {badges.map((badge, idx) => {
+            const color = badgeColors[idx % badgeColors.length]
+            return (
+              <div key={badge.id} className={`glass-card p-4 relative overflow-hidden transition-all duration-300 ${badge.earned ? `shadow-lg ${color.glow}` : 'opacity-40 grayscale'}`}>
+                {badge.earned && (
+                  <div className="absolute top-2 right-2 text-[#34C759]">
+                    <IconCheck />
+                  </div>
+                )}
+                <div className="flex flex-col items-center text-center">
+                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-[32px] mb-3 ${badge.earned ? `${color.bg} ${color.border} border shadow-lg` : 'bg-white/4 border border-white/6'}`}>
+                    {badge.emoji}
+                  </div>
+                  <div className={`text-[13px] font-semibold leading-tight ${badge.earned ? 'text-white' : 'text-white/30'}`}>
+                    {badge.name}
+                  </div>
+                  <div className="text-[10px] text-white/25 mt-1.5 leading-tight min-h-[24px]">
+                    {badge.description}
+                  </div>
+                  {badge.earned && badge.earnedAt && (
+                    <div className="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#34C759]/10 border border-[#34C759]/15">
+                      <span className="w-1 h-1 rounded-full bg-[#34C759]" />
+                      <span className="text-[9px] text-[#34C759] font-medium">
+                        {new Date(badge.earnedAt).toLocaleDateString('ru-RU')}
+                      </span>
+                    </div>
+                  )}
+                  {!badge.earned && (
+                    <div className="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/4 border border-white/6">
+                      <span className="w-1 h-1 rounded-full bg-white/20" />
+                      <span className="text-[9px] text-white/20 font-medium">Не получена</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {badges.length === 0 && (
+          <div className="text-center py-12">
+            <div className="w-14 h-14 rounded-2xl bg-white/4 flex items-center justify-center mx-auto mb-3">
+              <IconMilestones active={false} />
+            </div>
+            <p className="text-[14px] text-white/20 font-medium">Ачивки скоро появятся</p>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  /* ============================================================
+     RENDER: MILESTONES TAB (now labeled "Достижения" — Achievement List)
+     ============================================================ */
+  const renderMilestones = () => (
     <div className="px-5 pb-6 space-y-4 ios-fade-in">
       <div className="pt-3 flex items-center justify-between">
         <h1 className="ios-large-title">Достижения</h1>
@@ -1033,77 +1159,6 @@ export default function Home() {
       </div>
     </div>
   )
-
-  /* ============================================================
-     RENDER: MILESTONES (Ачивки) TAB
-     ============================================================ */
-  const renderMilestones = () => {
-    const earnedCount = badges.filter(b => b.earned).length
-
-    return (
-      <div className="px-5 pb-6 space-y-5 ios-fade-in">
-        <div className="pt-3">
-          <h1 className="ios-large-title">Ачивки</h1>
-          <p className="text-[14px] text-white/30 mt-1">
-            Получены {earnedCount} из {badges.length}
-          </p>
-        </div>
-
-        {/* Progress bar */}
-        {badges.length > 0 && (
-          <div className="glass-card p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[12px] text-white/30 font-medium uppercase tracking-wider">Прогресс</span>
-              <span className="text-[13px] font-bold text-[#007AFF]">{earnedCount}/{badges.length}</span>
-            </div>
-            <XpProgressBar
-              current={earnedCount}
-              max={badges.length}
-              gradient="linear-gradient(90deg, #FF9F0A, #FF3B30, #AF52DE)"
-            />
-          </div>
-        )}
-
-        {/* Badge cards grid */}
-        <div className="grid grid-cols-2 gap-3">
-          {badges.map((badge) => (
-            <div key={badge.id} className={`glass-card p-4 relative overflow-hidden ${badge.earned ? '' : 'opacity-40'}`}>
-              {badge.earned && (
-                <div className="absolute top-2 right-2">
-                  <IconCheck />
-                </div>
-              )}
-              <div className="flex flex-col items-center text-center">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-[28px] mb-2.5 ${badge.earned ? 'bg-[#FF9F0A]/10 border border-[#FF9F0A]/20' : 'bg-white/4 border border-white/6'}`}>
-                  {badge.emoji}
-                </div>
-                <div className={`text-[13px] font-semibold ${badge.earned ? 'text-white' : 'text-white/30'}`}>
-                  {badge.name}
-                </div>
-                <div className="text-[10px] text-white/25 mt-1 leading-tight">
-                  {badge.description}
-                </div>
-                {badge.earned && badge.earnedAt && (
-                  <div className="text-[9px] text-[#34C759]/60 mt-1.5">
-                    {new Date(badge.earnedAt).toLocaleDateString('ru-RU')}
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {badges.length === 0 && (
-          <div className="text-center py-12">
-            <div className="w-14 h-14 rounded-2xl bg-white/4 flex items-center justify-center mx-auto mb-3">
-              <IconAchievements active={false} />
-            </div>
-            <p className="text-[14px] text-white/20 font-medium">Ачивки скоро появятся</p>
-          </div>
-        )}
-      </div>
-    )
-  }
 
   /* ============================================================
      RENDER: RATING — With Top-3 Podium
@@ -1691,8 +1746,8 @@ export default function Home() {
         <div className="max-w-lg mx-auto flex">
           {([
             { key: 'home' as Tab, label: 'Главная', Icon: IconHome },
-            { key: 'achievements' as Tab, label: 'Достижения', Icon: IconAchievements },
-            { key: 'milestones' as Tab, label: 'Ачивки', Icon: IconMilestones },
+            { key: 'achievements' as Tab, label: 'Ачивки', Icon: IconMilestones },
+            { key: 'milestones' as Tab, label: 'Достижения', Icon: IconAchievements },
             { key: 'rating' as Tab, label: 'Рейтинг', Icon: IconTrophy },
             { key: 'profile' as Tab, label: 'Профиль', Icon: IconUser },
           ]).map(({ key, label, Icon }) => (

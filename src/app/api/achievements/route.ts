@@ -87,12 +87,12 @@ export async function POST(request: NextRequest) {
     } = body;
 
     if (!userId || !title || !achievementType) {
-      return NextResponse.json({ error: 'userId, title, achievementType required' }, { status: 400 });
+      return NextResponse.json({ error: 'Обязательные поля: userId, title, achievementType' }, { status: 400 });
     }
 
     const user = await db.user.findUnique({ where: { id: userId } });
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Пользователь не найден' }, { status: 404 });
     }
 
     // Auto-assign category based on achievement type
@@ -152,6 +152,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ achievement }, { status: 201 });
   } catch (error) {
     console.error('Achievements POST error:', error);
-    return NextResponse.json({ error: String(error) }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Внутренняя ошибка сервера при создании достижения';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
