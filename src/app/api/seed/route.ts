@@ -105,6 +105,18 @@ export async function GET() {
     const badge3 = await db.badge.create({ data: { id: 'b3', name: 'Олимпийский резерв', emoji: '🧠', description: '100+ XP в Знании', conditionType: 'XP_THRESHOLD_KNOWLEDGE', conditionValue: 100 } });
     const badge4 = await db.badge.create({ data: { id: 'b4', name: 'Железная воля', emoji: '💪', description: '50+ XP в Воле', conditionType: 'XP_THRESHOLD_WILL', conditionValue: 50 } });
 
+    const badge5 = await db.badge.create({ data: { id: 'b5', name: 'Чемпион', emoji: '🏆', description: 'Занять 1 место в соревновании', conditionType: 'FIRST_PLACE', conditionValue: 1 } });
+    const badge6 = await db.badge.create({ data: { id: 'b6', name: 'Олимпиадник', emoji: '🧪', description: 'Отправить достижение типа РЭШ/ВСОШ', conditionType: 'TYPE_OLYMPIAD', conditionValue: 1 } });
+    const badge7 = await db.badge.create({ data: { id: 'b7', name: 'Творец', emoji: '🎨', description: 'Отправить творческое достижение', conditionType: 'TYPE_CREATIVE', conditionValue: 1 } });
+    const badge8 = await db.badge.create({ data: { id: 'b8', name: 'Спортсмен', emoji: '🏃', description: 'Отправить спортивное достижение', conditionType: 'TYPE_SPORT', conditionValue: 1 } });
+    const badge9 = await db.badge.create({ data: { id: 'b9', name: 'Многорукий', emoji: '🐙', description: 'Получить XP во всех 5 направлениях', conditionType: 'ALL_DIRECTIONS', conditionValue: 5 } });
+    const badge10 = await db.badge.create({ data: { id: 'b10', name: 'На все руки', emoji: '🤹', description: 'Иметь достижения всех 4 типов', conditionType: 'ALL_TYPES', conditionValue: 4 } });
+    const badge11 = await db.badge.create({ data: { id: 'b11', name: 'Золотая лига', emoji: '🥇', description: 'Достичь Золотой лиги', conditionType: 'LEAGUE_GOLD', conditionValue: 1 } });
+    const badge12 = await db.badge.create({ data: { id: 'b12', name: 'Серебряная лига', emoji: '🥈', description: 'Достичь Серебряной лиги', conditionType: 'LEAGUE_SILVER', conditionValue: 1 } });
+    const badge13 = await db.badge.create({ data: { id: 'b13', name: 'Ботан', emoji: '📚', description: 'Достичь 4 уровня', conditionType: 'LEVEL_4', conditionValue: 4 } });
+    const badge14 = await db.badge.create({ data: { id: 'b14', name: 'Легенда', emoji: '⚡', description: 'Достичь 7 уровня', conditionType: 'LEVEL_7', conditionValue: 7 } });
+    const badge15 = await db.badge.create({ data: { id: 'b15', name: 'Волонтёр', emoji: '🤝', description: 'Отправить достижение в Сообщество', conditionType: 'TYPE_COMMUNITY', conditionValue: 1 } });
+
     // Give badges
     await db.userBadge.createMany({
       data: [
@@ -118,6 +130,9 @@ export async function GET() {
         { id: 'ub8', userId: user4.id, badgeId: badge1.id },
         { id: 'ub9', userId: user7.id, badgeId: badge1.id },
         { id: 'ub10', userId: user7.id, badgeId: badge2.id },
+        { id: 'ub11', userId: student.id, badgeId: badge5.id },
+        { id: 'ub12', userId: student.id, badgeId: badge6.id },
+        { id: 'ub13', userId: student.id, badgeId: badge7.id },
       ],
     });
 

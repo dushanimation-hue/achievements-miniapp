@@ -33,6 +33,11 @@ interface LeaderboardEntry {
 }
 interface LevelInfo { level: number; name: string; min: number; max: number }
 interface AuthUser { id: string; name: string; login: string; role: string; faculty: null }
+interface BadgeItem {
+  id: string; name: string; description: string; emoji: string;
+  conditionType: string; conditionValue: number;
+  earned: boolean; earnedAt: string | null;
+}
 
 /* ============================================================
    CONSTANTS
@@ -491,6 +496,7 @@ export default function Home() {
   const [achievementCounts, setAchievementCounts] = useState({ total: 0, APPROVED: 0, PENDING: 0, REJECTED: 0 })
   const [allAchievements, setAllAchievements] = useState<Achievement[]>([])
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
+  const [badges, setBadges] = useState<BadgeItem[]>([])
   const [loading, setLoading] = useState(false)
 
   // Add achievement form state
@@ -532,22 +538,46 @@ export default function Home() {
   // Auth check on mount — Telegram auto-login or localStorage
   useEffect(() => {
     const init = async () => {
-      // Check Telegram WebApp
-      const tg = (window as unknown as { Telegram?: { WebApp?: { initDataUnsafe?: { user?: { id: number; first_name: string; last_name?: string; username?: string; photo_url?: string } } } } }).Telegram
-      const tgUser = tg?.WebApp?.initDataUnsafe?.user
+      // Small delay to ensure Telegram WebApp script is initialized
+      await new Promise(r => setTimeout(r, 100))
 
-      if (tgUser) {
+      const tgWindow = window as unknown as {
+        Telegram?: {
+          WebApp?: {
+            initDataUnsafe?: { user?: { id: number; first_name: string; last_name?: string; username?: string; photo_url?: string } }
+            initData?: string
+            ready?: () => void
+            expand?: () => void
+          }
+        }
+      }
+      const tg = tgWindow.Telegram
+      const tgWebApp = tg?.WebApp
+
+      // Signal Telegram that the app is ready
+      if (tgWebApp?.ready) {
+        try { tgWebApp.ready() } catch {}
+      }
+      if (tgWebApp?.expand) {
+        try { tgWebApp.expand() } catch {}
+      }
+
+      const tgUser = tgWebApp?.initDataUnsafe?.user
+      const hasInitData = tgWebApp?.initData && tgWebApp.initData.length > 0
+
+      if (tgUser || hasInitData) {
         setIsTelegram(true)
         try {
           const res = await fetch('/api/auth/telegram', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              telegramId: String(tgUser.id),
-              firstName: tgUser.first_name,
-              lastName: tgUser.last_name || '',
-              username: tgUser.username || '',
-              photoUrl: tgUser.photo_url || '',
+              telegramId: String(tgUser?.id || 'tg_' + Date.now()),
+              firstName: tgUser?.first_name || 'Telegram',
+              lastName: tgUser?.last_name || '',
+              username: tgUser?.username || '',
+              photoUrl: tgUser?.photo_url || '',
+              initData: tgWebApp?.initData || '',
             }),
           })
           const data = await res.json()
@@ -609,6 +639,18 @@ export default function Home() {
     }
   }, [userId])
 
+  const fetchBadges = useCallback(async () => {
+    if (!userId) return
+    try {
+      const res = await fetch(`/api/badges?userId=${userId}`)
+      if (!res.ok) return
+      const data = await res.json()
+      setBadges(data.badges || [])
+    } catch (e) {
+      console.error('Badges fetch error:', e)
+    }
+  }, [userId])
+
   const fetchLeaderboard = useCallback(async () => {
     setLoading(true)
     try {
@@ -647,7 +689,7 @@ export default function Home() {
     }
   }, [])
 
-  useEffect(() => { if (userId) { fetchProfile(); fetchAchievements() } }, [userId, fetchProfile, fetchAchievements])
+  useEffect(() => { if (userId) { fetchProfile(); fetchAchievements(); fetchBadges() } }, [userId, fetchProfile, fetchAchievements, fetchBadges])
 
   useEffect(() => {
     if (currentTab === 'rating') fetchLeaderboard()
@@ -924,7 +966,7 @@ export default function Home() {
   const renderAchievements = () => (
     <div className="px-5 pb-6 space-y-4 ios-fade-in">
       <div className="pt-3 flex items-center justify-between">
-        <h1 className="ios-large-title">Ачивки</h1>
+        <h1 className="ios-large-title">Достижения</h1>
         <button onClick={() => setShowAddSheet(true)}
           className="w-9 h-9 rounded-xl bg-[#007AFF] flex items-center justify-center active:scale-95 ios-spring">
           <IconPlus size={18} />
@@ -983,7 +1025,7 @@ export default function Home() {
             <div className="w-14 h-14 rounded-2xl bg-white/4 flex items-center justify-center mx-auto mb-3">
               <IconAchievements active={false} />
             </div>
-            <p className="text-[14px] text-white/20 font-medium">Пока нет ачивок</p>
+            <p className="text-[14px] text-white/20 font-medium">Пока нет достижений</p>
             <button onClick={() => setShowAddSheet(true)}
               className="mt-3 text-[13px] text-[#007AFF] font-semibold">Добавить первую</button>
           </div>
@@ -993,154 +1035,72 @@ export default function Home() {
   )
 
   /* ============================================================
-     RENDER: MILESTONES (Достижения) TAB
+     RENDER: MILESTONES (Ачивки) TAB
      ============================================================ */
   const renderMilestones = () => {
-    const totalDirXp = Object.values(directionXp).reduce((s, v) => s + v, 0) || 1
+    const earnedCount = badges.filter(b => b.earned).length
 
     return (
       <div className="px-5 pb-6 space-y-5 ios-fade-in">
         <div className="pt-3">
-          <h1 className="ios-large-title">Достижения</h1>
-          <p className="text-[14px] text-white/30 mt-1">Прогресс и статистика</p>
+          <h1 className="ios-large-title">Ачивки</h1>
+          <p className="text-[14px] text-white/30 mt-1">
+            Получены {earnedCount} из {badges.length}
+          </p>
         </div>
 
-        {/* Level progress card */}
-        <div className="level-card-pro p-5 relative">
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#007AFF]/12 border border-[#007AFF]/20 flex items-center justify-center">
-                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                    <path d="M10 2L12.5 7.5L18 8.5L14 12.5L15 18L10 15.5L5 18L6 12.5L2 8.5L7.5 7.5L10 2Z" fill="#007AFF" stroke="#007AFF" strokeWidth="0.5" />
-                  </svg>
+        {/* Progress bar */}
+        {badges.length > 0 && (
+          <div className="glass-card p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[12px] text-white/30 font-medium uppercase tracking-wider">Прогресс</span>
+              <span className="text-[13px] font-bold text-[#007AFF]">{earnedCount}/{badges.length}</span>
+            </div>
+            <XpProgressBar
+              current={earnedCount}
+              max={badges.length}
+              gradient="linear-gradient(90deg, #FF9F0A, #FF3B30, #AF52DE)"
+            />
+          </div>
+        )}
+
+        {/* Badge cards grid */}
+        <div className="grid grid-cols-2 gap-3">
+          {badges.map((badge) => (
+            <div key={badge.id} className={`glass-card p-4 relative overflow-hidden ${badge.earned ? '' : 'opacity-40'}`}>
+              {badge.earned && (
+                <div className="absolute top-2 right-2">
+                  <IconCheck />
                 </div>
-                <div>
-                  <div className="text-[12px] text-white/30 font-medium uppercase tracking-wider">Уровень</div>
-                  <div className="text-[18px] font-bold text-white">{profile?.level} · {profile?.levelName}</div>
+              )}
+              <div className="flex flex-col items-center text-center">
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-[28px] mb-2.5 ${badge.earned ? 'bg-[#FF9F0A]/10 border border-[#FF9F0A]/20' : 'bg-white/4 border border-white/6'}`}>
+                  {badge.emoji}
                 </div>
-              </div>
-              <div className="text-right">
-                <div className="text-[22px] font-bold text-[#007AFF] tabular-nums">{profile?.totalXp}</div>
-                <div className="text-[11px] text-white/25 font-medium">XP</div>
+                <div className={`text-[13px] font-semibold ${badge.earned ? 'text-white' : 'text-white/30'}`}>
+                  {badge.name}
+                </div>
+                <div className="text-[10px] text-white/25 mt-1 leading-tight">
+                  {badge.description}
+                </div>
+                {badge.earned && badge.earnedAt && (
+                  <div className="text-[9px] text-[#34C759]/60 mt-1.5">
+                    {new Date(badge.earnedAt).toLocaleDateString('ru-RU')}
+                  </div>
+                )}
               </div>
             </div>
-            <XpProgressBar current={profile?.xpInLevel || 0} max={profile?.xpToNextLevel || 1} />
-            {profile?.nextLevelName && (
-              <p className="text-[11px] text-white/25 mt-2 text-center">
-                До «{profile.nextLevelName}» — ещё {Math.max(0, (profile.nextLevelXp || 0) - (profile.totalXp))} XP
-              </p>
-            )}
-          </div>
+          ))}
         </div>
 
-        {/* XP by direction */}
-        <div>
-          <h3 className="ios-section-header mb-3">XP по направлениям</h3>
-          <div className="space-y-2.5">
-            {Object.entries(DIRECTIONS).map(([key, dir]) => {
-              const xp = directionXp[key] || 0
-              const pct = Math.min((xp / totalDirXp) * 100, 100)
-              return (
-                <GlassCard key={key} className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-2.5 h-2.5 rounded-full" style={{ background: dir.color }} />
-                      <span className="text-[13px] font-semibold text-white">{dir.label}</span>
-                    </div>
-                    <span className="text-[14px] font-bold tabular-nums" style={{ color: dir.color }}>{xp} XP</span>
-                  </div>
-                  <div className="w-full bg-white/6 rounded-full h-2 overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-700 ease-out"
-                      style={{
-                        width: `${Math.max(pct, xp > 0 ? 4 : 0)}%`,
-                        background: `linear-gradient(90deg, ${dir.color}, ${dir.color}88)`
-                      }}
-                    />
-                  </div>
-                </GlassCard>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Statistics grid */}
-        <div>
-          <h3 className="ios-section-header mb-3">Статистика</h3>
-          <div className="grid grid-cols-2 gap-2">
-            <GlassCard className="p-4">
-              <div className="ios-section-header text-[9px]">Всего</div>
-              <div className="text-[22px] font-bold text-white mt-1.5 tabular-nums">{achievementCounts.total}</div>
-            </GlassCard>
-            <GlassCard className="p-4">
-              <div className="ios-section-header text-[9px]">Одобрено</div>
-              <div className="text-[22px] font-bold text-[#34C759] mt-1.5 tabular-nums">{achievementCounts.APPROVED}</div>
-            </GlassCard>
-            <GlassCard className="p-4">
-              <div className="ios-section-header text-[9px]">На проверке</div>
-              <div className="text-[22px] font-bold text-[#FF9F0A] mt-1.5 tabular-nums">{achievementCounts.PENDING}</div>
-            </GlassCard>
-            <GlassCard className="p-4">
-              <div className="ios-section-header text-[9px]">Отклонено</div>
-              <div className="text-[22px] font-bold text-[#FF3B30] mt-1.5 tabular-nums">{achievementCounts.REJECTED}</div>
-            </GlassCard>
-          </div>
-          {/* Visual stats bar */}
-          {achievementCounts.total > 0 && (
-            <div className="mt-3 flex rounded-full overflow-hidden h-2">
-              {achievementCounts.APPROVED > 0 && (
-                <div className="bg-[#34C759] transition-all duration-500" style={{ width: `${(achievementCounts.APPROVED / achievementCounts.total) * 100}%` }} />
-              )}
-              {achievementCounts.PENDING > 0 && (
-                <div className="bg-[#FF9F0A] transition-all duration-500" style={{ width: `${(achievementCounts.PENDING / achievementCounts.total) * 100}%` }} />
-              )}
-              {achievementCounts.REJECTED > 0 && (
-                <div className="bg-[#FF3B30] transition-all duration-500" style={{ width: `${(achievementCounts.REJECTED / achievementCounts.total) * 100}%` }} />
-              )}
+        {badges.length === 0 && (
+          <div className="text-center py-12">
+            <div className="w-14 h-14 rounded-2xl bg-white/4 flex items-center justify-center mx-auto mb-3">
+              <IconAchievements active={false} />
             </div>
-          )}
-        </div>
-
-        {/* Level roadmap */}
-        <div>
-          <h3 className="ios-section-header mb-3">Путь уровней</h3>
-          <div className="space-y-0">
-            {LEVELS.map((lv, idx) => {
-              const isCurrentLevel = profile?.level === lv.level
-              const isPastLevel = (profile?.level || 1) > lv.level
-              const isLast = idx === LEVELS.length - 1
-              return (
-                <div key={lv.level} className="flex items-start gap-3">
-                  {/* Vertical line + dot */}
-                  <div className="flex flex-col items-center">
-                    <div className={`w-3.5 h-3.5 rounded-full border-2 shrink-0 ${isCurrentLevel ? 'border-[#007AFF] bg-[#007AFF]' : isPastLevel ? 'border-[#34C759] bg-[#34C759]' : 'border-white/15 bg-transparent'}`} />
-                    {!isLast && (
-                      <div className={`w-0.5 h-8 ${isPastLevel ? 'bg-[#34C759]/40' : 'bg-white/6'}`} />
-                    )}
-                  </div>
-                  {/* Content */}
-                  <div className={`pb-4 ${isCurrentLevel ? '-mt-0.5' : ''}`}>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-[14px] font-semibold ${isCurrentLevel ? 'text-[#007AFF]' : isPastLevel ? 'text-[#34C759]' : 'text-white/30'}`}>
-                        Ур. {lv.level}
-                      </span>
-                      <span className={`text-[13px] ${isCurrentLevel ? 'text-white font-semibold' : isPastLevel ? 'text-white/50' : 'text-white/20'}`}>
-                        {lv.name}
-                      </span>
-                    </div>
-                    <span className="text-[11px] text-white/20">{lv.min}–{isLast ? '...' : lv.max} XP</span>
-                    {isCurrentLevel && (
-                      <div className="mt-1.5">
-                        <XpProgressBar current={profile?.xpInLevel || 0} max={profile?.xpToNextLevel || 1} />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
+            <p className="text-[14px] text-white/20 font-medium">Ачивки скоро появятся</p>
           </div>
-        </div>
+        )}
       </div>
     )
   }
@@ -1731,8 +1691,8 @@ export default function Home() {
         <div className="max-w-lg mx-auto flex">
           {([
             { key: 'home' as Tab, label: 'Главная', Icon: IconHome },
-            { key: 'achievements' as Tab, label: 'Ачивки', Icon: IconAchievements },
-            { key: 'milestones' as Tab, label: 'Достижения', Icon: IconMilestones },
+            { key: 'achievements' as Tab, label: 'Достижения', Icon: IconAchievements },
+            { key: 'milestones' as Tab, label: 'Ачивки', Icon: IconMilestones },
             { key: 'rating' as Tab, label: 'Рейтинг', Icon: IconTrophy },
             { key: 'profile' as Tab, label: 'Профиль', Icon: IconUser },
           ]).map(({ key, label, Icon }) => (

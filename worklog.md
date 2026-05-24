@@ -90,3 +90,25 @@ Stage Summary:
 - Вход: admin/admin123 или student/student123
 - Стекломорфизм реально виден благодаря фоновым орбам
 - Деловой стиль вместо игрового
+
+---
+Task ID: badges-tab-rework
+Agent: Main Agent + full-stack-developer subagent
+Task: Rename tabs, replace milestones with badge cards, fix Telegram auth
+
+Work Log:
+- Renamed "Ачивки" tab header back to "Достижения" (shows submitted achievements list)
+- Replaced "Достижения" (milestones/progress) tab with "Ачивки" — now shows earned/locked badge cards in a 2-column grid
+- Added BadgeItem interface, badges state, fetchBadges function
+- Updated bottom nav labels: achievements="Достижения", milestones="Ачивки"
+- Fixed Telegram WebApp auth: added ready()/expand() calls, initData fallback check, 100ms init delay
+- Updated /api/auth/telegram to accept initData field
+- Added 11 new badges to seed data (Чемпион, Олимпиадник, Творец, Спортсмен, Многорукий, На все руки, Золотая лига, Серебряная лига, Ботан, Легенда, Волонтёр)
+- Build compiles successfully
+
+Stage Summary:
+- "Достижения" tab: list of user's submitted achievements (was "Ачивки")
+- "Ачивки" tab: badge cards earned for actions (was "Достижения/milestones")
+- Telegram auth improved with ready(), expand(), initData fallback
+- 15 total badges in seed data
+- Need to re-seed database to see new badges

@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { telegramId, firstName, lastName, username, photoUrl } = await request.json();
+    const { telegramId, firstName, lastName, username, photoUrl, initData } = await request.json();
 
     if (!telegramId) {
       return NextResponse.json({ error: 'telegramId required' }, { status: 400 });
