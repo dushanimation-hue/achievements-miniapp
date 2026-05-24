@@ -143,12 +143,21 @@ const USER_BADGES = [
 ]
 
 const CHALLENGES = [
-  { id: 'ch1', title: 'Майский марафон', description: 'Собери 30 XP за май! Все направления засчитываются.', direction: 'ALL', xpTarget: 30, rewardXp: 10, startDate: new Date('2026-05-01'), endDate: new Date('2026-05-31'), isActive: true },
+  { id: 'ch1', title: 'Майский марафон', description: 'Собери 30 XP за май! Все направления засчитываются.', direction: 'KNOWLEDGE', xpTarget: 30, rewardXp: 10, startDate: new Date('2026-05-01'), endDate: new Date('2026-05-31'), isActive: true },
+  { id: 'ch2', title: 'Первый триместр', description: 'Набери 50 очков за первый триместр — покажи свою целеустремлённость!', direction: 'WILL', xpTarget: 50, rewardXp: 15, startDate: new Date('2026-09-01'), endDate: new Date('2026-11-30'), isActive: true },
+  { id: 'ch3', title: 'Мастер навыков', description: 'Заработай 20 XP в направлении Навыки до конца мая.', direction: 'SKILLS', xpTarget: 20, rewardXp: 8, startDate: new Date('2026-05-01'), endDate: new Date('2026-05-31'), isActive: true },
+  { id: 'ch4', title: 'Сердце лицея', description: 'Набери 15 XP в направлении Сообщество — помогай другим!', direction: 'COMMUNITY', xpTarget: 15, rewardXp: 5, startDate: new Date('2026-05-01'), endDate: new Date('2026-06-30'), isActive: true },
+  { id: 'ch5', title: 'Олимпийский резерв', description: 'Собери 40 XP только за олимпиады (РЭШ/ВСОШ) до конца года.', direction: 'KNOWLEDGE', xpTarget: 40, rewardXp: 20, startDate: new Date('2026-01-01'), endDate: new Date('2026-12-31'), isActive: true },
 ]
 
 const CHALLENGE_PARTICIPANTS = [
   { id: 'cp1', userId: 'u_student', challengeId: 'ch1', xpCollected: 22 },
+  { id: 'cp2', userId: 'u_student', challengeId: 'ch2', xpCollected: 0 },
   { id: 'cp3', userId: 'u2', challengeId: 'ch1', xpCollected: 30, completed: true, completedAt: new Date('2026-05-20') },
+  { id: 'cp4', userId: 'u1', challengeId: 'ch1', xpCollected: 20 },
+  { id: 'cp5', userId: 'u1', challengeId: 'ch5', xpCollected: 40, completed: true, completedAt: new Date('2026-05-15') },
+  { id: 'cp6', userId: 'u7', challengeId: 'ch1', xpCollected: 20 },
+  { id: 'cp7', userId: 'u3', challengeId: 'ch3', xpCollected: 6 },
 ]
 
 async function seed() {

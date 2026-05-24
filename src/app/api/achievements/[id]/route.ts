@@ -63,9 +63,48 @@ export async function PATCH(
       });
     }
 
+    // If revoking (changing from APPROVED to REJECTED), deduct XP
+    if (status === 'REJECTED' && achievement.status === 'APPROVED' && achievement.xpAwarded > 0) {
+      await db.user.update({
+        where: { id: achievement.userId },
+        data: { totalXp: { decrement: achievement.xpAwarded } },
+      });
+    }
+
     return NextResponse.json({ achievement: updated });
   } catch (error) {
     console.error('Achievement PATCH error:', error);
+    return NextResponse.json({ error: String(error) }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    const achievement = await db.achievement.findUnique({ where: { id } });
+    if (!achievement) {
+      return NextResponse.json({ error: 'Achievement not found' }, { status: 404 });
+    }
+
+    // If achievement was approved, deduct XP from user
+    if (achievement.status === 'APPROVED' && achievement.xpAwarded > 0) {
+      await db.user.update({
+        where: { id: achievement.userId },
+        data: { totalXp: { decrement: achievement.xpAwarded } },
+      });
+    }
+
+    // Delete related records first
+    await db.achievementBadge.deleteMany({ where: { achievementId: id } });
+    await db.achievement.delete({ where: { id } });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Achievement DELETE error:', error);
     return NextResponse.json({ error: String(error) }, { status: 500 });
   }
 }

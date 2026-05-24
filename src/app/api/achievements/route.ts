@@ -46,12 +46,14 @@ export async function GET(request: NextRequest) {
     const status = request.nextUrl.searchParams.get('status');
     const category = request.nextUrl.searchParams.get('category');
     const achievementType = request.nextUrl.searchParams.get('achievementType');
+    const role = request.nextUrl.searchParams.get('role');
 
     if (!userId) {
       return NextResponse.json({ error: 'userId required' }, { status: 400 });
     }
 
-    const where: Record<string, unknown> = { userId };
+    // Admin can see all achievements; students see only their own
+    const where: Record<string, unknown> = role === 'ADMIN' ? {} : { userId };
     if (status && status !== 'all') {
       where.status = status.toUpperCase();
     }
@@ -66,6 +68,7 @@ export async function GET(request: NextRequest) {
       where,
       orderBy: { createdAt: 'desc' },
       include: {
+        user: { select: { id: true, name: true, username: true, statusEmoji: true } },
         reviewer: { select: { id: true, name: true } },
       },
     });
