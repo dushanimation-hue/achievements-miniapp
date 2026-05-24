@@ -83,7 +83,8 @@ export async function POST(request: NextRequest) {
     const {
       userId, title, description, category, direction,
       achievementType, achievementLevel, resultType, placement, resultStatus,
-      xpRequested, achievementDate, comment, fileUrl
+      xpRequested, achievementDate, comment, fileUrl,
+      autoApprove, reviewedBy
     } = body;
 
     if (!userId || !title || !achievementType) {
@@ -128,6 +129,11 @@ export async function POST(request: NextRequest) {
       finalXpRequested = calculateXp(level, finalResultType, place, status);
     }
 
+    // Admin can auto-approve achievements for students
+    const isAutoApprove = autoApprove === true;
+    const finalStatus = isAutoApprove ? 'APPROVED' : 'PENDING';
+    const finalXpAwarded = isAutoApprove ? finalXpRequested : 0;
+
     const achievement = await db.achievement.create({
       data: {
         userId,
@@ -141,13 +147,23 @@ export async function POST(request: NextRequest) {
         placement: achievementType !== 'FREE_FORM' ? (placement ?? null) : null,
         resultStatus: achievementType !== 'FREE_FORM' && finalResultType === 'STATUS' ? (resultStatus || null) : null,
         xpRequested: finalXpRequested,
-        xpAwarded: 0,
-        status: 'PENDING',
+        xpAwarded: finalXpAwarded,
+        status: finalStatus,
         fileUrl: fileUrl || null,
         achievementDate: achievementDate || null,
         comment: comment || null,
+        reviewedBy: isAutoApprove ? (reviewedBy || null) : null,
+        reviewedAt: isAutoApprove ? new Date() : null,
       },
     });
+
+    // If auto-approved, update user's totalXp
+    if (isAutoApprove && finalXpAwarded > 0) {
+      await db.user.update({
+        where: { id: userId },
+        data: { totalXp: { increment: finalXpAwarded } },
+      });
+    }
 
     return NextResponse.json({ achievement }, { status: 201 });
   } catch (error) {

@@ -527,6 +527,14 @@ export default function Home() {
   const [adminXp, setAdminXp] = useState(0)
   const [adminRejectReasons, setAdminRejectReasons] = useState<Record<string, string>>({})
 
+  // Admin: student selector
+  const [students, setStudents] = useState<{ id: string; name: string; username: string | null }[]>([])
+  const [studentSearch, setStudentSearch] = useState('')
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
+  const [showStudentDropdown, setShowStudentDropdown] = useState(false)
+  // Admin: direction selection in add form
+  const [formDirections, setFormDirections] = useState<Record<string, boolean>>({})
+
   // Rating filters
   const [selectedLeague, setSelectedLeague] = useState<string | null>(null)
 
@@ -735,6 +743,8 @@ export default function Home() {
     setFormResultStatus('PARTICIPANT'); setFormXp(5)
     setFormDate(''); setFormComment('')
     setFormFileUrl(null); setFormFilePreview(null)
+    setSelectedStudentId(null); setStudentSearch('')
+    setFormDirections({}); setShowStudentDropdown(false)
   }
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -770,13 +780,21 @@ export default function Home() {
       toast.error('Выберите уровень достижения')
       return
     }
+    // Admin must select a student
+    if (isAdmin && !selectedStudentId) {
+      toast.error('Выберите ученика')
+      return
+    }
     if (!userId) {
       toast.error('Ошибка авторизации. Перевойдите в аккаунт.')
       return
     }
+    const targetUserId = isAdmin && selectedStudentId ? selectedStudentId : userId
+    const isAdminAdding = isAdmin && selectedStudentId && selectedStudentId !== userId
+    const selectedDirs = Object.entries(formDirections).filter(([, v]) => v).map(([k]) => k).join(',') || null
     try {
       const body: Record<string, unknown> = {
-        userId,
+        userId: targetUserId,
         title: formTitle.trim(),
         description: formDesc?.trim() || null,
         achievementType: formAchievementType,
@@ -788,6 +806,12 @@ export default function Home() {
         achievementDate: formDate || null,
         comment: formComment?.trim() || null,
         fileUrl: formFileUrl || null,
+        direction: selectedDirs,
+      }
+      // Admin adding for student: auto-approve
+      if (isAdminAdding) {
+        body.autoApprove = true
+        body.reviewedBy = userId
       }
       const res = await fetch('/api/achievements', {
         method: 'POST',
@@ -800,7 +824,7 @@ export default function Home() {
         toast.error(data.error || 'Ошибка при создании достижения')
         return
       }
-      toast.success('Достижение отправлено на проверку!')
+      toast.success(isAdminAdding ? 'Достижение добавлено и одобрено!' : 'Достижение отправлено на проверку!')
       resetForm()
       setShowAddSheet(false)
       fetchProfile()
@@ -835,6 +859,22 @@ export default function Home() {
 
   const isAdmin = authUser?.role === 'ADMIN' || profile?.role === 'ADMIN'
   const userLeague = getLeague(profile?.league || 'bronze')
+
+  // Fetch students for admin selector
+  const fetchStudents = useCallback(async () => {
+    try {
+      const res = await fetch('/api/students')
+      if (!res.ok) return
+      const data = await res.json()
+      setStudents(data.students || [])
+    } catch (e) {
+      console.error('Students fetch error:', e)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (isAdmin && showAddSheet) fetchStudents()
+  }, [isAdmin, showAddSheet, fetchStudents])
 
   // Filtered achievements
   const filteredAchievements = formAchievementFilter === 'all'
@@ -1353,6 +1393,89 @@ export default function Home() {
             <h2 className="text-[18px] font-bold text-white mb-5">Новое достижение</h2>
 
             <div className="space-y-4">
+              {/* Admin: Student selector */}
+              {isAdmin && (
+                <div className="relative">
+                  <label className="text-[12px] font-medium text-white/30 mb-1.5 block uppercase tracking-wider">Ученик</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={selectedStudentId ? students.find(s => s.id === selectedStudentId)?.name || studentSearch : studentSearch}
+                      onChange={(e) => {
+                        setStudentSearch(e.target.value)
+                        setSelectedStudentId(null)
+                        setShowStudentDropdown(true)
+                      }}
+                      onFocus={() => setShowStudentDropdown(true)}
+                      onBlur={() => setTimeout(() => setShowStudentDropdown(false), 200)}
+                      placeholder="Поиск ученика..."
+                      className="glass-input w-full px-4 py-3 text-[15px] text-white placeholder-white/20 bg-transparent focus:ring-0 focus:shadow-none"
+                    />
+                    {selectedStudentId && (
+                      <button
+                        onClick={() => { setSelectedStudentId(null); setStudentSearch(''); setShowStudentDropdown(true) }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60"
+                      >
+                        <IconClose size={14} />
+                      </button>
+                    )}
+                  </div>
+                  {showStudentDropdown && !selectedStudentId && (
+                    <div className="absolute z-50 left-0 right-0 mt-1 max-h-48 overflow-y-auto glass-card p-1 space-y-0.5">
+                      {students
+                        .filter(s => !studentSearch || s.name.toLowerCase().includes(studentSearch.toLowerCase()) || (s.username && s.username.toLowerCase().includes(studentSearch.toLowerCase())))
+                        .slice(0, 20)
+                        .map(s => (
+                          <button
+                            key={s.id}
+                            onClick={() => {
+                              setSelectedStudentId(s.id)
+                              setStudentSearch(s.name)
+                              setShowStudentDropdown(false)
+                            }}
+                            className="w-full text-left px-3 py-2.5 rounded-lg text-[14px] text-white/70 hover:bg-white/6 transition-colors flex items-center gap-2"
+                          >
+                            <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${getAvatarColor(s.name)} flex items-center justify-center text-[10px] font-bold text-white shrink-0`}>
+                              {getInitials(s.name)}
+                            </div>
+                            <span>{s.name}</span>
+                          </button>
+                        ))
+                      }
+                      {students.filter(s => !studentSearch || s.name.toLowerCase().includes(studentSearch.toLowerCase())).length === 0 && (
+                        <div className="px-3 py-3 text-[13px] text-white/25 text-center">Ученики не найдены</div>
+                      )}
+                    </div>
+                  )}
+                  {selectedStudentId && (
+                    <div className="mt-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-[#007AFF]/10 border border-[#007AFF]/20">
+                      <div className={`w-6 h-6 rounded-md bg-gradient-to-br ${getAvatarColor(students.find(s => s.id === selectedStudentId)?.name || '')} flex items-center justify-center text-[9px] font-bold text-white`}>
+                        {getInitials(students.find(s => s.id === selectedStudentId)?.name || '')}
+                      </div>
+                      <span className="text-[13px] text-[#007AFF] font-medium">{students.find(s => s.id === selectedStudentId)?.name}</span>
+                      <span className="text-[11px] text-white/25 ml-auto">выбран</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Admin: Direction selection */}
+              {isAdmin && (
+                <div>
+                  <label className="text-[12px] font-medium text-white/30 mb-1.5 block uppercase tracking-wider">Направления</label>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {Object.entries(DIRECTIONS).map(([key, dir]) => (
+                      <button key={key}
+                        onClick={() => setFormDirections(prev => ({ ...prev, [key]: !prev[key] }))}
+                        className={`ios-pill flex items-center gap-1.5 ${formDirections[key] ? 'ios-pill-active' : ''}`}>
+                        <span className="w-2 h-2 rounded-full" style={{ background: dir.color }} />
+                        {dir.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Title */}
               <div>
                 <label className="text-[12px] font-medium text-white/30 mb-1.5 block uppercase tracking-wider">Название</label>
@@ -1483,7 +1606,7 @@ export default function Home() {
 
               {/* Submit */}
               <button onClick={handleAddAchievement} className="ios-button-primary w-full">
-                Отправить на проверку
+                {isAdmin && selectedStudentId && selectedStudentId !== userId ? 'Добавить и одобрить' : 'Отправить на проверку'}
               </button>
             </div>
           </div>
