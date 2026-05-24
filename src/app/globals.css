@@ -45,71 +45,58 @@
 
 :root {
   --radius: 0.75rem;
-  --background: #0a0a1a;
-  --foreground: #f5f5f7;
+  --background: #08080f;
+  --foreground: #e8e8ed;
   --card: rgba(255, 255, 255, 0.04);
-  --card-foreground: #f5f5f7;
-  --popover: rgba(28, 28, 30, 0.95);
-  --popover-foreground: #f5f5f7;
-  --primary: #2AABEE;
+  --card-foreground: #e8e8ed;
+  --popover: rgba(18, 18, 28, 0.95);
+  --popover-foreground: #e8e8ed;
+  --primary: #007AFF;
   --primary-foreground: #ffffff;
   --secondary: rgba(255, 255, 255, 0.06);
-  --secondary-foreground: #f5f5f7;
+  --secondary-foreground: #e8e8ed;
   --muted: rgba(255, 255, 255, 0.05);
-  --muted-foreground: rgba(255, 255, 255, 0.55);
-  --accent: #6C5CE7;
+  --muted-foreground: rgba(255, 255, 255, 0.45);
+  --accent: #5856D6;
   --accent-foreground: #ffffff;
   --destructive: #FF3B30;
   --border: rgba(255, 255, 255, 0.06);
   --input: rgba(255, 255, 255, 0.05);
-  --ring: rgba(42, 171, 238, 0.3);
-  --chart-1: #2AABEE;
-  --chart-2: #6C5CE7;
+  --ring: rgba(0, 122, 255, 0.3);
+  --chart-1: #007AFF;
+  --chart-2: #5856D6;
   --chart-3: #34C759;
   --chart-4: #FF9F0A;
   --chart-5: #FF3B30;
-  --sidebar: rgba(10, 10, 26, 0.9);
-  --sidebar-foreground: #f5f5f7;
-  --sidebar-primary: #2AABEE;
+  --sidebar: rgba(8, 8, 15, 0.9);
+  --sidebar-foreground: #e8e8ed;
+  --sidebar-primary: #007AFF;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: rgba(255, 255, 255, 0.06);
-  --sidebar-accent-foreground: #f5f5f7;
+  --sidebar-accent-foreground: #e8e8ed;
   --sidebar-border: rgba(255, 255, 255, 0.06);
-  --sidebar-ring: rgba(42, 171, 238, 0.3);
+  --sidebar-ring: rgba(0, 122, 255, 0.3);
 }
 
 .dark {
-  --background: #0a0a1a;
-  --foreground: #f5f5f7;
+  --background: #08080f;
+  --foreground: #e8e8ed;
   --card: rgba(255, 255, 255, 0.04);
-  --card-foreground: #f5f5f7;
-  --popover: rgba(28, 28, 30, 0.95);
-  --popover-foreground: #f5f5f7;
-  --primary: #2AABEE;
+  --card-foreground: #e8e8ed;
+  --popover: rgba(18, 18, 28, 0.95);
+  --popover-foreground: #e8e8ed;
+  --primary: #007AFF;
   --primary-foreground: #ffffff;
   --secondary: rgba(255, 255, 255, 0.06);
-  --secondary-foreground: #f5f5f7;
+  --secondary-foreground: #e8e8ed;
   --muted: rgba(255, 255, 255, 0.05);
-  --muted-foreground: rgba(255, 255, 255, 0.55);
-  --accent: #6C5CE7;
+  --muted-foreground: rgba(255, 255, 255, 0.45);
+  --accent: #5856D6;
   --accent-foreground: #ffffff;
   --destructive: #FF3B30;
   --border: rgba(255, 255, 255, 0.06);
   --input: rgba(255, 255, 255, 0.05);
-  --ring: rgba(42, 171, 238, 0.3);
-  --chart-1: #2AABEE;
-  --chart-2: #6C5CE7;
-  --chart-3: #34C759;
-  --chart-4: #FF9F0A;
-  --chart-5: #FF3B30;
-  --sidebar: rgba(10, 10, 26, 0.9);
-  --sidebar-foreground: #f5f5f7;
-  --sidebar-primary: #2AABEE;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: rgba(255, 255, 255, 0.06);
-  --sidebar-accent-foreground: #f5f5f7;
-  --sidebar-border: rgba(255, 255, 255, 0.06);
-  --sidebar-ring: rgba(42, 171, 238, 0.3);
+  --ring: rgba(0, 122, 255, 0.3);
 }
 
 @layer base {
@@ -130,54 +117,138 @@
 }
 
 /* ============================================================
-   iOS DESIGN SYSTEM — Refined Glassmorphism
+   CORPORATE GLASSMORPHISM — Business/Banking Style
    ============================================================ */
 
-/* Standard glass card */
-.glass-card {
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 20px;
-  box-shadow:
-    0 1px 12px rgba(0, 0, 0, 0.1),
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.04);
+/* Background decorative orbs - MUST be present for glassmorphism to work */
+.bg-orb {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+  will-change: transform;
 }
 
-/* Elevated glass */
-.glass-card-elevated {
+.bg-orb-1 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(0, 122, 255, 0.15) 0%, transparent 70%);
+  top: -10%;
+  right: -10%;
+  animation: orb-float-1 20s ease-in-out infinite;
+}
+
+.bg-orb-2 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(88, 86, 214, 0.12) 0%, transparent 70%);
+  bottom: 20%;
+  left: -10%;
+  animation: orb-float-2 25s ease-in-out infinite;
+}
+
+.bg-orb-3 {
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(0, 122, 255, 0.08) 0%, transparent 70%);
+  top: 50%;
+  right: 20%;
+  animation: orb-float-3 18s ease-in-out infinite;
+}
+
+.bg-orb-4 {
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(88, 86, 214, 0.08) 0%, transparent 70%);
+  top: 30%;
+  left: 30%;
+  animation: orb-float-4 22s ease-in-out infinite;
+}
+
+@keyframes orb-float-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-30px, 40px) scale(1.1); }
+  66% { transform: translate(20px, -20px) scale(0.95); }
+}
+
+@keyframes orb-float-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(40px, -30px) scale(1.05); }
+  66% { transform: translate(-20px, 30px) scale(0.9); }
+}
+
+@keyframes orb-float-3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-25px, -35px) scale(1.08); }
+}
+
+@keyframes orb-float-4 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(30px, 20px) scale(0.92); }
+}
+
+/* Standard glass card — REAL glassmorphism */
+.glass-card {
   background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  box-shadow:
+    0 1px 16px rgba(0, 0, 0, 0.15),
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.1);
+  will-change: transform;
+}
+
+/* Elevated glass — more prominent */
+.glass-card-elevated {
+  background: rgba(255, 255, 255, 0.09);
   backdrop-filter: blur(60px) saturate(200%);
   -webkit-backdrop-filter: blur(60px) saturate(200%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
   box-shadow:
-    0 4px 24px rgba(0, 0, 0, 0.2),
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.06);
+    0 4px 32px rgba(0, 0, 0, 0.25),
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.12);
+  will-change: transform;
+}
+
+/* Professional card — credit card / ID style */
+.glass-card-pro {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0.04) 100%);
+  backdrop-filter: blur(60px) saturate(200%);
+  -webkit-backdrop-filter: blur(60px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.3),
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -0.5px 0 rgba(0, 0, 0, 0.1);
+  will-change: transform;
 }
 
 /* Navigation bar glass */
 .glass-nav {
-  background: rgba(10, 10, 26, 0.82);
+  background: rgba(8, 8, 15, 0.85);
   backdrop-filter: blur(50px) saturate(180%);
   -webkit-backdrop-filter: blur(50px) saturate(180%);
-  border-top: 0.5px solid rgba(255, 255, 255, 0.06);
+  border-top: 0.5px solid rgba(255, 255, 255, 0.08);
 }
 
 /* Glass input field */
 .glass-input {
   background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
   transition: all 0.2s ease;
 }
 
 .glass-input:focus-within,
 .glass-input:focus {
   background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(42, 171, 238, 0.35);
-  box-shadow: 0 0 0 3px rgba(42, 171, 238, 0.1);
+  border-color: rgba(0, 122, 255, 0.35);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
   outline: none;
 }
 
@@ -209,15 +280,15 @@
 }
 
 .ios-pill-active {
-  background: rgba(42, 171, 238, 0.12);
-  border-color: rgba(42, 171, 238, 0.25);
-  color: #2AABEE;
+  background: rgba(0, 122, 255, 0.12);
+  border-color: rgba(0, 122, 255, 0.25);
+  color: #007AFF;
 }
 
 /* iOS list item */
 .ios-list-item {
   background: rgba(255, 255, 255, 0.03);
-  border-radius: 16px;
+  border-radius: 14px;
   transition: all 0.15s ease;
 }
 
@@ -228,33 +299,33 @@
 
 /* iOS large title */
 .ios-large-title {
-  font-size: 34px;
+  font-size: 28px;
   font-weight: 700;
-  letter-spacing: -0.5px;
-  line-height: 1.1;
-  color: #f5f5f7;
+  letter-spacing: -0.3px;
+  line-height: 1.15;
+  color: #e8e8ed;
 }
 
 /* iOS section header */
 .ios-section-header {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: rgba(255, 255, 255, 0.35);
+  letter-spacing: 0.8px;
+  color: rgba(255, 255, 255, 0.3);
 }
 
-/* iOS primary button */
+/* iOS primary button — corporate style */
 .ios-button-primary {
-  background: #2AABEE;
+  background: #007AFF;
   color: #ffffff;
   font-weight: 600;
-  font-size: 17px;
-  border-radius: 14px;
-  padding: 16px 24px;
+  font-size: 16px;
+  border-radius: 12px;
+  padding: 14px 24px;
   text-align: center;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 12px rgba(42, 171, 238, 0.25);
+  box-shadow: 0 2px 12px rgba(0, 122, 255, 0.2);
 }
 
 .ios-button-primary:active {
@@ -264,7 +335,7 @@
 
 /* iOS bottom sheet */
 .ios-sheet {
-  background: rgba(22, 22, 28, 0.94);
+  background: rgba(14, 14, 22, 0.94);
   backdrop-filter: blur(60px) saturate(200%);
   -webkit-backdrop-filter: blur(60px) saturate(200%);
   border-radius: 20px 20px 0 0;
@@ -292,9 +363,9 @@ input[type="range"]::-webkit-slider-thumb {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #2AABEE;
+  background: #007AFF;
   border: 3px solid rgba(255, 255, 255, 0.25);
-  box-shadow: 0 2px 8px rgba(42, 171, 238, 0.35);
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.35);
   margin-top: -9px;
   transition: transform 0.15s ease;
 }
@@ -313,9 +384,9 @@ input[type="range"]::-moz-range-thumb {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #2AABEE;
+  background: #007AFF;
   border: 3px solid rgba(255, 255, 255, 0.25);
-  box-shadow: 0 2px 8px rgba(42, 171, 238, 0.35);
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.35);
 }
 
 /* Safe area */
@@ -371,4 +442,76 @@ input[type="number"] {
 
 .ios-sheet-up {
   animation: ios-sheet-up 0.35s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+/* Login page glassmorphism */
+.glass-login {
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(50px) saturate(180%);
+  -webkit-backdrop-filter: blur(50px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  box-shadow:
+    0 8px 48px rgba(0, 0, 0, 0.3),
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.12);
+  will-change: transform;
+}
+
+/* League badge styling */
+.league-badge-bronze {
+  background: linear-gradient(135deg, rgba(180, 120, 60, 0.2) 0%, rgba(140, 90, 40, 0.1) 100%);
+  border: 1px solid rgba(180, 120, 60, 0.25);
+  color: #CD7F32;
+}
+
+.league-badge-silver {
+  background: linear-gradient(135deg, rgba(180, 180, 190, 0.2) 0%, rgba(150, 150, 160, 0.1) 100%);
+  border: 1px solid rgba(180, 180, 190, 0.25);
+  color: #C0C0C0;
+}
+
+.league-badge-gold {
+  background: linear-gradient(135deg, rgba(255, 200, 50, 0.2) 0%, rgba(220, 170, 30, 0.1) 100%);
+  border: 1px solid rgba(255, 200, 50, 0.25);
+  color: #FFD700;
+}
+
+/* Professional level card — like credit card */
+.level-card-pro {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(145deg, 
+    rgba(255, 255, 255, 0.10) 0%, 
+    rgba(255, 255, 255, 0.04) 40%,
+    rgba(0, 122, 255, 0.06) 100%);
+  backdrop-filter: blur(60px) saturate(200%);
+  -webkit-backdrop-filter: blur(60px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.3),
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.15);
+  will-change: transform;
+}
+
+.level-card-pro::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(0, 122, 255, 0.08) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.level-card-pro::after {
+  content: '';
+  position: absolute;
+  bottom: -30%;
+  left: -30%;
+  width: 80%;
+  height: 80%;
+  background: radial-gradient(circle, rgba(88, 86, 214, 0.06) 0%, transparent 60%);
+  pointer-events: none;
 }

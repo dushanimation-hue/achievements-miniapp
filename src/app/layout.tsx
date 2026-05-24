@@ -13,7 +13,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#0a0a1a",
+  themeColor: "#08080f",
 };
 
 export default function RootLayout({
@@ -23,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru" className="dark" suppressHydrationWarning>
-      <body className="antialiased bg-[#0a0a1a] text-foreground">
+      <body className="antialiased bg-[#08080f] text-foreground">
         {children}
         <Toaster theme="dark" />
       </body>

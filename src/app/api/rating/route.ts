@@ -6,10 +6,14 @@ export async function GET(request: NextRequest) {
     const direction = request.nextUrl.searchParams.get('direction');
     const facultyId = request.nextUrl.searchParams.get('facultyId');
     const period = request.nextUrl.searchParams.get('period') || 'all';
+    const leagueFilter = request.nextUrl.searchParams.get('league');
 
     const where: Record<string, unknown> = {};
     if (facultyId && facultyId !== 'all') {
       where.facultyId = facultyId;
+    }
+    if (leagueFilter && leagueFilter !== 'all') {
+      where.league = leagueFilter;
     }
     where.role = 'STUDENT';
 
@@ -54,6 +58,7 @@ export async function GET(request: NextRequest) {
         level: u.level,
         statusEmoji: u.statusEmoji,
         statusPrefix: u.statusPrefix,
+        league: u.league,
         faculty: u.faculty,
         achievementCount: u.achievements.length,
       };

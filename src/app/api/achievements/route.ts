@@ -16,7 +16,7 @@ const PLACEMENT_MULTIPLIER: Record<number, number> = {
   1: 1.0,
   2: 0.8,
   3: 0.6,
-  0: 0.3, // participant
+  0: 0.3,
 };
 
 function calculateXp(level: string, placement: number): number {
@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
     const userId = request.nextUrl.searchParams.get('userId');
     const status = request.nextUrl.searchParams.get('status');
     const category = request.nextUrl.searchParams.get('category');
+    const achievementType = request.nextUrl.searchParams.get('achievementType');
 
     if (!userId) {
       return NextResponse.json({ error: 'userId required' }, { status: 400 });
@@ -41,6 +42,9 @@ export async function GET(request: NextRequest) {
     }
     if (category && category !== 'all') {
       where.category = category;
+    }
+    if (achievementType && achievementType !== 'all') {
+      where.achievementType = achievementType;
     }
 
     const achievements = await db.achievement.findMany({
