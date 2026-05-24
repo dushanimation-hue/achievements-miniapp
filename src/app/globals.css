@@ -117,7 +117,7 @@
 }
 
 /* ============================================================
-   CORPORATE GLASSMORPHISM — Business/Banking Style
+   CORPORATE GLASSMORPHISM — Enhanced Visibility
    ============================================================ */
 
 /* Background decorative orbs - MUST be present for glassmorphism to work */
@@ -131,36 +131,36 @@
 }
 
 .bg-orb-1 {
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(0, 122, 255, 0.15) 0%, transparent 70%);
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(0, 122, 255, 0.30) 0%, transparent 70%);
   top: -10%;
   right: -10%;
   animation: orb-float-1 20s ease-in-out infinite;
 }
 
 .bg-orb-2 {
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(88, 86, 214, 0.12) 0%, transparent 70%);
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(88, 86, 214, 0.25) 0%, transparent 70%);
   bottom: 20%;
   left: -10%;
   animation: orb-float-2 25s ease-in-out infinite;
 }
 
 .bg-orb-3 {
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(circle, rgba(0, 122, 255, 0.08) 0%, transparent 70%);
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(0, 122, 255, 0.18) 0%, transparent 70%);
   top: 50%;
   right: 20%;
   animation: orb-float-3 18s ease-in-out infinite;
 }
 
 .bg-orb-4 {
-  width: 250px;
-  height: 250px;
-  background: radial-gradient(circle, rgba(88, 86, 214, 0.08) 0%, transparent 70%);
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(88, 86, 214, 0.15) 0%, transparent 70%);
   top: 30%;
   left: 30%;
   animation: orb-float-4 22s ease-in-out infinite;
@@ -188,42 +188,42 @@
   50% { transform: translate(30px, 20px) scale(0.92); }
 }
 
-/* Standard glass card — REAL glassmorphism */
+/* Standard glass card — REAL glassmorphism with enhanced visibility */
 .glass-card {
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(60px) saturate(200%);
+  -webkit-backdrop-filter: blur(60px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 16px;
   box-shadow:
-    0 1px 16px rgba(0, 0, 0, 0.15),
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.1);
+    0 2px 24px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
   will-change: transform;
 }
 
 /* Elevated glass — more prominent */
 .glass-card-elevated {
-  background: rgba(255, 255, 255, 0.09);
-  backdrop-filter: blur(60px) saturate(200%);
-  -webkit-backdrop-filter: blur(60px) saturate(200%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(80px) saturate(220%);
+  -webkit-backdrop-filter: blur(80px) saturate(220%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 16px;
   box-shadow:
-    0 4px 32px rgba(0, 0, 0, 0.25),
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.12);
+    0 4px 40px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
   will-change: transform;
 }
 
 /* Professional card — credit card / ID style */
 .glass-card-pro {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0.04) 100%);
-  backdrop-filter: blur(60px) saturate(200%);
-  -webkit-backdrop-filter: blur(60px) saturate(200%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.05) 100%);
+  backdrop-filter: blur(80px) saturate(220%);
+  -webkit-backdrop-filter: blur(80px) saturate(220%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 16px;
   box-shadow:
-    0 8px 40px rgba(0, 0, 0, 0.3),
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.15),
+    0 8px 48px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
     inset 0 -0.5px 0 rgba(0, 0, 0, 0.1);
   will-change: transform;
 }
@@ -238,15 +238,15 @@
 
 /* Glass input field */
 .glass-input {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
   border-radius: 12px;
   transition: all 0.2s ease;
 }
 
 .glass-input:focus-within,
 .glass-input:focus {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.08);
   border-color: rgba(0, 122, 255, 0.35);
   box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
   outline: none;
@@ -268,8 +268,8 @@
 
 /* iOS pill button */
 .ios-pill {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 100px;
   padding: 6px 14px;
   font-size: 13px;
@@ -280,21 +280,21 @@
 }
 
 .ios-pill-active {
-  background: rgba(0, 122, 255, 0.12);
-  border-color: rgba(0, 122, 255, 0.25);
+  background: rgba(0, 122, 255, 0.15);
+  border-color: rgba(0, 122, 255, 0.30);
   color: #007AFF;
 }
 
 /* iOS list item */
 .ios-list-item {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.04);
   border-radius: 14px;
   transition: all 0.15s ease;
 }
 
 .ios-list-item:active {
   transform: scale(0.98);
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 /* iOS large title */
@@ -446,14 +446,14 @@ input[type="number"] {
 
 /* Login page glassmorphism */
 .glass-login {
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(50px) saturate(180%);
   -webkit-backdrop-filter: blur(50px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 24px;
   box-shadow:
     0 8px 48px rgba(0, 0, 0, 0.3),
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.12);
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.15);
   will-change: transform;
 }
 
@@ -481,16 +481,16 @@ input[type="number"] {
   position: relative;
   overflow: hidden;
   background: linear-gradient(145deg, 
-    rgba(255, 255, 255, 0.10) 0%, 
-    rgba(255, 255, 255, 0.04) 40%,
-    rgba(0, 122, 255, 0.06) 100%);
-  backdrop-filter: blur(60px) saturate(200%);
-  -webkit-backdrop-filter: blur(60px) saturate(200%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+    rgba(255, 255, 255, 0.12) 0%, 
+    rgba(255, 255, 255, 0.05) 40%,
+    rgba(0, 122, 255, 0.08) 100%);
+  backdrop-filter: blur(80px) saturate(220%);
+  -webkit-backdrop-filter: blur(80px) saturate(220%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 16px;
   box-shadow:
-    0 8px 40px rgba(0, 0, 0, 0.3),
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.15);
+    0 8px 48px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
   will-change: transform;
 }
 
@@ -501,7 +501,7 @@ input[type="number"] {
   right: -50%;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle, rgba(0, 122, 255, 0.08) 0%, transparent 60%);
+  background: radial-gradient(circle, rgba(0, 122, 255, 0.10) 0%, transparent 60%);
   pointer-events: none;
 }
 
@@ -512,6 +512,6 @@ input[type="number"] {
   left: -30%;
   width: 80%;
   height: 80%;
-  background: radial-gradient(circle, rgba(88, 86, 214, 0.06) 0%, transparent 60%);
+  background: radial-gradient(circle, rgba(88, 86, 214, 0.08) 0%, transparent 60%);
   pointer-events: none;
 }

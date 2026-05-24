@@ -25,17 +25,6 @@ interface Achievement {
   createdAt: string;
   user?: { id: string; name: string; username: string | null; statusEmoji: string; faculty?: Faculty | null }
 }
-interface BadgeItem {
-  id: string; name: string; description: string; emoji: string;
-  conditionType: string; conditionValue: number;
-  earned: boolean; earnedAt: string | null;
-}
-interface ChallengeItem {
-  id: string; title: string; description: string; direction: string;
-  xpTarget: number; rewardXp: number; startDate: string; endDate: string;
-  isActive: boolean; isJoined: boolean; xpCollected: number;
-  completed: boolean; completedAt: string | null;
-}
 interface LeaderboardEntry {
   rank: number; id: string; name: string; username: string | null;
   totalXp: number; level: number; statusEmoji: string; statusPrefix: string;
@@ -59,9 +48,9 @@ const LEVELS: LevelInfo[] = [
 ]
 
 const LEAGUES = [
-  { id: 'bronze', name: 'Бронза', cssClass: 'league-badge-bronze', icon: '🥉' },
-  { id: 'silver', name: 'Серебро', cssClass: 'league-badge-silver', icon: '🥈' },
-  { id: 'gold', name: 'Золото', cssClass: 'league-badge-gold', icon: '🥇' },
+  { id: 'bronze', name: 'Бронза', cssClass: 'league-badge-bronze' },
+  { id: 'silver', name: 'Серебро', cssClass: 'league-badge-silver' },
+  { id: 'gold', name: 'Золото', cssClass: 'league-badge-gold' },
 ]
 
 function getLeague(id: string) {
@@ -259,6 +248,15 @@ function IconLogout() {
   )
 }
 
+function IconCrown() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <path d="M2 17L4.5 8L8 12L12 4L16 12L19.5 8L22 17H2Z" fill="rgba(255,215,0,0.15)" stroke="#FFD700" strokeWidth="1.5" strokeLinejoin="round" />
+      <circle cx="12" cy="19" r="1.5" fill="#FFD700" />
+    </svg>
+  )
+}
+
 function AchievementTypeIcon({ type }: { type: string | null }) {
   switch (type) {
     case 'SPORT': return <IconSport />
@@ -306,6 +304,28 @@ function StatusDot({ status }: { status: string }) {
 
 function IosSheetHandle() {
   return <div className="w-9 h-1 bg-white/15 rounded-full mx-auto mb-5" />
+}
+
+function getInitials(name: string): string {
+  if (!name) return '?'
+  const parts = name.trim().split(/\s+/)
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
+  return parts[0].substring(0, 2).toUpperCase()
+}
+
+const AVATAR_COLORS = [
+  'from-[#007AFF] to-[#5856D6]',
+  'from-[#5856D6] to-[#AF52DE]',
+  'from-[#34C759] to-[#007AFF]',
+  'from-[#FF9F0A] to-[#FF3B30]',
+  'from-[#AF52DE] to-[#FF3B80]',
+  'from-[#007AFF] to-[#34C759]',
+]
+
+function getAvatarColor(name: string): string {
+  let hash = 0
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
 }
 
 /* ============================================================
@@ -411,8 +431,6 @@ export default function Home() {
   const [recentAchievements, setRecentAchievements] = useState<Achievement[]>([])
   const [achievementCounts, setAchievementCounts] = useState({ total: 0, APPROVED: 0, PENDING: 0, REJECTED: 0 })
   const [allAchievements, setAllAchievements] = useState<Achievement[]>([])
-  const [badges, setBadges] = useState<BadgeItem[]>([])
-  const [challenges, setChallenges] = useState<ChallengeItem[]>([])
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -491,30 +509,6 @@ export default function Home() {
     }
   }, [userId])
 
-  const fetchBadges = useCallback(async () => {
-    if (!userId) return
-    try {
-      const res = await fetch(`/api/badges?userId=${userId}`)
-      if (!res.ok) return
-      const data = await res.json()
-      setBadges(data.badges || [])
-    } catch (e) {
-      console.error('Badges fetch error:', e)
-    }
-  }, [userId])
-
-  const fetchChallenges = useCallback(async () => {
-    if (!userId) return
-    try {
-      const res = await fetch(`/api/challenges?userId=${userId}`)
-      if (!res.ok) return
-      const data = await res.json()
-      setChallenges(data.challenges || [])
-    } catch (e) {
-      console.error('Challenges fetch error:', e)
-    }
-  }, [userId])
-
   const fetchLeaderboard = useCallback(async () => {
     setLoading(true)
     try {
@@ -556,10 +550,6 @@ export default function Home() {
   }, [])
 
   useEffect(() => { if (userId) { fetchProfile(); fetchAchievements() } }, [userId, fetchProfile, fetchAchievements])
-
-  useEffect(() => {
-    if (currentTab === 'achievements' && userId) { fetchBadges(); fetchChallenges() }
-  }, [currentTab, userId, fetchBadges, fetchChallenges])
 
   useEffect(() => {
     if (currentTab === 'rating') fetchLeaderboard()
@@ -619,21 +609,6 @@ export default function Home() {
     }
   }
 
-  const handleJoinChallenge = async (challengeId: string) => {
-    try {
-      const res = await fetch('/api/challenges', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, challengeId }),
-      })
-      if (!res.ok) return
-      toast.success('Вы присоединились к челленджу!')
-      fetchChallenges()
-    } catch {
-      toast.error('Ошибка')
-    }
-  }
-
   const handleModerate = async (achievementId: string, action: 'approve' | 'reject', xpAwarded?: number, direction?: string, reviewComment?: string) => {
     try {
       const res = await fetch('/api/moderate', {
@@ -674,7 +649,7 @@ export default function Home() {
         <div>
           <h1 className="ios-large-title">{profile?.name || '...'}</h1>
           <p className="text-[14px] text-white/30 mt-0.5 font-medium">
-            {profile?.statusPrefix}{profile?.faculty ? ` · ${profile.faculty.name}` : ''}
+            {profile?.statusPrefix}
           </p>
         </div>
         <button onClick={handleLogout} className="w-9 h-9 rounded-xl bg-white/4 border border-white/6 flex items-center justify-center text-white/30 hover:bg-white/6 transition-colors">
@@ -869,195 +844,269 @@ export default function Home() {
           </div>
         )}
       </div>
-
-      {/* Badges section */}
-      {badges.length > 0 && (
-        <div>
-          <h3 className="ios-section-header mb-3">Бейджи</h3>
-          <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1">
-            {badges.filter(b => b.earned).map((b) => (
-              <div key={b.id} className="shrink-0 w-14 text-center">
-                <div className="w-11 h-11 rounded-xl bg-white/4 border border-white/6 flex items-center justify-center mx-auto text-[18px]">
-                  {b.emoji}
-                </div>
-                <p className="text-[9px] text-white/30 mt-1 leading-tight font-medium">{b.name}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Challenges */}
-      {challenges.filter(c => c.isActive).length > 0 && (
-        <div>
-          <h3 className="ios-section-header mb-3">Активные челленджи</h3>
-          <div className="space-y-2">
-            {challenges.filter(c => c.isActive).map((ch) => (
-              <GlassCard key={ch.id} className="p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-[14px] font-semibold text-white">{ch.title}</h4>
-                    <p className="text-[11px] text-white/25 mt-0.5">{ch.description}</p>
-                  </div>
-                  {ch.completed && (
-                    <div className="w-5 h-5 rounded-full bg-[#34C759]/15 flex items-center justify-center shrink-0">
-                      <IconCheck />
-                    </div>
-                  )}
-                </div>
-                <div className="mt-2.5">
-                  <div className="flex items-center justify-between text-[11px] text-white/25 mb-1">
-                    <span>{ch.xpCollected} / {ch.xpTarget} XP</span>
-                    <span className="font-semibold text-[#007AFF]">+{ch.rewardXp} XP</span>
-                  </div>
-                  <XpProgressBar current={ch.xpCollected} max={ch.xpTarget} />
-                </div>
-                {!ch.isJoined && !ch.completed && (
-                  <button onClick={() => handleJoinChallenge(ch.id)}
-                    className="mt-2.5 w-full py-2 bg-[#007AFF]/10 text-[#007AFF] text-[13px] font-semibold rounded-xl active:scale-[0.97] transition-transform">
-                    Присоединиться
-                  </button>
-                )}
-              </GlassCard>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   )
 
   /* ============================================================
-     RENDER: RATING
+     RENDER: RATING — With Top-3 Podium
      ============================================================ */
-  const renderRating = () => (
-    <div className="px-5 pb-6 space-y-4 ios-fade-in">
-      <div className="pt-3">
-        <h1 className="ios-large-title">Рейтинг</h1>
-      </div>
+  const renderRating = () => {
+    const top3 = leaderboard.slice(0, 3)
+    const rest = leaderboard.slice(3)
+    const podiumOrder = top3.length >= 3 ? [top3[1], top3[0], top3[2]] : top3.length === 2 ? [top3[1], top3[0]] : top3
 
-      {/* League filter */}
-      <div className="flex gap-2">
-        {[
-          { key: null, label: 'Все' },
-          { key: 'bronze', label: '🥉 Бронза' },
-          { key: 'silver', label: '🥈 Серебро' },
-          { key: 'gold', label: '🥇 Золото' },
-        ].map((f) => (
-          <button key={f.key || 'all'} onClick={() => setSelectedLeague(f.key)}
-            className={`shrink-0 ios-pill ${selectedLeague === f.key ? 'ios-pill-active' : ''}`}>
-            {f.label}
-          </button>
-        ))}
-      </div>
+    const podiumHeights = ['h-20', 'h-28', 'h-16']
+    const podiumColors = [
+      'from-[#C0C0C0]/20 to-[#C0C0C0]/5 border-[#C0C0C0]/20',
+      'from-[#FFD700]/25 to-[#FFD700]/5 border-[#FFD700]/25',
+      'from-[#CD7F32]/20 to-[#CD7F32]/5 border-[#CD7F32]/20',
+    ]
+    const podiumRanks = [2, 1, 3]
 
-      {/* Leaderboard */}
-      <div className="space-y-1.5 max-h-[70vh] overflow-y-auto">
-        {loading && <div className="text-center py-8 text-white/20 text-[14px]">Загрузка...</div>}
-        {!loading && leaderboard.map((entry) => {
-          const entryLeague = getLeague(entry.league)
-          const isMe = entry.id === userId
-          return (
-            <div key={entry.id} className={`ios-list-item p-3.5 flex items-center gap-3 ${isMe ? 'border border-[#007AFF]/15 bg-[#007AFF]/4' : ''}`}>
-              <div className={`w-8 text-[15px] font-bold text-center tabular-nums ${entry.rank <= 3 ? 'text-[#007AFF]' : 'text-white/20'}`}>
-                {entry.rank}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-[14px] font-medium text-white truncate">
-                  {entry.name}
-                  {isMe && <span className="text-[#007AFF] ml-1.5 text-[11px] font-semibold">ВЫ</span>}
+    return (
+      <div className="px-5 pb-6 space-y-4 ios-fade-in">
+        <div className="pt-3">
+          <h1 className="ios-large-title">Рейтинг</h1>
+        </div>
+
+        {/* League filter — text only, no emoji */}
+        <div className="flex gap-2">
+          {[
+            { key: null, label: 'Все' },
+            { key: 'bronze', label: 'Бронза' },
+            { key: 'silver', label: 'Серебро' },
+            { key: 'gold', label: 'Золото' },
+          ].map((f) => (
+            <button key={f.key || 'all'} onClick={() => setSelectedLeague(f.key)}
+              className={`shrink-0 ios-pill ${selectedLeague === f.key ? 'ios-pill-active' : ''}`}>
+              {f.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Top 3 Podium */}
+        {!loading && top3.length > 0 && (
+          <div className="flex items-end justify-center gap-2 pt-4 pb-2">
+            {podiumOrder.map((entry, idx) => {
+              const actualRank = podiumRanks[idx]
+              const heightClass = actualRank === 1 ? 'h-28' : actualRank === 2 ? 'h-20' : 'h-16'
+              const colorClass = actualRank === 1
+                ? 'from-[#FFD700]/25 to-[#FFD700]/5 border-[#FFD700]/25'
+                : actualRank === 2
+                  ? 'from-[#C0C0C0]/20 to-[#C0C0C0]/5 border-[#C0C0C0]/20'
+                  : 'from-[#CD7F32]/20 to-[#CD7F32]/5 border-[#CD7F32]/20'
+              const isMe = entry.id === userId
+              const entryLeague = getLeague(entry.league)
+              const initials = getInitials(entry.name)
+              const avatarGrad = getAvatarColor(entry.name)
+              return (
+                <div key={entry.id} className="flex flex-col items-center" style={{ width: actualRank === 1 ? '120px' : '100px' }}>
+                  {/* Avatar + Name */}
+                  <div className={`relative mb-2 ${actualRank === 1 ? 'order-1' : 'order-1'}`}>
+                    {actualRank === 1 && (
+                      <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                        <IconCrown />
+                      </div>
+                    )}
+                    <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${avatarGrad} flex items-center justify-center text-white font-bold text-[14px] border-2 ${actualRank === 1 ? 'border-[#FFD700]/50 w-14 h-14 text-[16px]' : actualRank === 2 ? 'border-[#C0C0C0]/40' : 'border-[#CD7F32]/40'} ${isMe ? 'ring-2 ring-[#007AFF]/50 ring-offset-2 ring-offset-[#08080f]' : ''}`}>
+                      {initials}
+                    </div>
+                  </div>
+                  <div className="text-center mb-1.5">
+                    <div className={`text-[12px] font-semibold text-white truncate max-w-[100px] ${isMe ? 'text-[#007AFF]' : ''}`}>
+                      {entry.name}
+                    </div>
+                    <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded ${entryLeague.cssClass}`}>{entryLeague.name}</span>
+                  </div>
+                  {/* Podium block */}
+                  <div className={`w-full bg-gradient-to-t ${colorClass} border rounded-t-xl flex flex-col items-center justify-start pt-2 ${heightClass}`}>
+                    <div className={`text-[20px] font-black ${actualRank === 1 ? 'text-[#FFD700]' : actualRank === 2 ? 'text-[#C0C0C0]' : 'text-[#CD7F32]'}`}>
+                      {actualRank}
+                    </div>
+                    <div className="text-[11px] font-bold text-white/60 tabular-nums">{entry.totalXp} XP</div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${entryLeague.cssClass}`}>{entryLeague.name}</span>
-                  {entry.faculty && <span className="text-[10px] text-white/20">{entry.faculty.name}</span>}
-                </div>
-              </div>
-              <div className="text-right shrink-0">
-                <div className="text-[14px] font-bold text-white tabular-nums">{entry.totalXp}</div>
-                <div className="text-[10px] text-white/20">XP</div>
-              </div>
-            </div>
-          )
-        })}
-        {!loading && leaderboard.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-[14px] text-white/15">Нет данных</p>
+              )
+            })}
           </div>
         )}
-      </div>
-    </div>
-  )
 
-  /* ============================================================
-     RENDER: PROFILE
-     ============================================================ */
-  const renderProfile = () => (
-    <div className="px-5 pb-6 space-y-5 ios-fade-in">
-      <div className="pt-3">
-        <h1 className="ios-large-title">Профиль</h1>
-      </div>
-
-      {/* Profile card */}
-      <GlassCard elevated className="p-6">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-[#007AFF]/10 border border-[#007AFF]/15 flex items-center justify-center">
-            <IconUser active={true} />
-          </div>
-          <div className="flex-1">
-            <div className="text-[17px] font-bold text-white">{profile?.name}</div>
-            <div className="text-[13px] text-white/30 mt-0.5">{profile?.statusPrefix}</div>
-            {profile?.faculty && <div className="text-[12px] text-white/20 mt-0.5">{profile.faculty.name}</div>}
-          </div>
-          <span className={`text-[12px] font-bold px-3 py-1.5 rounded-lg ${userLeague.cssClass}`}>{userLeague.name}</span>
-        </div>
-      </GlassCard>
-
-      {/* Level roadmap */}
-      <div>
-        <h3 className="ios-section-header mb-3">Прогресс уровней</h3>
-        <div className="space-y-2">
-          {LEVELS.map((l) => {
-            const isCurrent = l.level === profile?.level
-            const isPassed = l.level < (profile?.level || 0)
+        {/* Rest of leaderboard */}
+        <div className="space-y-1.5 max-h-[50vh] overflow-y-auto">
+          {loading && <div className="text-center py-8 text-white/20 text-[14px]">Загрузка...</div>}
+          {!loading && rest.map((entry) => {
+            const entryLeague = getLeague(entry.league)
+            const isMe = entry.id === userId
+            const initials = getInitials(entry.name)
+            const avatarGrad = getAvatarColor(entry.name)
             return (
-              <div key={l.level} className={`flex items-center gap-3 p-3 rounded-xl ${isCurrent ? 'bg-[#007AFF]/8 border border-[#007AFF]/15' : isPassed ? 'bg-white/2' : 'bg-white/1'}`}>
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-[13px] font-bold ${
-                  isCurrent ? 'bg-[#007AFF]/15 text-[#007AFF]' : isPassed ? 'bg-[#34C759]/10 text-[#34C759]' : 'bg-white/4 text-white/15'
-                }`}>
-                  {isPassed ? '✓' : l.level}
+              <div key={entry.id} className={`glass-card p-3.5 flex items-center gap-3 ${isMe ? 'border-[#007AFF]/20 bg-[#007AFF]/6' : ''}`}>
+                <div className="w-8 text-[15px] font-bold text-center tabular-nums text-white/20">
+                  {entry.rank}
                 </div>
-                <div className="flex-1">
-                  <div className={`text-[13px] font-medium ${isCurrent ? 'text-white' : 'text-white/30'}`}>{l.name}</div>
-                  <div className="text-[10px] text-white/15">{l.min}–{l.max === 999999 ? '∞' : l.max} XP</div>
+                <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${avatarGrad} flex items-center justify-center text-white font-bold text-[11px] shrink-0 ${isMe ? 'ring-2 ring-[#007AFF]/40' : ''}`}>
+                  {initials}
                 </div>
-                {isCurrent && (
-                  <span className="text-[11px] text-[#007AFF] font-semibold">Текущий</span>
-                )}
+                <div className="flex-1 min-w-0">
+                  <div className="text-[14px] font-medium text-white truncate">
+                    {entry.name}
+                    {isMe && <span className="text-[#007AFF] ml-1.5 text-[11px] font-semibold">ВЫ</span>}
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${entryLeague.cssClass}`}>{entryLeague.name}</span>
+                    <span className="text-[10px] text-white/20">Ур. {entry.level}</span>
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="text-[14px] font-bold text-white tabular-nums">{entry.totalXp}</div>
+                  <div className="text-[10px] text-white/20">XP</div>
+                </div>
               </div>
             )
           })}
+          {!loading && leaderboard.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-[14px] text-white/15">Нет данных</p>
+            </div>
+          )}
         </div>
       </div>
+    )
+  }
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-2">
-        <GlassCard className="p-4">
-          <div className="ios-section-header text-[9px]">Всего XP</div>
-          <div className="text-[20px] font-bold text-[#007AFF] mt-1 tabular-nums">{profile?.totalXp}</div>
-        </GlassCard>
-        <GlassCard className="p-4">
-          <div className="ios-section-header text-[9px]">Достижений</div>
-          <div className="text-[20px] font-bold text-white mt-1 tabular-nums">{achievementCounts.APPROVED}</div>
-        </GlassCard>
+  /* ============================================================
+     RENDER: PROFILE — Dark mobile app style
+     ============================================================ */
+  const renderProfile = () => {
+    const initials = getInitials(profile?.name || '')
+    const avatarGrad = getAvatarColor(profile?.name || '')
+    const currentLevel = profile?.level || 1
+    const xpInLevel = profile?.xpInLevel || 0
+    const xpToNext = profile?.xpToNextLevel || 1
+    const levelProgress = xpToNext > 0 ? Math.min((xpInLevel / xpToNext) * 100, 100) : 0
+
+    return (
+      <div className="px-5 pb-6 space-y-5 ios-fade-in">
+        {/* Profile Header */}
+        <div className="pt-3 flex flex-col items-center text-center">
+          <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${avatarGrad} flex items-center justify-center text-white font-bold text-[24px] border-2 border-white/10 mb-3`}>
+            {initials}
+          </div>
+          <h1 className="text-[20px] font-bold text-white">{profile?.name}</h1>
+          <div className="mt-1.5">
+            <span className={`text-[12px] font-bold px-3 py-1 rounded-lg ${userLeague.cssClass}`}>{userLeague.name}</span>
+          </div>
+        </div>
+
+        {/* Stats row — 3 columns */}
+        <div className="grid grid-cols-3 gap-2">
+          <GlassCard className="p-4 text-center">
+            <div className="text-[22px] font-bold text-[#007AFF] tabular-nums">{profile?.totalXp}</div>
+            <div className="text-[10px] text-white/25 mt-0.5 font-medium uppercase tracking-wider">Всего XP</div>
+          </GlassCard>
+          <GlassCard className="p-4 text-center">
+            <div className="text-[22px] font-bold text-white tabular-nums">{achievementCounts.APPROVED}</div>
+            <div className="text-[10px] text-white/25 mt-0.5 font-medium uppercase tracking-wider">Достижений</div>
+          </GlassCard>
+          <GlassCard className="p-4 text-center">
+            <div className="text-[22px] font-bold text-white tabular-nums">{profile?.level}</div>
+            <div className="text-[10px] text-white/25 mt-0.5 font-medium uppercase tracking-wider">Уровень</div>
+          </GlassCard>
+        </div>
+
+        {/* Level Progress Card — Blue gradient */}
+        <div className="relative overflow-hidden rounded-2xl p-5"
+          style={{ background: 'linear-gradient(135deg, rgba(0,122,255,0.25) 0%, rgba(88,86,214,0.15) 100%)', border: '1px solid rgba(0,122,255,0.2)' }}>
+          <div className="relative z-10">
+            <div className="text-[11px] text-white/40 font-semibold uppercase tracking-wider">
+              УРОВЕНЬ {profile?.level} · {profile?.levelName}
+            </div>
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[12px] text-white/50 tabular-nums">{xpInLevel} / {xpInLevel + (xpToNext - xpInLevel)} XP</span>
+                <span className="text-[12px] text-[#007AFF] font-bold tabular-nums">{Math.round(levelProgress)}%</span>
+              </div>
+              <div className="w-full bg-white/10 rounded-full h-2.5 overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-700 ease-out"
+                  style={{ width: `${levelProgress}%`, background: 'linear-gradient(90deg, #007AFF, #5856D6)' }}
+                />
+              </div>
+            </div>
+            <div className="mt-3 flex items-center justify-between">
+              {profile?.nextLevelName && (
+                <span className="text-[11px] text-white/30">
+                  До «{profile.nextLevelName}» — ещё {Math.max(0, (profile.nextLevelXp || 0) - (profile.totalXp))} XP
+                </span>
+              )}
+              <button onClick={() => {}} className="text-[12px] text-[#007AFF] font-semibold flex items-center gap-1 ml-auto">
+                Подробнее <IconChevron size={10} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Level Roadmap */}
+        <div>
+          <h3 className="ios-section-header mb-3">Путь уровней</h3>
+          <div className="space-y-1.5">
+            {LEVELS.map((l) => {
+              const isCurrent = l.level === currentLevel
+              const isPassed = l.level < currentLevel
+              return (
+                <div key={l.level} className={`flex items-center gap-3 p-3 rounded-xl ${
+                  isCurrent
+                    ? 'bg-[#007AFF]/8 border border-[#007AFF]/15'
+                    : isPassed
+                      ? 'bg-white/2'
+                      : 'bg-white/1'
+                }`}>
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-[13px] font-bold ${
+                    isCurrent
+                      ? 'bg-[#007AFF]/15 text-[#007AFF]'
+                      : isPassed
+                        ? 'bg-[#34C759]/10 text-[#34C759]'
+                        : 'bg-white/4 text-white/15'
+                  }`}>
+                    {isPassed ? (
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                        <path d="M3 8L7 12L13 4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    ) : isCurrent ? (
+                      <svg width="10" height="14" viewBox="0 0 10 16" fill="none">
+                        <path d="M1 2L5 8L1 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    ) : (
+                      <svg width="10" height="14" viewBox="0 0 10 16" fill="none">
+                        <circle cx="5" cy="8" r="3" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className={`text-[13px] font-medium ${isCurrent ? 'text-white' : 'text-white/30'}`}>{l.name}</div>
+                    <div className="text-[10px] text-white/15">{l.min}–{l.max === 999999 ? '...' : l.max} XP</div>
+                  </div>
+                  {isCurrent && (
+                    <span className="text-[10px] text-[#007AFF] font-semibold px-2 py-0.5 rounded-full bg-[#007AFF]/10">Текущий</span>
+                  )}
+                  {isPassed && (
+                    <span className="text-[10px] text-[#34C759] font-semibold px-2 py-0.5 rounded-full bg-[#34C759]/10">Пройден</span>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Logout */}
+        <button onClick={handleLogout}
+          className="w-full glass-card py-3.5 flex items-center justify-center gap-2 text-[#FF3B30]/70 text-[14px] font-semibold active:scale-[0.97] ios-spring">
+          <IconLogout />
+          Выйти
+        </button>
       </div>
-
-      {/* Logout */}
-      <button onClick={handleLogout}
-        className="w-full glass-card py-3.5 flex items-center justify-center gap-2 text-[#FF3B30]/70 text-[14px] font-semibold active:scale-[0.97] ios-spring">
-        <IconLogout />
-        Выйти
-      </button>
-    </div>
-  )
+    )
+  }
 
   /* ============================================================
      RENDER: ADD ACHIEVEMENT SHEET
