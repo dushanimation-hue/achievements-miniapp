@@ -2175,7 +2175,7 @@ export default function Page() {
       <div className="bg-orb bg-orb-2" />
       <div className="bg-orb bg-orb-3" />
 
-      <div className="relative z-10 max-w-lg mx-auto pb-24">
+      <div className={`relative z-10 max-w-lg mx-auto pb-24 ${isTelegram ? 'pt-safe-top' : ''}`}>
         {currentTab === 'home' && renderHome()}
         {currentTab === 'achievements' && renderAchievements()}
         {currentTab === 'milestones' && renderMilestones()}
