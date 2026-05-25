@@ -171,6 +171,7 @@ async function seed() {
   await db.achievement.deleteMany()
   await db.challenge.deleteMany()
   await db.user.deleteMany()
+  await db.faculty.deleteMany()
 
   // Create users
   for (const u of USERS) {
@@ -200,6 +201,20 @@ async function seed() {
   // Create challenge participants
   for (const cp of CHALLENGE_PARTICIPANTS) {
     await db.challengeParticipant.create({ data: cp })
+  }
+
+  // Create faculties
+  const faculties = [
+    { name: 'Атос', emoji: '🗡️', color: '#007AFF' },
+    { name: 'Портос', emoji: '🏰', color: '#FF9F0A' },
+    { name: 'Арамис', emoji: '⚔️', color: '#5856D6' },
+  ]
+  for (const f of faculties) {
+    await db.faculty.upsert({
+      where: { name: f.name },
+      update: {},
+      create: f,
+    })
   }
 
   console.log('Seeding complete!')

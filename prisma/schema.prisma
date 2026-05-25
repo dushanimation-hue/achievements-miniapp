@@ -21,13 +21,26 @@ model User {
   league       String   @default("bronze")
   statusEmoji  String   @default("")
   statusPrefix String   @default("")
+  facultyId    String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  faculty               Faculty?      @relation(fields: [facultyId], references: [id])
   achievements          Achievement[]
   userBadges            UserBadge[]
   challengeParticipations ChallengeParticipant[]
   reviewedAchievements  Achievement[] @relation("ReviewedAchievements")
+}
+
+model Faculty {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  emoji     String
+  color     String
+  createdAt DateTime @default(now())
+  members   User[]
+
+  @@map("faculties")
 }
 
 model Achievement {

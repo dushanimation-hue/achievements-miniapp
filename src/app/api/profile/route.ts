@@ -115,6 +115,7 @@ export async function GET(request: NextRequest) {
         statusEmoji: user.statusEmoji,
         statusPrefix: user.statusPrefix,
         league: user.league,
+        facultyId: user.facultyId,
       },
       achievementCounts,
       xpByDirection,
