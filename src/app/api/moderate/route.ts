@@ -1,4 +1,5 @@
 import { db } from '@/lib/db';
+import { updateChallengeProgress } from '@/lib/challengeUtils';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
@@ -55,6 +56,9 @@ export async function PATCH(request: NextRequest) {
         where: { id: achievement.userId },
         data: { totalXp: { increment: awardedXp } },
       });
+
+      // Update challenge progress for this user
+      await updateChallengeProgress(achievement.userId, awardedXp, finalDirection || achievement.direction);
 
       return NextResponse.json({ achievement: updated });
     } else if (action === 'reject') {

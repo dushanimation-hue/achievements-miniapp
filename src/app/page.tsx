@@ -100,6 +100,7 @@ const RESULT_STATUSES: Record<string, { label: string; multiplier: number }> = {
 }
 
 const DIRECTIONS: Record<string, { label: string; color: string }> = {
+  ALL: { label: 'Все направления', color: '#FF9F0A' },
   KNOWLEDGE: { label: 'Знание', color: '#007AFF' },
   WILL: { label: 'Воля', color: '#FF9F0A' },
   SKILLS: { label: 'Навыки', color: '#5856D6' },
@@ -846,6 +847,30 @@ export default function Page() {
     }
   }
 
+  const handleJoinChallenge = async (challengeId: string) => {
+    if (!userId) return
+    try {
+      const res = await fetch('/api/challenges', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, challengeId }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        if (data.error === 'Already joined') {
+          toast.error('Вы уже участвуете в этом челлендже')
+        } else {
+          toast.error('Ошибка при вступлении в челлендж')
+        }
+        return
+      }
+      toast.success('Вы вступили в челлендж! Зарабатывайте XP для его выполнения.')
+      fetchChallenges()
+    } catch {
+      toast.error('Ошибка сети')
+    }
+  }
+
   const handleAddAchievement = async () => {
     if (!formTitle || !formAchievementType) {
       toast.error('Заполните название и тип достижения')
@@ -904,6 +929,7 @@ export default function Page() {
       setShowAddSheet(false)
       fetchProfile()
       fetchAchievements()
+      fetchChallenges()
     } catch (e) {
       console.error('Achievement creation network error:', e)
       toast.error('Ошибка сети. Попробуйте ещё раз.')
@@ -926,7 +952,7 @@ export default function Page() {
       if (!res.ok) return
       toast.success(action === 'approve' ? 'Достижение одобрено' : 'Достижение отклонено')
       setAdminRejectReasons(prev => { const next = { ...prev }; delete next[achievementId]; return next })
-      fetchPending(); fetchAdminStats(); fetchProfile(); fetchAchievements()
+      fetchPending(); fetchAdminStats(); fetchProfile(); fetchAchievements(); fetchChallenges()
     } catch {
       toast.error('Ошибка')
     }
@@ -1339,8 +1365,18 @@ export default function Page() {
                         </div>
                       )}
 
-                      {/* Progress */}
-                      {!ch.completed && (
+                      {/* Not joined — show join button */}
+                      {!ch.isJoined && !ch.completed && (
+                        <button
+                          onClick={() => handleJoinChallenge(ch.id)}
+                          className="mt-3 w-full py-2.5 rounded-xl bg-[#FF9F0A]/12 border border-[#FF9F0A]/20 text-[13px] font-semibold text-[#FF9F0A] active:scale-[0.97] ios-spring transition-all hover:bg-[#FF9F0A]/18"
+                        >
+                          Участвовать
+                        </button>
+                      )}
+
+                      {/* Joined but not completed — show progress */}
+                      {ch.isJoined && !ch.completed && (
                         <div className="mt-3">
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-[11px] text-white/30">{ch.xpCollected} / {ch.xpTarget} XP</span>
@@ -1351,6 +1387,17 @@ export default function Page() {
                             max={ch.xpTarget}
                             gradient={`linear-gradient(90deg, ${dirInfo?.color || '#FF9F0A'}, #FF3B30)`}
                           />
+                        </div>
+                      )}
+
+                      {/* Completed — show success */}
+                      {ch.completed && (
+                        <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-[#34C759]/8 border border-[#34C759]/15">
+                          <span className="text-[14px]">🎉</span>
+                          <div>
+                            <div className="text-[12px] font-semibold text-[#34C759]">Челлендж выполнен!</div>
+                            <div className="text-[10px] text-white/25">+{ch.rewardXp} XP начислено</div>
+                          </div>
                         </div>
                       )}
 

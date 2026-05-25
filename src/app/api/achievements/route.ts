@@ -1,4 +1,5 @@
 import { db } from '@/lib/db';
+import { updateChallengeProgress } from '@/lib/challengeUtils';
 import { NextRequest, NextResponse } from 'next/server';
 
 // XP base values per achievement level
@@ -166,6 +167,9 @@ export async function POST(request: NextRequest) {
         where: { id: userId },
         data: { totalXp: { increment: finalXpAwarded } },
       });
+
+      // Update challenge progress for this user
+      await updateChallengeProgress(userId, finalXpAwarded, finalDirection);
     }
 
     return NextResponse.json({ achievement }, { status: 201 });

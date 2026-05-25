@@ -1,4 +1,5 @@
 import { db } from '@/lib/db';
+import { updateChallengeProgress } from '@/lib/challengeUtils';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
@@ -61,6 +62,8 @@ export async function PATCH(
         where: { id: achievement.userId },
         data: { totalXp: { increment: xpAwarded } },
       });
+      // Update challenge progress for this user
+      await updateChallengeProgress(achievement.userId, xpAwarded, direction || achievement.direction);
     }
 
     // If revoking (changing from APPROVED to REJECTED), deduct XP
