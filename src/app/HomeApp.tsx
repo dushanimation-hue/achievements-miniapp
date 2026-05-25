@@ -730,6 +730,29 @@ export default function Home() {
     }
   }, [])
 
+  const fetchChallenges = useCallback(async () => {
+    if (!userId) return
+    try {
+      const res = await fetch(`/api/challenges?userId=${userId}`)
+      if (!res.ok) return
+      const data = await res.json()
+      setChallenges(data.challenges || [])
+    } catch (e) {
+      console.error('Challenges fetch error:', e)
+    }
+  }, [userId])
+
+  const fetchStudents = useCallback(async () => {
+    try {
+      const res = await fetch('/api/students')
+      if (!res.ok) return
+      const data = await res.json()
+      setStudents(data.students || [])
+    } catch (e) {
+      console.error('Students fetch error:', e)
+    }
+  }, [])
+
   useEffect(() => { if (userId) { fetchProfile(); fetchAchievements(); fetchBadges(); fetchChallenges() } }, [userId, fetchProfile, fetchAchievements, fetchBadges, fetchChallenges])
 
   useEffect(() => {
@@ -877,30 +900,6 @@ export default function Home() {
       toast.error('Ошибка сети')
     }
   }
-
-  const fetchChallenges = useCallback(async () => {
-    if (!userId) return
-    try {
-      const res = await fetch(`/api/challenges?userId=${userId}`)
-      if (!res.ok) return
-      const data = await res.json()
-      setChallenges(data.challenges || [])
-    } catch (e) {
-      console.error('Challenges fetch error:', e)
-    }
-  }, [userId])
-
-  // Fetch students for admin selector
-  const fetchStudents = useCallback(async () => {
-    try {
-      const res = await fetch('/api/students')
-      if (!res.ok) return
-      const data = await res.json()
-      setStudents(data.students || [])
-    } catch (e) {
-      console.error('Students fetch error:', e)
-    }
-  }, [])
 
   useEffect(() => {
     if (isAdmin && showAddSheet) fetchStudents()
