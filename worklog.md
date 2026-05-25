@@ -112,3 +112,34 @@ Stage Summary:
 - Telegram auth improved with ready(), expand(), initData fallback
 - 15 total badges in seed data
 - Need to re-seed database to see new badges
+---
+Task ID: 1
+Agent: Main Agent
+Task: Ensure challenges award XP and achievements are properly credited
+
+Work Log:
+- Analyzed the entire codebase to understand the XP flow
+- Found that challenges never update xpCollected when achievements are approved
+- Found that there was no "Join Challenge" button in the UI
+- Found that challenges never auto-completed when xpCollected >= xpTarget
+- Created /src/lib/challengeUtils.ts with updateChallengeProgress() helper
+- Fixed /api/moderate/route.ts to call updateChallengeProgress after approving
+- Fixed /api/achievements/route.ts to call updateChallengeProgress after auto-approve
+- Fixed /api/achievements/[id]/route.ts to call updateChallengeProgress after approving via PATCH
+- Added handleJoinChallenge function in page.tsx
+- Added "Участвовать" (Join) button for unjoined challenges in the UI
+- Added completed state UI with success message and reward XP display
+- Added DIRECTIONS.ALL entry for 'Все направления' challenges
+- Frontend now refreshes challenges data after approving/adding achievements
+- Build successful, pushed to GitHub
+
+Stage Summary:
+- Challenge XP tracking is now fully functional
+- When an achievement is approved (via moderation, auto-approve, or PATCH), the system automatically:
+  1. Finds all active challenge participations for the user
+  2. Matches challenges by direction (including 'ALL')
+  3. Increments xpCollected on matching participations
+  4. Auto-completes challenges when xpCollected >= xpTarget
+  5. Awards rewardXp to the user's totalXp
+- Users can now join challenges via the "Участвовать" button
+- Completed challenges show a success message with the reward XP
