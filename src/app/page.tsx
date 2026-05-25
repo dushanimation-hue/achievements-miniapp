@@ -151,9 +151,9 @@ function IconHome({ active }: { active: boolean }) {
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
       <path d="M3 12L5 10M5 10L12 3L19 10M5 10V20C5 20.5523 5.44772 21 6 21H9M19 10L21 12M19 10V20C19 20.5523 18.5523 21 18 21H15M9 21C9 21 9 15 12 15C15 15 15 21 15 21M9 21H15"
-        stroke={active ? '#007AFF' : 'currentColor'} strokeWidth={active ? 2 : 1.5}
+        stroke={active ? '#ffffff' : 'currentColor'} strokeWidth={active ? 2 : 1.5}
         strokeLinecap="round" strokeLinejoin="round"
-        fill={active ? 'rgba(0,122,255,0.1)' : 'none'} />
+        fill={active ? 'rgba(255,255,255,0.08)' : 'none'} />
     </svg>
   )
 }
@@ -161,12 +161,12 @@ function IconHome({ active }: { active: boolean }) {
 function IconAchievements({ active }: { active: boolean }) {
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="14" r="6" stroke={active ? '#007AFF' : 'currentColor'} strokeWidth={active ? 2 : 1.5}
-        fill={active ? 'rgba(0,122,255,0.1)' : 'none'} />
-      <path d="M9.5 3L12 8L14.5 3" stroke={active ? '#007AFF' : 'currentColor'} strokeWidth={active ? 2 : 1.5}
+      <circle cx="12" cy="14" r="6" stroke={active ? '#ffffff' : 'currentColor'} strokeWidth={active ? 2 : 1.5}
+        fill={active ? 'rgba(255,255,255,0.08)' : 'none'} />
+      <path d="M9.5 3L12 8L14.5 3" stroke={active ? '#ffffff' : 'currentColor'} strokeWidth={active ? 2 : 1.5}
         strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="12" cy="14" r="2.5" stroke={active ? '#007AFF' : 'currentColor'} strokeWidth={active ? 1.5 : 1}
-        fill={active ? 'rgba(0,122,255,0.2)' : 'none'} />
+      <circle cx="12" cy="14" r="2.5" stroke={active ? '#ffffff' : 'currentColor'} strokeWidth={active ? 1.5 : 1}
+        fill={active ? 'rgba(255,255,255,0.15)' : 'none'} />
     </svg>
   )
 }
@@ -174,13 +174,13 @@ function IconAchievements({ active }: { active: boolean }) {
 function IconMilestones({ active }: { active: boolean }) {
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-      <path d="M4 20H20" stroke={active ? '#007AFF' : 'currentColor'} strokeWidth={active ? 2 : 1.5} strokeLinecap="round" />
-      <path d="M7 20V14" stroke={active ? '#007AFF' : 'currentColor'} strokeWidth={active ? 2 : 1.5} strokeLinecap="round" />
-      <path d="M12 20V10" stroke={active ? '#007AFF' : 'currentColor'} strokeWidth={active ? 2 : 1.5} strokeLinecap="round" />
-      <path d="M17 20V6" stroke={active ? '#007AFF' : 'currentColor'} strokeWidth={active ? 2 : 1.5} strokeLinecap="round" />
-      <circle cx="7" cy="13" r="1.5" fill={active ? '#007AFF' : 'currentColor'} />
-      <circle cx="12" cy="9" r="1.5" fill={active ? '#007AFF' : 'currentColor'} />
-      <circle cx="17" cy="5" r="1.5" fill={active ? '#007AFF' : 'currentColor'} />
+      <path d="M4 20H20" stroke={active ? '#ffffff' : 'currentColor'} strokeWidth={active ? 2 : 1.5} strokeLinecap="round" />
+      <path d="M7 20V14" stroke={active ? '#ffffff' : 'currentColor'} strokeWidth={active ? 2 : 1.5} strokeLinecap="round" />
+      <path d="M12 20V10" stroke={active ? '#ffffff' : 'currentColor'} strokeWidth={active ? 2 : 1.5} strokeLinecap="round" />
+      <path d="M17 20V6" stroke={active ? '#ffffff' : 'currentColor'} strokeWidth={active ? 2 : 1.5} strokeLinecap="round" />
+      <circle cx="7" cy="13" r="1.5" fill={active ? '#ffffff' : 'currentColor'} />
+      <circle cx="12" cy="9" r="1.5" fill={active ? '#ffffff' : 'currentColor'} />
+      <circle cx="17" cy="5" r="1.5" fill={active ? '#ffffff' : 'currentColor'} />
     </svg>
   )
 }
@@ -189,9 +189,9 @@ function IconTrophy({ active }: { active: boolean }) {
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
       <path d="M12 17C13.5 17 15 16 15 14H9C9 16 10.5 17 12 17ZM12 17V20M8 20H16M7 4H17V10C17 12.7614 14.7614 15 12 15C9.23858 15 7 12.7614 7 10V4ZM5 6C5 5 5.5 4 7 4M19 6C19 5 18.5 4 17 4"
-        stroke={active ? '#007AFF' : 'currentColor'} strokeWidth={active ? 2 : 1.5}
+        stroke={active ? '#ffffff' : 'currentColor'} strokeWidth={active ? 2 : 1.5}
         strokeLinecap="round" strokeLinejoin="round"
-        fill={active ? 'rgba(0,122,255,0.1)' : 'none'} />
+        fill={active ? 'rgba(255,255,255,0.08)' : 'none'} />
     </svg>
   )
 }
@@ -199,11 +199,11 @@ function IconTrophy({ active }: { active: boolean }) {
 function IconUser({ active }: { active: boolean }) {
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="8" r="4" stroke={active ? '#007AFF' : 'currentColor'} strokeWidth={active ? 2 : 1.5}
-        fill={active ? 'rgba(0,122,255,0.1)' : 'none'} />
+      <circle cx="12" cy="8" r="4" stroke={active ? '#ffffff' : 'currentColor'} strokeWidth={active ? 2 : 1.5}
+        fill={active ? 'rgba(255,255,255,0.08)' : 'none'} />
       <path d="M4 20C4 16.6863 7.58172 14 12 14C16.4183 14 20 16.6863 20 20"
-        stroke={active ? '#007AFF' : 'currentColor'} strokeWidth={active ? 2 : 1.5}
-        strokeLinecap="round" fill={active ? 'rgba(0,122,255,0.06)' : 'none'} />
+        stroke={active ? '#ffffff' : 'currentColor'} strokeWidth={active ? 2 : 1.5}
+        strokeLinecap="round" fill={active ? 'rgba(255,255,255,0.05)' : 'none'} />
     </svg>
   )
 }
@@ -211,7 +211,7 @@ function IconUser({ active }: { active: boolean }) {
 function IconPlus({ size = 20 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 20 20" fill="none">
-      <path d="M10 4V16M4 10H16" stroke="white" strokeWidth="2" strokeLinecap="round" />
+      <path d="M10 4V16M4 10H16" stroke="black" strokeWidth="2" strokeLinecap="round" />
     </svg>
   )
 }
@@ -236,9 +236,9 @@ function IconClose({ size = 14 }: { size?: number }) {
 function IconSport() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="5" r="3" stroke="#007AFF" strokeWidth="1.5" />
-      <path d="M6 22L9 12H15L18 22" stroke="#007AFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M9 12L7 8M15 12L17 8M12 12V9" stroke="#007AFF" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="12" cy="5" r="3" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" />
+      <path d="M6 22L9 12H15L18 22" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9 12L7 8M15 12L17 8M12 12V9" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   )
 }
@@ -247,7 +247,7 @@ function IconCreative() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
       <path d="M12 2L14.09 8.26L21 9.27L16 14.14L17.18 21.02L12 17.77L6.82 21.02L8 14.14L3 9.27L9.91 8.26L12 2Z"
-        stroke="#5856D6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="rgba(88,86,214,0.08)" />
+        stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="rgba(255,255,255,0.04)" />
     </svg>
   )
 }
@@ -255,9 +255,9 @@ function IconCreative() {
 function IconOlympiad() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-      <rect x="3" y="3" width="18" height="18" rx="4" stroke="#FF9F0A" strokeWidth="1.5" fill="rgba(255,159,10,0.06)" />
-      <path d="M9 8L12 12L15 8" stroke="#FF9F0A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M8 15H16M12 12V17" stroke="#FF9F0A" strokeWidth="1.5" strokeLinecap="round" />
+      <rect x="3" y="3" width="18" height="18" rx="4" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" fill="rgba(255,255,255,0.04)" />
+      <path d="M9 8L12 12L15 8" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8 15H16M12 12V17" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   )
 }
@@ -265,9 +265,9 @@ function IconOlympiad() {
 function IconFreeForm() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-      <path d="M11 4H4V18C4 19.1046 4.89543 20 6 20H18C19.1046 20 20 19.1046 20 18V13" stroke="#34C759" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M11 4H4V18C4 19.1046 4.89543 20 6 20H18C19.1046 20 20 19.1046 20 18V13" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" strokeLinecap="round" />
       <path d="M18.5 2.50001C19.3284 1.67158 20.6716 1.67158 21.5 2.50001C22.3284 3.32844 22.3284 4.67158 21.5 5.50001L12 15L8 16L9 12L18.5 2.50001Z"
-        stroke="#34C759" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="rgba(52,199,89,0.06)" />
+        stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="rgba(255,255,255,0.04)" />
     </svg>
   )
 }
@@ -284,8 +284,8 @@ function IconShield() {
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
       <path d="M12 2L4 6V12C4 16.4183 7.58172 20.5 12 22C16.4183 20.5 20 16.4183 20 12V6L12 2Z"
-        stroke="#007AFF" strokeWidth="1.5" strokeLinejoin="round" fill="rgba(0,122,255,0.06)" />
-      <path d="M9 12L11 14L15 10" stroke="#007AFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" strokeLinejoin="round" fill="rgba(255,255,255,0.04)" />
+      <path d="M9 12L11 14L15 10" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 }
@@ -351,7 +351,7 @@ function GlassCard({ children, className = '', elevated = false, pro = false }: 
   )
 }
 
-function XpProgressBar({ current, max, className = '', gradient = 'linear-gradient(90deg, #007AFF, #5856D6)' }: { current: number; max: number; className?: string; gradient?: string }) {
+function XpProgressBar({ current, max, className = '', gradient = 'linear-gradient(90deg, rgba(255,255,255,0.6), rgba(255,255,255,0.3))' }: { current: number; max: number; className?: string; gradient?: string }) {
   const pct = max > 0 ? Math.min((current / max) * 100, 100) : 0
   return (
     <div className={`w-full bg-white/6 rounded-full h-1.5 overflow-hidden ${className}`}>
@@ -385,12 +385,12 @@ function getInitials(name: string): string {
 }
 
 const AVATAR_COLORS = [
-  'from-[#007AFF] to-[#5856D6]',
-  'from-[#5856D6] to-[#AF52DE]',
-  'from-[#34C759] to-[#007AFF]',
-  'from-[#FF9F0A] to-[#FF3B30]',
-  'from-[#AF52DE] to-[#FF3B80]',
-  'from-[#007AFF] to-[#34C759]',
+  'from-white/20 to-white/5',
+  'from-white/15 to-white/8',
+  'from-white/10 to-white/5',
+  'from-white/18 to-white/6',
+  'from-white/12 to-white/7',
+  'from-white/8 to-white/4',
 ]
 
 function getAvatarColor(name: string): string {
@@ -436,7 +436,7 @@ function LoginScreen({ onLogin }: { onLogin: (user: AuthUser) => void }) {
 
       <div className="glass-login p-8 w-full max-w-sm relative z-10">
         <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-[#007AFF]/10 border border-[#007AFF]/20 flex items-center justify-center mx-auto mb-4">
+          <div className="w-14 h-14 rounded-2xl bg-white/8 border border-white/12 flex items-center justify-center mx-auto mb-4">
             <IconShield />
           </div>
           <h1 className="text-[22px] font-bold text-white tracking-tight">Достижения</h1>
@@ -1027,9 +1027,9 @@ export default function Page() {
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#007AFF]/12 border border-[#007AFF]/20 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-white/8 border border-white/10 flex items-center justify-center">
                 <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                  <path d="M10 2L12.5 7.5L18 8.5L14 12.5L15 18L10 15.5L5 18L6 12.5L2 8.5L7.5 7.5L10 2Z" fill="#007AFF" stroke="#007AFF" strokeWidth="0.5" />
+                  <path d="M10 2L12.5 7.5L18 8.5L14 12.5L15 18L10 15.5L5 18L6 12.5L2 8.5L7.5 7.5L10 2Z" fill="white" stroke="white" strokeWidth="0.5" />
                 </svg>
               </div>
               <div>
@@ -1038,7 +1038,7 @@ export default function Page() {
               </div>
             </div>
             <div className="text-right">
-              <div className="text-[22px] font-bold text-[#007AFF] tabular-nums">{profile?.totalXp}</div>
+              <div className="text-[22px] font-bold text-white tabular-nums">{profile?.totalXp}</div>
               <div className="text-[11px] text-white/25 font-medium">XP</div>
             </div>
           </div>
@@ -1077,14 +1077,14 @@ export default function Page() {
       <div className="grid grid-cols-2 gap-2">
         <button onClick={() => { setCurrentTab('milestones'); setTimeout(() => setShowAddSheet(true), 100) }}
           className="glass-card flex items-center gap-3 py-3 px-4 active:scale-[0.97] ios-spring">
-          <div className="w-9 h-9 rounded-xl bg-[#007AFF]/10 border border-[#007AFF]/15 flex items-center justify-center">
+          <div className="w-9 h-9 rounded-xl bg-white/6 border border-white/8 flex items-center justify-center">
             <IconPlus size={16} />
           </div>
           <span className="text-[13px] text-white/50 font-semibold">Добавить</span>
         </button>
         <button onClick={() => setCurrentTab('rating')}
           className="glass-card flex items-center gap-3 py-3 px-4 active:scale-[0.97] ios-spring">
-          <div className="w-9 h-9 rounded-xl bg-[#5856D6]/10 border border-[#5856D6]/15 flex items-center justify-center">
+          <div className="w-9 h-9 rounded-xl bg-white/6 border border-white/8 flex items-center justify-center">
             <IconTrophy active={false} />
           </div>
           <span className="text-[13px] text-white/50 font-semibold">Рейтинг</span>
@@ -1109,7 +1109,7 @@ export default function Page() {
       <div>
         <div className="flex items-center justify-between mb-3">
           <h3 className="ios-section-header">Последние достижения</h3>
-          <button onClick={() => setCurrentTab('milestones')} className="text-[13px] text-[#007AFF] font-medium">Все</button>
+          <button onClick={() => setCurrentTab('milestones')} className="text-[13px] text-white font-medium">Все</button>
         </div>
         <div className="space-y-1.5">
           {recentAchievements.map((a) => (
@@ -1241,12 +1241,12 @@ export default function Page() {
 
     // Define badge card colors for visual variety
     const badgeColors = [
-      { bg: 'bg-[#FF9F0A]/10', border: 'border-[#FF9F0A]/20', glow: 'shadow-[#FF9F0A]/10' },
-      { bg: 'bg-[#5856D6]/10', border: 'border-[#5856D6]/20', glow: 'shadow-[#5856D6]/10' },
-      { bg: 'bg-[#007AFF]/10', border: 'border-[#007AFF]/20', glow: 'shadow-[#007AFF]/10' },
-      { bg: 'bg-[#34C759]/10', border: 'border-[#34C759]/20', glow: 'shadow-[#34C759]/10' },
-      { bg: 'bg-[#AF52DE]/10', border: 'border-[#AF52DE]/20', glow: 'shadow-[#AF52DE]/10' },
-      { bg: 'bg-[#FF3B30]/10', border: 'border-[#FF3B30]/20', glow: 'shadow-[#FF3B30]/10' },
+      { bg: 'bg-white/6', border: 'border-white/8', glow: 'shadow-white/5' },
+      { bg: 'bg-white/6', border: 'border-white/8', glow: 'shadow-white/5' },
+      { bg: 'bg-white/6', border: 'border-white/8', glow: 'shadow-white/5' },
+      { bg: 'bg-white/6', border: 'border-white/8', glow: 'shadow-white/5' },
+      { bg: 'bg-white/6', border: 'border-white/8', glow: 'shadow-white/5' },
+      { bg: 'bg-white/6', border: 'border-white/8', glow: 'shadow-white/5' },
     ]
 
     return (
@@ -1263,12 +1263,12 @@ export default function Page() {
           <div className="glass-card p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[12px] text-white/30 font-medium uppercase tracking-wider">Прогресс</span>
-              <span className="text-[13px] font-bold text-[#FF9F0A]">{earnedCount}/{badges.length}</span>
+              <span className="text-[13px] font-bold text-white">{earnedCount}/{badges.length}</span>
             </div>
             <XpProgressBar
               current={earnedCount}
               max={badges.length}
-              gradient="linear-gradient(90deg, #FF9F0A, #FF3B30, #AF52DE)"
+              gradient="linear-gradient(90deg, rgba(255,255,255,0.5), rgba(255,255,255,0.2))"
             />
           </div>
         )}
@@ -1327,9 +1327,9 @@ export default function Page() {
         {challenges.length > 0 && (
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-1 h-5 rounded-full bg-gradient-to-b from-[#FF9F0A] to-[#FF3B30]" />
+              <div className="w-1 h-5 rounded-full bg-gradient-to-b from-white/20 to-white/5" />
               <h3 className="text-[15px] font-bold text-white">Сезонные челленджи</h3>
-              <span className="px-2 py-0.5 rounded-full bg-[#FF9F0A]/12 text-[10px] font-bold text-[#FF9F0A] uppercase tracking-wider">Live</span>
+              <span className="px-2 py-0.5 rounded-full bg-white/8 text-[10px] font-bold text-white uppercase tracking-wider">Live</span>
             </div>
             <div className="space-y-2.5">
               {challenges.map((ch) => {
@@ -1352,7 +1352,7 @@ export default function Page() {
                           <p className="text-[12px] text-white/35 mt-1 leading-relaxed">{ch.description}</p>
                         </div>
                         <div className="text-right shrink-0">
-                          <div className="text-[16px] font-bold text-[#FF9F0A]">+{ch.rewardXp}</div>
+                          <div className="text-[16px] font-bold text-white">+{ch.rewardXp}</div>
                           <div className="text-[9px] text-white/20 uppercase tracking-wider">XP</div>
                         </div>
                       </div>
@@ -1369,7 +1369,7 @@ export default function Page() {
                       {!ch.isJoined && !ch.completed && (
                         <button
                           onClick={() => handleJoinChallenge(ch.id)}
-                          className="mt-3 w-full py-2.5 rounded-xl bg-[#FF9F0A]/12 border border-[#FF9F0A]/20 text-[13px] font-semibold text-[#FF9F0A] active:scale-[0.97] ios-spring transition-all hover:bg-[#FF9F0A]/18"
+                          className="mt-3 w-full py-2.5 rounded-xl bg-white/8 border border-white/12 text-[13px] font-semibold text-white active:scale-[0.97] ios-spring transition-all hover:bg-white/12"
                         >
                           Участвовать
                         </button>
@@ -1380,7 +1380,7 @@ export default function Page() {
                         <div className="mt-3">
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-[11px] text-white/30">{ch.xpCollected} / {ch.xpTarget} XP</span>
-                            <span className="text-[11px] text-[#FF9F0A] font-semibold">{Math.round(progress)}%</span>
+                            <span className="text-[11px] text-white font-semibold">{Math.round(progress)}%</span>
                           </div>
                           <XpProgressBar
                             current={ch.xpCollected}
@@ -1426,7 +1426,7 @@ export default function Page() {
       <div className="pt-3 flex items-center justify-between">
         <h1 className="ios-large-title">Достижения</h1>
         <button onClick={() => setShowAddSheet(true)}
-          className="w-9 h-9 rounded-xl bg-[#007AFF] flex items-center justify-center active:scale-95 ios-spring">
+          className="w-9 h-9 rounded-xl bg-white flex items-center justify-center active:scale-95 ios-spring">
           <IconPlus size={18} />
         </button>
       </div>
@@ -1468,7 +1468,7 @@ export default function Page() {
               <div className="flex items-center gap-2 mt-0.5">
                 {/* Admin sees student name */}
                 {isAdmin && a.user && (
-                  <span className="text-[11px] text-[#007AFF] font-medium">{a.user.name}</span>
+                  <span className="text-[11px] text-white font-medium">{a.user.name}</span>
                 )}
                 <StatusDot status={a.status} />
                 {a.achievementLevel && a.achievementType !== 'FREE_FORM' && (
@@ -1512,7 +1512,7 @@ export default function Page() {
             </div>
             <p className="text-[14px] text-white/20 font-medium">Пока нет достижений</p>
             <button onClick={() => setShowAddSheet(true)}
-              className="mt-3 text-[13px] text-[#007AFF] font-semibold">Добавить первую</button>
+              className="mt-3 text-[13px] text-white font-semibold">Добавить первую</button>
           </div>
         )}
       </div>
@@ -1572,12 +1572,12 @@ export default function Page() {
                         <IconCrown />
                       </div>
                     )}
-                    <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${avatarGrad} flex items-center justify-center text-white font-bold text-[14px] border-2 ${actualRank === 1 ? 'border-[#FFD700]/50 w-14 h-14 text-[16px]' : actualRank === 2 ? 'border-[#C0C0C0]/40' : 'border-[#CD7F32]/40'} ${isMe ? 'ring-2 ring-[#007AFF]/50 ring-offset-2 ring-offset-[#08080f]' : ''}`}>
+                    <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${avatarGrad} flex items-center justify-center text-white font-bold text-[14px] border-2 ${actualRank === 1 ? 'border-[#FFD700]/50 w-14 h-14 text-[16px]' : actualRank === 2 ? 'border-[#C0C0C0]/40' : 'border-[#CD7F32]/40'} ${isMe ? 'ring-2 ring-white/30 ring-offset-2 ring-offset-black' : ''}`}>
                       {initials}
                     </div>
                   </div>
                   <div className="text-center mb-1.5">
-                    <div className={`text-[12px] font-semibold text-white truncate max-w-[100px] ${isMe ? 'text-[#007AFF]' : ''}`}>
+                    <div className={`text-[12px] font-semibold text-white truncate max-w-[100px] ${isMe ? 'text-white' : ''}`}>
                       {entry.name}
                     </div>
                     <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded ${entryLeague.cssClass}`}>{entryLeague.name}</span>
@@ -1604,13 +1604,13 @@ export default function Page() {
               const avatarGrad = getAvatarColor(entry.name)
               return (
                 <div key={entry.id}
-                  className={`ios-list-item p-3 flex items-center gap-3 ${isMe ? 'ring-1 ring-[#007AFF]/20' : ''}`}>
+                  className={`ios-list-item p-3 flex items-center gap-3 ${isMe ? 'ring-1 ring-white/15' : ''}`}>
                   <span className="text-[13px] font-bold text-white/25 w-6 text-center tabular-nums">{entry.rank}</span>
                   <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${avatarGrad} flex items-center justify-center text-white font-bold text-[12px] shrink-0`}>
                     {initials}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className={`text-[14px] font-medium truncate ${isMe ? 'text-[#007AFF]' : 'text-white'}`}>{entry.name}</div>
+                    <div className={`text-[14px] font-medium truncate ${isMe ? 'text-white' : 'text-white'}`}>{entry.name}</div>
                     <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded ${entryLeague.cssClass}`}>{entryLeague.name}</span>
                   </div>
                   <div className="text-[14px] font-bold text-white/50 tabular-nums">{entry.totalXp}</div>
@@ -1622,7 +1622,7 @@ export default function Page() {
 
         {loading && (
           <div className="text-center py-12">
-            <div className="w-8 h-8 border-2 border-white/10 border-t-[#007AFF] rounded-full animate-spin mx-auto" />
+            <div className="w-8 h-8 border-2 border-white/10 border-t-white rounded-full animate-spin mx-auto" />
           </div>
         )}
 
@@ -1660,7 +1660,7 @@ export default function Page() {
       {/* Stats cards */}
       <div className="grid grid-cols-3 gap-2">
         <GlassCard className="p-4 text-center">
-          <div className="text-[20px] font-bold text-[#007AFF] tabular-nums">{profile?.totalXp}</div>
+          <div className="text-[20px] font-bold text-white tabular-nums">{profile?.totalXp}</div>
           <div className="text-[10px] text-white/25 mt-0.5">XP</div>
         </GlassCard>
         <GlassCard className="p-4 text-center">
@@ -1767,11 +1767,11 @@ export default function Page() {
                     </div>
                   )}
                   {selectedStudentId && (
-                    <div className="mt-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-[#007AFF]/10 border border-[#007AFF]/20">
+                    <div className="mt-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-white/8 border border-white/12">
                       <div className={`w-6 h-6 rounded-md bg-gradient-to-br ${getAvatarColor(students.find(s => s.id === selectedStudentId)?.name || '')} flex items-center justify-center text-[9px] font-bold text-white`}>
                         {getInitials(students.find(s => s.id === selectedStudentId)?.name || '')}
                       </div>
-                      <span className="text-[13px] text-[#007AFF] font-medium">{students.find(s => s.id === selectedStudentId)?.name}</span>
+                      <span className="text-[13px] text-white font-medium">{students.find(s => s.id === selectedStudentId)?.name}</span>
                       <span className="text-[11px] text-white/25 ml-auto">выбран</span>
                     </div>
                   )}
@@ -2170,7 +2170,7 @@ export default function Page() {
      RENDER: MAIN
      ============================================================ */
   return (
-    <div className="min-h-screen relative overflow-hidden bg-[#08080f]">
+    <div className="min-h-screen relative overflow-hidden bg-black">
       <div className="bg-orb bg-orb-1" />
       <div className="bg-orb bg-orb-2" />
       <div className="bg-orb bg-orb-3" />
@@ -2194,7 +2194,7 @@ export default function Page() {
             { key: 'profile' as Tab, label: 'Профиль', Icon: IconUser },
           ]).map(({ key, label, Icon }) => (
             <button key={key} onClick={() => setCurrentTab(key)}
-              className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 transition-colors ${currentTab === key ? 'text-[#007AFF]' : 'text-white/25'}`}>
+              className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 transition-colors ${currentTab === key ? 'text-white' : 'text-white/25'}`}>
               <Icon active={currentTab === key} />
               <span className="text-[9px] font-medium">{label}</span>
             </button>

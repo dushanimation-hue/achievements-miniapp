@@ -45,58 +45,58 @@
 
 :root {
   --radius: 0.75rem;
-  --background: #08080f;
-  --foreground: #e8e8ed;
-  --card: rgba(255, 255, 255, 0.04);
-  --card-foreground: #e8e8ed;
-  --popover: rgba(18, 18, 28, 0.95);
-  --popover-foreground: #e8e8ed;
-  --primary: #007AFF;
-  --primary-foreground: #ffffff;
-  --secondary: rgba(255, 255, 255, 0.06);
-  --secondary-foreground: #e8e8ed;
-  --muted: rgba(255, 255, 255, 0.05);
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: rgba(255, 255, 255, 0.05);
+  --card-foreground: #ffffff;
+  --popover: rgba(10, 10, 10, 0.95);
+  --popover-foreground: #ffffff;
+  --primary: #ffffff;
+  --primary-foreground: #000000;
+  --secondary: rgba(255, 255, 255, 0.08);
+  --secondary-foreground: #ffffff;
+  --muted: rgba(255, 255, 255, 0.06);
   --muted-foreground: rgba(255, 255, 255, 0.45);
-  --accent: #5856D6;
+  --accent: rgba(255, 255, 255, 0.12);
   --accent-foreground: #ffffff;
   --destructive: #FF3B30;
-  --border: rgba(255, 255, 255, 0.06);
-  --input: rgba(255, 255, 255, 0.05);
-  --ring: rgba(0, 122, 255, 0.3);
-  --chart-1: #007AFF;
-  --chart-2: #5856D6;
-  --chart-3: #34C759;
-  --chart-4: #FF9F0A;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.06);
+  --ring: rgba(255, 255, 255, 0.2);
+  --chart-1: #ffffff;
+  --chart-2: rgba(255, 255, 255, 0.7);
+  --chart-3: rgba(255, 255, 255, 0.5);
+  --chart-4: rgba(255, 255, 255, 0.3);
   --chart-5: #FF3B30;
-  --sidebar: rgba(8, 8, 15, 0.9);
-  --sidebar-foreground: #e8e8ed;
-  --sidebar-primary: #007AFF;
-  --sidebar-primary-foreground: #ffffff;
+  --sidebar: rgba(0, 0, 0, 0.9);
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #ffffff;
+  --sidebar-primary-foreground: #000000;
   --sidebar-accent: rgba(255, 255, 255, 0.06);
-  --sidebar-accent-foreground: #e8e8ed;
-  --sidebar-border: rgba(255, 255, 255, 0.06);
-  --sidebar-ring: rgba(0, 122, 255, 0.3);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: rgba(255, 255, 255, 0.2);
 }
 
 .dark {
-  --background: #08080f;
-  --foreground: #e8e8ed;
-  --card: rgba(255, 255, 255, 0.04);
-  --card-foreground: #e8e8ed;
-  --popover: rgba(18, 18, 28, 0.95);
-  --popover-foreground: #e8e8ed;
-  --primary: #007AFF;
-  --primary-foreground: #ffffff;
-  --secondary: rgba(255, 255, 255, 0.06);
-  --secondary-foreground: #e8e8ed;
-  --muted: rgba(255, 255, 255, 0.05);
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: rgba(255, 255, 255, 0.05);
+  --card-foreground: #ffffff;
+  --popover: rgba(10, 10, 10, 0.95);
+  --popover-foreground: #ffffff;
+  --primary: #ffffff;
+  --primary-foreground: #000000;
+  --secondary: rgba(255, 255, 255, 0.08);
+  --secondary-foreground: #ffffff;
+  --muted: rgba(255, 255, 255, 0.06);
   --muted-foreground: rgba(255, 255, 255, 0.45);
-  --accent: #5856D6;
+  --accent: rgba(255, 255, 255, 0.12);
   --accent-foreground: #ffffff;
   --destructive: #FF3B30;
-  --border: rgba(255, 255, 255, 0.06);
-  --input: rgba(255, 255, 255, 0.05);
-  --ring: rgba(0, 122, 255, 0.3);
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.06);
+  --ring: rgba(255, 255, 255, 0.2);
 }
 
 @layer base {
@@ -117,50 +117,52 @@
 }
 
 /* ============================================================
-   CORPORATE GLASSMORPHISM — Enhanced Visibility
+   TOTAL BLACK + GLASSMORPHISM
+   Pure black background, frosted glass cards, minimal color
+   Colors only for: leagues (bronze/silver/gold), directions, status
    ============================================================ */
 
-/* Background decorative orbs - MUST be present for glassmorphism to work */
+/* Background decorative orbs — very subtle, monochrome */
 .bg-orb {
   position: fixed;
   border-radius: 50%;
-  filter: blur(120px);
+  filter: blur(140px);
   pointer-events: none;
   z-index: 0;
   will-change: transform;
 }
 
 .bg-orb-1 {
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba(0, 122, 255, 0.30) 0%, transparent 70%);
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.04) 0%, transparent 70%);
   top: -10%;
   right: -10%;
   animation: orb-float-1 20s ease-in-out infinite;
 }
 
 .bg-orb-2 {
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(88, 86, 214, 0.25) 0%, transparent 70%);
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.03) 0%, transparent 70%);
   bottom: 20%;
   left: -10%;
   animation: orb-float-2 25s ease-in-out infinite;
 }
 
 .bg-orb-3 {
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(0, 122, 255, 0.18) 0%, transparent 70%);
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.025) 0%, transparent 70%);
   top: 50%;
   right: 20%;
   animation: orb-float-3 18s ease-in-out infinite;
 }
 
 .bg-orb-4 {
-  width: 350px;
-  height: 350px;
-  background: radial-gradient(circle, rgba(88, 86, 214, 0.15) 0%, transparent 70%);
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.02) 0%, transparent 70%);
   top: 30%;
   left: 30%;
   animation: orb-float-4 22s ease-in-out infinite;
@@ -188,67 +190,67 @@
   50% { transform: translate(30px, 20px) scale(0.92); }
 }
 
-/* Standard glass card — REAL glassmorphism with enhanced visibility */
+/* Standard glass card — frosted glass on pure black */
 .glass-card {
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(60px) saturate(200%);
-  -webkit-backdrop-filter: blur(60px) saturate(200%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(40px) saturate(150%);
+  -webkit-backdrop-filter: blur(40px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 16px;
   box-shadow:
-    0 2px 24px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    0 2px 16px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
   will-change: transform;
 }
 
-/* Elevated glass — more prominent */
+/* Elevated glass — more visible */
 .glass-card-elevated {
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(80px) saturate(220%);
-  -webkit-backdrop-filter: blur(80px) saturate(220%);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(60px) saturate(170%);
+  -webkit-backdrop-filter: blur(60px) saturate(170%);
+  border: 1px solid rgba(255, 255, 255, 0.10);
   border-radius: 16px;
   box-shadow:
-    0 4px 40px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    0 4px 32px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
   will-change: transform;
 }
 
-/* Professional card — credit card / ID style */
+/* Professional card — level/credit card style */
 .glass-card-pro {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.05) 100%);
-  backdrop-filter: blur(80px) saturate(220%);
-  -webkit-backdrop-filter: blur(80px) saturate(220%);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+  backdrop-filter: blur(60px) saturate(170%);
+  -webkit-backdrop-filter: blur(60px) saturate(170%);
+  border: 1px solid rgba(255, 255, 255, 0.10);
   border-radius: 16px;
   box-shadow:
-    0 8px 48px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    inset 0 -0.5px 0 rgba(0, 0, 0, 0.1);
+    0 8px 40px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    inset 0 -0.5px 0 rgba(0, 0, 0, 0.2);
   will-change: transform;
 }
 
-/* Navigation bar glass */
+/* Navigation bar glass — very subtle */
 .glass-nav {
-  background: rgba(8, 8, 15, 0.85);
-  backdrop-filter: blur(50px) saturate(180%);
-  -webkit-backdrop-filter: blur(50px) saturate(180%);
-  border-top: 0.5px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(40px) saturate(150%);
+  -webkit-backdrop-filter: blur(40px) saturate(150%);
+  border-top: 0.5px solid rgba(255, 255, 255, 0.06);
 }
 
 /* Glass input field */
 .glass-input {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
   transition: all 0.2s ease;
 }
 
 .glass-input:focus-within,
 .glass-input:focus {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(0, 122, 255, 0.35);
-  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06);
   outline: none;
 }
 
@@ -263,50 +265,50 @@
 .ios-segmented-pill {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 10px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-/* iOS pill button */
+/* iOS pill button — monochrome */
 .ios-pill {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 100px;
   padding: 6px 14px;
   font-size: 13px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.4);
   transition: all 0.2s ease;
   white-space: nowrap;
 }
 
 .ios-pill-active {
-  background: rgba(0, 122, 255, 0.15);
-  border-color: rgba(0, 122, 255, 0.30);
-  color: #007AFF;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
 }
 
 /* iOS list item */
 .ios-list-item {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.03);
   border-radius: 14px;
   transition: all 0.15s ease;
 }
 
 .ios-list-item:active {
   transform: scale(0.98);
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
 }
 
-/* iOS large title */
+/* iOS large title — white */
 .ios-large-title {
   font-size: 28px;
   font-weight: 700;
   letter-spacing: -0.3px;
   line-height: 1.15;
-  color: #e8e8ed;
+  color: #ffffff;
 }
 
-/* iOS section header */
+/* iOS section header — muted white */
 .ios-section-header {
   font-size: 12px;
   font-weight: 600;
@@ -315,17 +317,17 @@
   color: rgba(255, 255, 255, 0.3);
 }
 
-/* iOS primary button — corporate style */
+/* iOS primary button — white on black */
 .ios-button-primary {
-  background: #007AFF;
-  color: #ffffff;
+  background: #ffffff;
+  color: #000000;
   font-weight: 600;
   font-size: 16px;
   border-radius: 12px;
   padding: 14px 24px;
   text-align: center;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 12px rgba(0, 122, 255, 0.2);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
 }
 
 .ios-button-primary:active {
@@ -333,17 +335,17 @@
   opacity: 0.9;
 }
 
-/* iOS bottom sheet */
+/* iOS bottom sheet — pure black glass */
 .ios-sheet {
-  background: rgba(14, 14, 22, 0.94);
-  backdrop-filter: blur(60px) saturate(200%);
-  -webkit-backdrop-filter: blur(60px) saturate(200%);
+  background: rgba(8, 8, 8, 0.95);
+  backdrop-filter: blur(60px) saturate(180%);
+  -webkit-backdrop-filter: blur(60px) saturate(180%);
   border-radius: 20px 20px 0 0;
   border-top: 0.5px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.6);
 }
 
-/* Range slider — iOS style */
+/* Range slider — monochrome */
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
@@ -363,9 +365,9 @@ input[type="range"]::-webkit-slider-thumb {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #007AFF;
-  border: 3px solid rgba(255, 255, 255, 0.25);
-  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.35);
+  background: #ffffff;
+  border: 3px solid rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   margin-top: -9px;
   transition: transform 0.15s ease;
 }
@@ -384,9 +386,9 @@ input[type="range"]::-moz-range-thumb {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #007AFF;
-  border: 3px solid rgba(255, 255, 255, 0.25);
-  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.35);
+  background: #ffffff;
+  border: 3px solid rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
 /* Safe area */
@@ -394,10 +396,10 @@ input[type="range"]::-moz-range-thumb {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* Scrollbar — iOS thin */
+/* Scrollbar — minimal */
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.06); border-radius: 2px; }
 
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -406,7 +408,7 @@ input[type="range"]::-moz-range-thumb {
 
 /* Date input dark theme fix */
 input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(0.7);
+  filter: invert(1);
 }
 
 /* Number input remove spinners */
@@ -444,53 +446,53 @@ input[type="number"] {
   animation: ios-sheet-up 0.35s cubic-bezier(0.2, 0.9, 0.3, 1);
 }
 
-/* Login page glassmorphism */
+/* Login page glassmorphism — total black */
 .glass-login {
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(50px) saturate(180%);
-  -webkit-backdrop-filter: blur(50px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(50px) saturate(150%);
+  -webkit-backdrop-filter: blur(50px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 24px;
   box-shadow:
-    0 8px 48px rgba(0, 0, 0, 0.3),
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.15);
+    0 8px 48px rgba(0, 0, 0, 0.5),
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.08);
   will-change: transform;
 }
 
-/* League badge styling */
+/* League badge styling — ONLY place with color */
 .league-badge-bronze {
-  background: linear-gradient(135deg, rgba(180, 120, 60, 0.2) 0%, rgba(140, 90, 40, 0.1) 100%);
-  border: 1px solid rgba(180, 120, 60, 0.25);
+  background: rgba(205, 127, 50, 0.12);
+  border: 1px solid rgba(205, 127, 50, 0.2);
   color: #CD7F32;
 }
 
 .league-badge-silver {
-  background: linear-gradient(135deg, rgba(180, 180, 190, 0.2) 0%, rgba(150, 150, 160, 0.1) 100%);
-  border: 1px solid rgba(180, 180, 190, 0.25);
+  background: rgba(192, 192, 192, 0.12);
+  border: 1px solid rgba(192, 192, 192, 0.2);
   color: #C0C0C0;
 }
 
 .league-badge-gold {
-  background: linear-gradient(135deg, rgba(255, 200, 50, 0.2) 0%, rgba(220, 170, 30, 0.1) 100%);
-  border: 1px solid rgba(255, 200, 50, 0.25);
+  background: rgba(255, 215, 0, 0.12);
+  border: 1px solid rgba(255, 215, 0, 0.2);
   color: #FFD700;
 }
 
-/* Professional level card — like credit card */
+/* Level card — pure black glass with subtle white glow */
 .level-card-pro {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(145deg, 
-    rgba(255, 255, 255, 0.12) 0%, 
-    rgba(255, 255, 255, 0.05) 40%,
-    rgba(0, 122, 255, 0.08) 100%);
-  backdrop-filter: blur(80px) saturate(220%);
-  -webkit-backdrop-filter: blur(80px) saturate(220%);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(145deg,
+    rgba(255, 255, 255, 0.07) 0%,
+    rgba(255, 255, 255, 0.03) 40%,
+    rgba(255, 255, 255, 0.01) 100%);
+  backdrop-filter: blur(60px) saturate(170%);
+  -webkit-backdrop-filter: blur(60px) saturate(170%);
+  border: 1px solid rgba(255, 255, 255, 0.10);
   border-radius: 16px;
   box-shadow:
-    0 8px 48px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    0 8px 48px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10);
   will-change: transform;
 }
 
@@ -501,7 +503,7 @@ input[type="number"] {
   right: -50%;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle, rgba(0, 122, 255, 0.10) 0%, transparent 60%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.04) 0%, transparent 60%);
   pointer-events: none;
 }
 
@@ -512,6 +514,6 @@ input[type="number"] {
   left: -30%;
   width: 80%;
   height: 80%;
-  background: radial-gradient(circle, rgba(88, 86, 214, 0.08) 0%, transparent 60%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.02) 0%, transparent 60%);
   pointer-events: none;
 }
