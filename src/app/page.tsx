@@ -300,9 +300,9 @@ function IconLogout() {
   )
 }
 
-function IconCrown() {
+function IconCrown({ size = 24 }: { size?: number } = {}) {
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <path d="M2 17L4.5 8L8 12L12 4L16 12L19.5 8L22 17H2Z" fill="rgba(255,215,0,0.15)" stroke="#FFD700" strokeWidth="1.5" strokeLinejoin="round" />
       <circle cx="12" cy="19" r="1.5" fill="#FFD700" />
     </svg>
@@ -316,6 +316,41 @@ function IconCamera() {
       <circle cx="12" cy="13" r="4" stroke="currentColor" strokeWidth="1.5" />
     </svg>
   )
+}
+
+function IconSword() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <path d="M6.5 6.5L17.5 17.5M6.5 6.5L3 3M6.5 6.5L4 8L3 3L8 4L6.5 6.5ZM17.5 17.5L20 16L21 21L16 20L17.5 17.5ZM17.5 17.5L21 21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10 10L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function IconShieldCross() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <path d="M12 2L4 6V12C4 16.4183 7.58172 20.5 12 22C16.4183 20.5 20 16.4183 20 12V6L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" fill="rgba(255,255,255,0.03)" />
+      <path d="M12 7V17M8 12H16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function IconStar() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <path d="M12 2L14.09 8.26L21 9.27L16 14.14L17.18 21.02L12 17.77L6.82 21.02L8 14.14L3 9.27L9.91 8.26L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="rgba(255,255,255,0.03)" />
+    </svg>
+  )
+}
+
+function FacultyIcon({ facultyId }: { facultyId: string }) {
+  switch (facultyId) {
+    case 'f_athos': return <IconSword />
+    case 'f_porthos': return <IconShieldCross />
+    case 'f_aramis': return <IconStar />
+    default: return <IconShield />
+  }
 }
 
 function IconImage() {
@@ -1022,10 +1057,10 @@ export default function Page() {
         </button>
       </div>
 
-      {/* Level card */}
+      {/* Level card with league inside */}
       <div className="level-card-pro p-5 relative">
         <div className="relative z-10">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-white/8 border border-white/10 flex items-center justify-center">
                 <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
@@ -1042,6 +1077,13 @@ export default function Page() {
               <div className="text-[11px] text-white/25 font-medium">XP</div>
             </div>
           </div>
+          {/* League inside level card — glassmorphism, no color */}
+          <div className="flex items-center gap-2 mb-4 ml-[52px]">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[12px] font-semibold bg-white/5 border border-white/8 text-white/40">
+              <IconCrown size={12} />
+              <span className={`${userLeague.cssClass} text-[12px]`}>{userLeague.name}</span>
+            </div>
+          </div>
           <XpProgressBar current={profile?.xpInLevel || 0} max={profile?.xpToNextLevel || 1} />
           {profile?.nextLevelName && (
             <p className="text-[11px] text-white/25 mt-2 text-center">
@@ -1051,26 +1093,24 @@ export default function Page() {
         </div>
       </div>
 
-      {/* League + Stats row */}
-      <div className="grid grid-cols-3 gap-2">
-        <GlassCard className="p-4">
-          <div className="ios-section-header text-[9px]">Лига</div>
-          <div className={`mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[13px] font-bold ${userLeague.cssClass}`}>
-            {userLeague.name}
+      {/* Stats — achievements + pending merged into one */}
+      <div className="glass-card p-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/7 flex items-center justify-center">
+            <IconAchievements active={false} />
           </div>
-        </GlassCard>
-        <GlassCard className="!p-3 overflow-hidden min-w-0">
-          <div className="ios-section-header text-[9px] truncate">Достижения</div>
-          <div className="flex items-baseline gap-0.5 min-w-0 mt-1.5">
-            <span className="text-[16px] font-bold text-white tabular-nums">{achievementCounts.APPROVED}</span>
-            <span className="text-[9px] text-white/20 whitespace-nowrap">из {achievementCounts.total}</span>
+          <div>
+            <div className="text-[13px] font-bold text-white tabular-nums">{achievementCounts.APPROVED} <span className="text-white/20 font-normal">из {achievementCounts.total}</span></div>
+            <div className="text-[11px] text-white/25">достижений одобрено</div>
           </div>
-        </GlassCard>
-        <GlassCard className="p-4 overflow-hidden">
-          <div className="ios-section-header text-[9px]">На проверке</div>
-          <div className="text-[18px] font-bold text-[#FF9F0A] mt-1.5 tabular-nums">{achievementCounts.PENDING}</div>
-          <div className="text-[10px] text-white/20 mt-0.5">ожидает</div>
-        </GlassCard>
+        </div>
+        {achievementCounts.PENDING > 0 && (
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/4 border border-white/6">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#FF9F0A]" />
+            <span className="text-[12px] font-semibold text-[#FF9F0A] tabular-nums">{achievementCounts.PENDING}</span>
+            <span className="text-[10px] text-white/25">на проверке</span>
+          </div>
+        )}
       </div>
 
       {/* Quick actions */}
@@ -1141,32 +1181,37 @@ export default function Page() {
       {/* Faculty block */}
       <div className="glass-card p-5">
         <div className="flex items-center gap-2 mb-4">
-          <span className="text-[16px]">🏛️</span>
+          <div className="w-7 h-7 rounded-lg bg-white/5 border border-white/7 flex items-center justify-center text-white/50">
+            <IconShield />
+          </div>
           <h3 className="text-[15px] font-bold text-white">Факультет</h3>
         </div>
 
-        {/* User's current faculty or join prompt */}
+        {/* User's current faculty */}
         {userFaculty ? (
-          <div className="flex items-center gap-3 mb-4 p-3 rounded-xl" style={{ background: `${userFaculty.color}10`, border: `1px solid ${userFaculty.color}25` }}>
-            <span className="text-[28px]">{userFaculty.emoji}</span>
+          <div className="flex items-center gap-3 mb-4 p-3 rounded-xl bg-white/4 border border-white/7">
+            <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/8 flex items-center justify-center" style={{ color: userFaculty.color }}>
+              <FacultyIcon facultyId={userFaculty.id} />
+            </div>
             <div>
-              <div className="text-[15px] font-bold text-white">{userFaculty.name}</div>
-              <div className="text-[12px] text-white/40">{userFaculty.totalXp} XP за год</div>
+              <div className="text-[14px] font-bold text-white">{userFaculty.name}</div>
+              <div className="text-[12px] text-white/30">{userFaculty.totalXp} XP за год</div>
             </div>
           </div>
         ) : (
           <div className="mb-4">
-            <p className="text-[13px] text-white/30 mb-3">Выберите свой факультет:</p>
+            <p className="text-[12px] text-white/25 mb-3">Выберите свой факультет:</p>
             <div className="flex gap-2">
               {faculties.map((f) => (
                 <button
                   key={f.id}
                   onClick={() => handleJoinFaculty(f.id)}
-                  className="flex-1 flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl active:scale-95 ios-spring transition-all"
-                  style={{ background: `${f.color}10`, border: `1px solid ${f.color}25` }}
+                  className="flex-1 flex flex-col items-center gap-2 py-3 px-2 rounded-xl bg-white/4 border border-white/7 active:scale-95 ios-spring transition-all"
                 >
-                  <span className="text-[22px]">{f.emoji}</span>
-                  <span className="text-[11px] font-semibold" style={{ color: f.color }}>{f.name}</span>
+                  <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/8 flex items-center justify-center" style={{ color: f.color }}>
+                    <FacultyIcon facultyId={f.id} />
+                  </div>
+                  <span className="text-[11px] font-semibold text-white/50">{f.name}</span>
                 </button>
               ))}
             </div>
@@ -1176,26 +1221,27 @@ export default function Page() {
         {/* Faculty rating */}
         {faculties.length > 0 && (
           <div>
-            <div className="text-[11px] text-white/25 font-medium uppercase tracking-wider mb-2.5">Рейтинг факультетов</div>
-            <div className="space-y-2">
+            <div className="text-[11px] text-white/20 font-medium uppercase tracking-wider mb-2.5">Рейтинг</div>
+            <div className="space-y-1.5">
               {faculties.map((f, idx) => {
                 const isCurrentUser = f.id === userFacultyId
                 return (
                   <div
                     key={f.id}
-                    className={`flex items-center gap-3 p-2.5 rounded-xl transition-all ${isCurrentUser ? 'ring-1' : ''}`}
-                    style={isCurrentUser ? { background: `${f.color}08`, ringColor: `${f.color}30` } : { background: 'rgba(255,255,255,0.02)' }}
+                    className={`flex items-center gap-3 p-2.5 rounded-xl ${isCurrentUser ? 'bg-white/5 border border-white/8' : 'bg-white/[0.02]'}`}
                   >
-                    <span className="text-[13px] font-bold text-white/25 w-5 text-center tabular-nums">{idx + 1}</span>
-                    <span className="text-[18px]">{f.emoji}</span>
+                    <span className="text-[12px] font-bold text-white/15 w-4 text-center tabular-nums">{idx + 1}</span>
+                    <div className="w-7 h-7 rounded-lg bg-white/5 border border-white/6 flex items-center justify-center" style={{ color: f.color }}>
+                      <FacultyIcon facultyId={f.id} />
+                    </div>
                     <div className="flex-1 min-w-0">
-                      <span className="text-[13px] font-semibold" style={{ color: isCurrentUser ? f.color : 'rgba(255,255,255,0.7)' }}>{f.name}</span>
+                      <span className={`text-[13px] font-semibold ${isCurrentUser ? 'text-white' : 'text-white/50'}`}>{f.name}</span>
                     </div>
                     <div className="text-right">
-                      <span className="text-[13px] font-bold tabular-nums" style={{ color: f.color }}>{f.totalXp}</span>
-                      <span className="text-[10px] text-white/20 ml-1">XP</span>
+                      <span className="text-[13px] font-bold tabular-nums text-white/40">{f.totalXp}</span>
+                      <span className="text-[10px] text-white/15 ml-0.5">XP</span>
                     </div>
-                    <span className="text-[10px] text-white/20 tabular-nums">{f.memberCount}ч</span>
+                    <span className="text-[10px] text-white/15 tabular-nums">{f.memberCount}ч</span>
                   </div>
                 )
               })}
@@ -1203,11 +1249,11 @@ export default function Page() {
           </div>
         )}
 
-        {/* Change faculty button (if already in one) */}
+        {/* Change faculty button */}
         {userFaculty && (
           <button
             onClick={() => setShowFacultyPicker(!showFacultyPicker)}
-            className="mt-3 text-[12px] text-white/25 underline decoration-white/15 underline-offset-2 hover:text-white/40 transition-colors"
+            className="mt-3 text-[12px] text-white/20 hover:text-white/35 transition-colors"
           >
             Сменить факультет
           </button>
@@ -1219,11 +1265,12 @@ export default function Page() {
                 key={f.id}
                 onClick={() => handleJoinFaculty(f.id)}
                 disabled={f.id === userFacultyId}
-                className="flex-1 flex flex-col items-center gap-1.5 py-2.5 px-2 rounded-xl active:scale-95 ios-spring transition-all disabled:opacity-30 disabled:active:scale-100"
-                style={{ background: `${f.color}10`, border: `1px solid ${f.color}25` }}
+                className="flex-1 flex flex-col items-center gap-1.5 py-2.5 px-2 rounded-xl bg-white/4 border border-white/7 active:scale-95 ios-spring transition-all disabled:opacity-30 disabled:active:scale-100"
               >
-                <span className="text-[20px]">{f.emoji}</span>
-                <span className="text-[10px] font-semibold" style={{ color: f.color }}>{f.name}</span>
+                <div className="w-7 h-7 rounded-lg bg-white/5 border border-white/8 flex items-center justify-center" style={{ color: f.color }}>
+                  <FacultyIcon facultyId={f.id} />
+                </div>
+                <span className="text-[10px] font-semibold text-white/50">{f.name}</span>
               </button>
             ))}
           </div>
