@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useRef, useSyncExternalStore } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { toast } from 'sonner'
 
 /* ============================================================
@@ -490,19 +490,7 @@ function LoginScreen({ onLogin }: { onLogin: (user: AuthUser) => void }) {
    ============================================================ */
 
 export default function Page() {
-  // Mounted guard — prevents SSR hydration issues
-  // Using useSyncExternalStore to avoid lint error with setState in effect
-  const mounted = useSyncExternalStore(
-    () => () => {}, // subscribe (no-op)
-    () => true,      // getSnapshot (client)
-    () => false,     // getServerSnapshot (server)
-  )
-  if (!mounted) return null
-
-  return <HomeApp />
-}
-
-function HomeApp() {
+  const [mounted, setMounted] = useState(false)
   const [authUser, setAuthUser] = useState<AuthUser | null>(null)
   const [authChecked, setAuthChecked] = useState(false)
   const [isTelegram, setIsTelegram] = useState(false)
@@ -977,9 +965,13 @@ function HomeApp() {
     })
   })
 
+  // Mounted guard — must be after all hooks
+  useEffect(() => { setMounted(true) }, [])
+
   /* ============================================================
      AUTH GATE
      ============================================================ */
+  if (!mounted) return null
   if (!authChecked) return null
   if (!authUser && !isTelegram) return <LoginScreen onLogin={handleLogin} />
 
@@ -1041,11 +1033,11 @@ function HomeApp() {
             {userLeague.name}
           </div>
         </GlassCard>
-        <GlassCard className="p-4 overflow-hidden">
-          <div className="ios-section-header text-[9px]">Достижения</div>
-          <div className="flex items-baseline gap-1 min-w-0 mt-1.5">
-            <span className="text-[18px] font-bold text-white tabular-nums truncate">{achievementCounts.APPROVED}</span>
-            <span className="text-[10px] text-white/20 shrink-0">из {achievementCounts.total}</span>
+        <GlassCard className="!p-3 overflow-hidden min-w-0">
+          <div className="ios-section-header text-[9px] truncate">Достижения</div>
+          <div className="flex items-baseline gap-0.5 min-w-0 mt-1.5">
+            <span className="text-[16px] font-bold text-white tabular-nums">{achievementCounts.APPROVED}</span>
+            <span className="text-[9px] text-white/20 whitespace-nowrap">из {achievementCounts.total}</span>
           </div>
         </GlassCard>
         <GlassCard className="p-4 overflow-hidden">

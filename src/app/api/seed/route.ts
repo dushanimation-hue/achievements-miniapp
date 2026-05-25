@@ -11,6 +11,18 @@ export async function GET() {
     await db.badge.deleteMany();
     await db.challenge.deleteMany();
     await db.user.deleteMany();
+    await db.faculty.deleteMany();
+
+    // Create Faculties (Three Musketeers)
+    const facultyAthos = await db.faculty.create({
+      data: { id: 'f_athos', name: 'Атос', emoji: '⚔️', color: '#007AFF' },
+    });
+    const facultyPorthos = await db.faculty.create({
+      data: { id: 'f_porthos', name: 'Партос', emoji: '🛡️', color: '#FF9F0A' },
+    });
+    const facultyAramis = await db.faculty.create({
+      data: { id: 'f_aramis', name: 'Арамис', emoji: '✨', color: '#AF52DE' },
+    });
 
     // Create Admin user
     const admin = await db.user.create({
@@ -27,6 +39,7 @@ export async function GET() {
         league: 'gold',
         statusEmoji: '',
         statusPrefix: 'Администратор',
+        facultyId: facultyAthos.id,
       },
     });
 
@@ -45,6 +58,7 @@ export async function GET() {
         league: 'bronze',
         statusEmoji: '',
         statusPrefix: 'Олимпиадник',
+        facultyId: facultyAthos.id,
       },
     });
 
@@ -54,6 +68,7 @@ export async function GET() {
         id: 'u2', telegramId: 'user2', name: 'Мария Петрова', username: 'maria_p',
         role: 'STUDENT', totalXp: 420, level: 5,
         league: 'silver', statusEmoji: '', statusPrefix: 'Мастер',
+        facultyId: facultyPorthos.id,
       },
     });
     const user3 = await db.user.create({
@@ -61,6 +76,7 @@ export async function GET() {
         id: 'u3', telegramId: 'user3', name: 'Алексей Сидоров', username: 'alex_s',
         role: 'STUDENT', totalXp: 180, level: 4,
         league: 'bronze', statusEmoji: '', statusPrefix: 'Ботан',
+        facultyId: facultyPorthos.id,
       },
     });
     const user4 = await db.user.create({
@@ -68,6 +84,7 @@ export async function GET() {
         id: 'u4', telegramId: 'user4', name: 'Анна Козлова', username: 'anna_k',
         role: 'STUDENT', totalXp: 60, level: 2,
         league: 'bronze', statusEmoji: '', statusPrefix: 'Активный',
+        facultyId: facultyAramis.id,
       },
     });
     const user5 = await db.user.create({
@@ -75,6 +92,7 @@ export async function GET() {
         id: 'u5', telegramId: 'user5', name: 'Дмитрий Новиков', username: 'dima_n',
         role: 'STUDENT', totalXp: 35, level: 2,
         league: 'bronze', statusEmoji: '', statusPrefix: 'Активный',
+        facultyId: facultyAramis.id,
       },
     });
     const user6 = await db.user.create({
@@ -82,6 +100,7 @@ export async function GET() {
         id: 'u6', telegramId: 'user6', name: 'Елена Смирнова', username: 'lena_s',
         role: 'STUDENT', totalXp: 110, level: 3,
         league: 'bronze', statusEmoji: '', statusPrefix: 'Олимпиадник',
+        facultyId: facultyAthos.id,
       },
     });
     const user7 = await db.user.create({
@@ -89,6 +108,7 @@ export async function GET() {
         id: 'u7', telegramId: 'user7', name: 'Павел Морозов', username: 'pavel_m',
         role: 'STUDENT', totalXp: 650, level: 6,
         league: 'gold', statusEmoji: '', statusPrefix: 'Элита',
+        facultyId: facultyPorthos.id,
       },
     });
     const user8 = await db.user.create({
@@ -96,6 +116,7 @@ export async function GET() {
         id: 'u8', telegramId: 'user8', name: 'Софья Волкова', username: 'sofa_v',
         role: 'STUDENT', totalXp: 310, level: 5,
         league: 'silver', statusEmoji: '', statusPrefix: 'Мастер',
+        facultyId: facultyAramis.id,
       },
     });
 
