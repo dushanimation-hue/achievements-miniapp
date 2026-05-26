@@ -32,7 +32,7 @@ interface LeaderboardEntry {
   faculty: null; achievementCount: number; league: string;
 }
 interface LevelInfo { level: number; name: string; min: number; max: number }
-interface AuthUser { id: string; name: string; login: string; role: string; faculty: null }
+interface AuthUser { id: string; name: string; login: string; role: string; faculty: null; registered?: boolean; schoolCode?: string | null; classYear?: number | null; classLetter?: string | null; fullName?: string | null }
 interface BadgeItem {
   id: string; name: string; description: string; emoji: string;
   conditionType: string; conditionValue: number;
@@ -522,6 +522,240 @@ function LoginScreen({ onLogin }: { onLogin: (user: AuthUser) => void }) {
 }
 
 /* ============================================================
+   REGISTRATION SCREEN — Shown when Telegram user has no school info
+   Step 1: Enter 6-char school code (11607L)
+   Step 2: Enter ФИО + class (year + letter)
+   ============================================================ */
+
+function RegistrationScreen({ userId, onComplete }: { userId: string; onComplete: (user: AuthUser) => void }) {
+  const [step, setStep] = useState<'code' | 'profile'>('code')
+  const [code, setCode] = useState(['', '', '', '', '', ''])
+  const [codeError, setCodeError] = useState('')
+  const [verifying, setVerifying] = useState(false)
+  const codeRefs = useRef<(HTMLInputElement | null)[]>([])
+  const [fullName, setFullName] = useState('')
+  const [classYear, setClassYear] = useState('')
+  const [classLetter, setClassLetter] = useState('')
+  const [profileError, setProfileError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [schoolName, setSchoolName] = useState('')
+
+  // Handle code input — one char per square
+  const handleCodeChange = (index: number, value: string) => {
+    if (value.length > 1) return
+    const newCode = [...code]
+    newCode[index] = value.toUpperCase()
+    setCode(newCode)
+    setCodeError('')
+
+    // Auto-advance to next input
+    if (value && index < 5) {
+      codeRefs.current[index + 1]?.focus()
+    }
+
+    // Auto-submit when all 6 chars are filled
+    if (value && index === 5) {
+      const fullCode = newCode.join('')
+      verifyCode(fullCode)
+    }
+  }
+
+  const handleCodeKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && !code[index] && index > 0) {
+      codeRefs.current[index - 1]?.focus()
+    }
+  }
+
+  const handleCodePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault()
+    const pasted = e.clipboardData.getData('text').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6)
+    const newCode = [...code]
+    for (let i = 0; i < pasted.length; i++) {
+      newCode[i] = pasted[i]
+    }
+    setCode(newCode)
+    if (pasted.length === 6) {
+      verifyCode(pasted.join(''))
+    } else if (pasted.length > 0) {
+      codeRefs.current[Math.min(pasted.length, 5)]?.focus()
+    }
+  }
+
+  const verifyCode = async (fullCode: string) => {
+    if (fullCode.length !== 6) return
+    setVerifying(true)
+    setCodeError('')
+    try {
+      const res = await fetch(`/api/auth/register?code=${fullCode}`)
+      const data = await res.json()
+      if (data.valid) {
+        setSchoolName(data.schoolName)
+        setStep('profile')
+      } else {
+        setCodeError('Неверный код школы')
+        setCode(['', '', '', '', '', ''])
+        codeRefs.current[0]?.focus()
+      }
+    } catch {
+      setCodeError('Ошибка проверки')
+    } finally {
+      setVerifying(false)
+    }
+  }
+
+  const handleSubmit = async () => {
+    if (!fullName.trim()) { setProfileError('Введите ФИО'); return }
+    if (!classYear || parseInt(classYear) < 1 || parseInt(classYear) > 11) { setProfileError('Введите класс (1-11)'); return }
+    setProfileError('')
+    setSubmitting(true)
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          schoolCode: code.join(''),
+          fullName: fullName.trim(),
+          classYear: parseInt(classYear),
+          classLetter: classLetter.trim(),
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setProfileError(data.error || 'Ошибка регистрации')
+        return
+      }
+      // Update auth user and clear registration flag
+      const updatedUser = data.user as AuthUser
+      localStorage.setItem('auth_user', JSON.stringify(updatedUser))
+      onComplete(updatedUser)
+    } catch {
+      setProfileError('Ошибка сети')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-5 relative overflow-hidden">
+      <div className="bg-orb bg-orb-1" />
+      <div className="bg-orb bg-orb-2" />
+      <div className="bg-orb bg-orb-3" />
+
+      <div className="glass-login p-8 w-full max-w-sm relative z-10">
+        {step === 'code' ? (
+          <>
+            <div className="text-center mb-8">
+              <div className="w-14 h-14 rounded-2xl bg-white/8 border border-white/12 flex items-center justify-center mx-auto mb-4">
+                <IconShield />
+              </div>
+              <h1 className="text-[22px] font-bold text-white tracking-tight">Регистрация</h1>
+              <p className="text-[14px] text-white/30 mt-1.5">Введите код вашей школы</p>
+            </div>
+
+            {/* 6 square code inputs */}
+            <div className="flex justify-center gap-2.5 mb-5">
+              {code.map((char, i) => (
+                <input
+                  key={i}
+                  ref={el => { codeRefs.current[i] = el }}
+                  type="text"
+                  inputMode="text"
+                  maxLength={1}
+                  value={char}
+                  onChange={(e) => handleCodeChange(i, e.target.value)}
+                  onKeyDown={(e) => handleCodeKeyDown(i, e)}
+                  onPaste={i === 0 ? handleCodePaste : undefined}
+                  className={`w-11 h-13 text-center text-[18px] font-bold rounded-xl border transition-all duration-200 outline-none
+                    ${char
+                      ? 'bg-white/8 border-white/20 text-white'
+                      : 'bg-white/3 border-white/8 text-white'
+                    }
+                    ${codeError ? 'border-[#FF3B30]/50' : ''}
+                    focus:border-white/30 focus:bg-white/6
+                  `}
+                  style={{ caretColor: 'transparent' }}
+                />
+              ))}
+            </div>
+
+            {/* Empty square dot indicators */}
+            <div className="flex justify-center gap-2.5 mb-4 -mt-3">
+              {code.map((char, i) => (
+                <div key={i} className="w-11 flex justify-center">
+                  {!char && <div className="w-1.5 h-1.5 rounded-full bg-white/10" />}
+                </div>
+              ))}
+            </div>
+
+            {codeError && (
+              <p className="text-[13px] text-[#FF3B30] text-center mb-3">{codeError}</p>
+            )}
+
+            {verifying && (
+              <div className="flex justify-center mb-3">
+                <div className="w-5 h-5 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+              </div>
+            )}
+
+            <button
+              onClick={() => verifyCode(code.join(''))}
+              disabled={code.some(c => !c) || verifying}
+              className="ios-button-primary w-full disabled:opacity-30"
+            >
+              Проверить код
+            </button>
+          </>
+        ) : (
+          <>
+            <div className="text-center mb-6">
+              <div className="w-14 h-14 rounded-2xl bg-white/8 border border-white/12 flex items-center justify-center mx-auto mb-4">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="8" r="4" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" fill="rgba(255,255,255,0.04)" />
+                  <path d="M4 20C4 16.6863 7.58172 14 12 14C16.4183 14 20 16.6863 20 20" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </div>
+              <h1 className="text-[22px] font-bold text-white tracking-tight">Профиль</h1>
+              <p className="text-[14px] text-white/30 mt-1.5">{schoolName}</p>
+            </div>
+
+            <div className="space-y-3.5">
+              <div>
+                <label className="text-[12px] font-medium text-white/30 mb-1.5 block uppercase tracking-wider">ФИО</label>
+                <input type="text" value={fullName} onChange={(e) => { setFullName(e.target.value); setProfileError('') }}
+                  placeholder="Иванов Иван Иванович"
+                  className="glass-input w-full px-4 py-3 text-[15px] text-white placeholder-white/20 bg-transparent focus:ring-0 focus:shadow-none" />
+              </div>
+              <div className="flex gap-2.5">
+                <div className="flex-1">
+                  <label className="text-[12px] font-medium text-white/30 mb-1.5 block uppercase tracking-wider">Класс</label>
+                  <input type="number" min="1" max="11" value={classYear} onChange={(e) => { setClassYear(e.target.value); setProfileError('') }}
+                    placeholder="7"
+                    className="glass-input w-full px-4 py-3 text-[15px] text-white placeholder-white/20 bg-transparent focus:ring-0 focus:shadow-none" />
+                </div>
+                <div className="w-20">
+                  <label className="text-[12px] font-medium text-white/30 mb-1.5 block uppercase tracking-wider">Буква</label>
+                  <input type="text" maxLength={1} value={classLetter} onChange={(e) => { setClassLetter(e.target.value); setProfileError('') }}
+                    placeholder="А"
+                    className="glass-input w-full px-4 py-3 text-[15px] text-white placeholder-white/20 bg-transparent focus:ring-0 focus:shadow-none text-center" />
+                </div>
+              </div>
+
+              {profileError && <p className="text-[13px] text-[#FF3B30] text-center">{profileError}</p>}
+
+              <button onClick={handleSubmit} disabled={submitting}
+                className="ios-button-primary w-full disabled:opacity-50 mt-2">
+                {submitting ? 'Сохранение...' : 'Завершить регистрацию'}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/* ============================================================
    MAIN APP
    ============================================================ */
 
@@ -562,6 +796,9 @@ export default function Page() {
   // Admin panel
   const [showAdmin, setShowAdmin] = useState(false)
   const [pendingAchievements, setPendingAchievements] = useState<Achievement[]>([])
+
+  // Registration flow
+  const [needsRegistration, setNeedsRegistration] = useState(false)
   const [adminStats, setAdminStats] = useState<Record<string, unknown> | null>(null)
   const [adminDirections, setAdminDirections] = useState<Record<string, boolean>>({})
   const [adminXp, setAdminXp] = useState(0)
@@ -649,9 +886,13 @@ export default function Page() {
         })
         const data = await res.json()
         if (res.ok && data.user) {
-          console.log('[TG] Auth successful:', data.user.name)
+          console.log('[TG] Auth successful:', data.user.name, 'registered:', data.user.registered)
           setAuthUser(data.user)
           localStorage.setItem('auth_user', JSON.stringify(data.user))
+          // Check if user needs registration (no school info yet)
+          if (!data.user.registered) {
+            setNeedsRegistration(true)
+          }
           return true
         } else {
           console.error('[TG] Auth failed:', data.error)
@@ -681,7 +922,14 @@ export default function Page() {
       // Fallback: check localStorage
       const stored = localStorage.getItem('auth_user')
       if (stored) {
-        try { setAuthUser(JSON.parse(stored)) } catch { /* ignore */ }
+        try {
+          const parsed = JSON.parse(stored)
+          setAuthUser(parsed)
+          // Check if this stored user needs registration
+          if (!parsed.registered) {
+            setNeedsRegistration(true)
+          }
+        } catch { /* ignore */ }
       }
       setAuthChecked(true)
     }
@@ -693,10 +941,16 @@ export default function Page() {
     localStorage.setItem('auth_user', JSON.stringify(user))
   }
 
+  const handleRegistrationComplete = (user: AuthUser) => {
+    setAuthUser(user)
+    setNeedsRegistration(false)
+  }
+
   const handleLogout = () => {
     setAuthUser(null)
     setProfile(null)
     setUserFacultyId(null)
+    setNeedsRegistration(false)
     localStorage.removeItem('auth_user')
   }
 
@@ -1035,6 +1289,7 @@ export default function Page() {
   if (!mounted) return null
   if (!authChecked) return null
   if (!authUser && !isTelegram) return <LoginScreen onLogin={handleLogin} />
+  if (needsRegistration && authUser) return <RegistrationScreen userId={authUser.id} onComplete={handleRegistrationComplete} />
 
   /* ============================================================
      RENDER: HOME

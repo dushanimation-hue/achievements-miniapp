@@ -36,6 +36,11 @@ export async function POST(request: NextRequest) {
         login: user.login,
         role: user.role,
         faculty: null,
+        registered: user.registered,
+        schoolCode: user.schoolCode,
+        classYear: user.classYear,
+        classLetter: user.classLetter,
+        fullName: user.fullName,
       },
     });
   } catch (error) {

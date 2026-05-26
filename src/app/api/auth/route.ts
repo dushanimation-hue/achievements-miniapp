@@ -17,6 +17,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Неверный логин или пароль' }, { status: 401 });
     }
 
+    // Login-based users are always considered registered (admin/demo accounts)
     return NextResponse.json({
       user: {
         id: user.id,
@@ -24,6 +25,11 @@ export async function POST(request: NextRequest) {
         login: user.login,
         role: user.role,
         faculty: null,
+        registered: true,
+        schoolCode: user.schoolCode,
+        classYear: user.classYear,
+        classLetter: user.classLetter,
+        fullName: user.fullName,
       },
     });
   } catch (error) {
