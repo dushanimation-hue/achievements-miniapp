@@ -742,9 +742,6 @@ function RegistrationScreen({ userId, onComplete }: { userId: string; onComplete
         {step === 'code' ? (
           <>
             <div className="text-center mb-8">
-              <div className="w-14 h-14 rounded-2xl bg-white/8 border border-white/12 flex items-center justify-center mx-auto mb-4">
-                <IconShield />
-              </div>
               <h1 className="text-[22px] font-bold text-white tracking-tight">Регистрация</h1>
               <p className="text-[14px] text-white/30 mt-1.5">Введите код вашей школы</p>
             </div>
@@ -805,12 +802,6 @@ function RegistrationScreen({ userId, onComplete }: { userId: string; onComplete
         ) : (
           <>
             <div className="text-center mb-6">
-              <div className="w-14 h-14 rounded-2xl bg-white/8 border border-white/12 flex items-center justify-center mx-auto mb-4">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="8" r="4" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" fill="rgba(255,255,255,0.04)" />
-                  <path d="M4 20C4 16.6863 7.58172 14 12 14C16.4183 14 20 16.6863 20 20" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-              </div>
               <h1 className="text-[22px] font-bold text-white tracking-tight">Профиль</h1>
               <p className="text-[14px] text-white/30 mt-1.5">{schoolName}</p>
             </div>
@@ -1185,7 +1176,7 @@ export default function Page() {
 
   // Auto-calculate XP
   useEffect(() => {
-    if (formAchievementType && formAchievementType !== 'FREE_FORM' && formLevel) {
+    if (formAchievementType && formLevel) {
       setFormXp(calculateAutoXp(formLevel, formResultType, formPlacement, formResultStatus))
     }
   }, [formAchievementType, formLevel, formResultType, formPlacement, formResultStatus])
@@ -1272,7 +1263,7 @@ export default function Page() {
       toast.error('Заполните название и тип достижения')
       return
     }
-    if (formAchievementType !== 'FREE_FORM' && !formLevel) {
+    if (!formLevel) {
       toast.error('Выберите уровень достижения')
       return
     }
@@ -1294,10 +1285,10 @@ export default function Page() {
         title: formTitle.trim(),
         description: formDesc?.trim() || null,
         achievementType: formAchievementType,
-        achievementLevel: formAchievementType !== 'FREE_FORM' ? formLevel : null,
-        resultType: formAchievementType !== 'FREE_FORM' ? formResultType : null,
-        placement: formAchievementType !== 'FREE_FORM' && formResultType === 'PLACEMENT' ? formPlacement : null,
-        resultStatus: formAchievementType !== 'FREE_FORM' && formResultType === 'STATUS' ? formResultStatus : null,
+        achievementLevel: formLevel || null,
+        resultType: formResultType || null,
+        placement: formResultType === 'PLACEMENT' ? formPlacement : null,
+        resultStatus: formResultType === 'STATUS' ? formResultStatus : null,
         xpRequested: formXp,
         achievementDate: formDate || null,
         comment: formComment?.trim() || null,
@@ -1844,33 +1835,36 @@ export default function Page() {
         </div>
       )}
 
-      {/* Filters — Type */}
-      <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
-        {[
-          { key: 'all', label: 'Все' },
-          { key: 'SPORT', label: 'Спорт' },
-          { key: 'CREATIVE', label: 'Творчество' },
-          { key: 'OLYMPIAD', label: 'РЭШ/ВСОШ' },
-          { key: 'FREE_FORM', label: 'Свободные' },
-        ].map((f) => (
-          <button key={f.key} onClick={() => { setFormAchievementFilter(f.key); setFormLevelFilter('all') }}
-            className={`shrink-0 ios-pill ${formAchievementFilter === f.key ? 'ios-pill-active' : ''}`}>
-            {f.label}
-          </button>
-        ))}
-      </div>
+      {/* Filters */}
+      <div className="space-y-2">
+        {/* Type filter */}
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-0.5" style={{ WebkitOverflowScrolling: 'touch' }}>
+          {[
+            { key: 'all', label: 'Все' },
+            { key: 'SPORT', label: 'Спорт' },
+            { key: 'CREATIVE', label: 'Творчество' },
+            { key: 'OLYMPIAD', label: 'РЭШ/ВСОШ' },
+            { key: 'FREE_FORM', label: 'Свободные' },
+          ].map((f) => (
+            <button key={f.key} onClick={() => { setFormAchievementFilter(f.key); setFormLevelFilter('all') }}
+              className={`shrink-0 ios-pill ${formAchievementFilter === f.key ? 'ios-pill-active' : ''}`}>
+              {f.label}
+            </button>
+          ))}
+        </div>
 
-      {/* Filters — Level */}
-      <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
-        {[
-          { key: 'all', label: 'Все уровни' },
-          ...Object.entries(ACHIEVEMENT_LEVELS).map(([key, val]) => ({ key, label: val.label })),
-        ].map((f) => (
-          <button key={f.key} onClick={() => setFormLevelFilter(f.key)}
-            className={`shrink-0 ios-pill text-[11px] py-1 px-2.5 ${formLevelFilter === f.key ? 'ios-pill-active' : ''}`}>
-            {f.label}
-          </button>
-        ))}
+        {/* Level filter */}
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-0.5" style={{ WebkitOverflowScrolling: 'touch' }}>
+          {[
+            { key: 'all', label: 'Все уровни' },
+            ...Object.entries(ACHIEVEMENT_LEVELS).map(([key, val]) => ({ key, label: val.label })),
+          ].map((f) => (
+            <button key={f.key} onClick={() => setFormLevelFilter(f.key)}
+              className={`shrink-0 ios-pill text-[11px] py-1 px-2.5 ${formLevelFilter === f.key ? 'ios-pill-active' : ''}`}>
+              {f.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Achievement list */}
@@ -1888,7 +1882,7 @@ export default function Page() {
                   <span className="text-[11px] text-white font-medium">{a.user.name}</span>
                 )}
                 <StatusDot status={a.status} />
-                {a.achievementLevel && a.achievementType !== 'FREE_FORM' && (
+                {a.achievementLevel && (
                   <span className="text-[10px] text-white/20">
                     {ACHIEVEMENT_LEVELS[a.achievementLevel]?.label || a.achievementLevel}
                     {getResultLabel(a) && ` · ${getResultLabel(a)}`}
@@ -2103,40 +2097,61 @@ export default function Page() {
         </GlassCard>
       </div>
 
-      {/* О себе — personal info block */}
-      {(profile?.fullName || profile?.classYear || schoolName) && (
-        <div>
-          <h3 className="ios-section-header mb-3">О себе</h3>
-          <GlassCard className="space-y-3">
-            {profile?.fullName && (
-              <div className="flex items-center gap-3">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="8" r="4" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
-                  <path d="M4 20C4 16.6863 7.58172 14 12 14C16.4183 14 20 16.6863 20 20" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-                <span className="text-[13px] text-white/70">{profile.fullName}</span>
-              </div>
-            )}
-            {profile?.classYear && (
-              <div className="flex items-center gap-3">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <rect x="3" y="5" width="18" height="14" rx="2" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
-                  <path d="M3 10H21" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
-                </svg>
-                <span className="text-[13px] text-white/70">{profile.classYear}{profile.classLetter || ''} класс</span>
-              </div>
-            )}
-            {schoolName && (
-              <div className="flex items-center gap-3">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M3 21H21M5 21V7L12 3L19 7V21M9 21V15H15V21" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                <span className="text-[13px] text-white/70">{schoolName}</span>
-              </div>
-            )}
-          </GlassCard>
-        </div>
-      )}
+      {/* О себе — personal info block (always visible) */}
+      <div>
+        <h3 className="ios-section-header mb-3">О себе</h3>
+        <GlassCard className="space-y-3">
+          {profile?.fullName ? (
+            <div className="flex items-center gap-3">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="8" r="4" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
+                <path d="M4 20C4 16.6863 7.58172 14 12 14C16.4183 14 20 16.6863 20 20" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+              <span className="text-[13px] text-white/70">{profile.fullName}</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="8" r="4" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
+                <path d="M4 20C4 16.6863 7.58172 14 12 14C16.4183 14 20 16.6863 20 20" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+              <span className="text-[13px] text-white/20">ФИО не указано</span>
+            </div>
+          )}
+          {profile?.classYear ? (
+            <div className="flex items-center gap-3">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="5" width="18" height="14" rx="2" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
+                <path d="M3 10H21" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
+              </svg>
+              <span className="text-[13px] text-white/70">{profile.classYear}{profile.classLetter || ''} класс</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="5" width="18" height="14" rx="2" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
+                <path d="M3 10H21" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
+              </svg>
+              <span className="text-[13px] text-white/20">Класс не указан</span>
+            </div>
+          )}
+          {schoolName ? (
+            <div className="flex items-center gap-3">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M3 21H21M5 21V7L12 3L19 7V21M9 21V15H15V21" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span className="text-[13px] text-white/70">{schoolName}</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M3 21H21M5 21V7L12 3L19 7V21M9 21V15H15V21" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span className="text-[13px] text-white/20">Школа не указана</span>
+            </div>
+          )}
+        </GlassCard>
+      </div>
 
       {/* Radar chart — direction XP */}
       <div>
@@ -2285,8 +2300,8 @@ export default function Page() {
                 </div>
               </div>
 
-              {/* Level + Result (only for non-FREE_FORM) */}
-              {formAchievementType && formAchievementType !== 'FREE_FORM' && (
+              {/* Level + Result */}
+              {formAchievementType && (
                 <>
                   {/* Level */}
                   <div>
@@ -2418,7 +2433,7 @@ export default function Page() {
                 <h2 className="text-[18px] font-bold text-white">{a.title}</h2>
                 <div className="flex items-center gap-2 mt-1">
                   <StatusDot status={a.status} />
-                  {a.achievementLevel && a.achievementType !== 'FREE_FORM' && (
+                  {a.achievementLevel && (
                     <span className="text-[11px] text-white/25">
                       {ACHIEVEMENT_LEVELS[a.achievementLevel]?.label}
                     </span>
