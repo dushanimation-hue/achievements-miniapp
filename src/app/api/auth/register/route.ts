@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 // Valid school codes — add more here as needed
 const VALID_SCHOOL_CODES: Record<string, { name: string }> = {
-  '11607L': { name: 'Школа №11607' },
+  '11607L': { name: 'Лицей 7' },
 };
 
 export async function POST(request: NextRequest) {

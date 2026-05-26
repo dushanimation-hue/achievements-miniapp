@@ -12,7 +12,8 @@ interface UserProfile {
   totalXp: number; level: number; levelName: string; xpInLevel: number;
   xpToNextLevel: number; nextLevelXp: number | null; nextLevelName: string | null;
   statusEmoji: string; statusPrefix: string; facultyId: string | null;
-  league: string;
+  league: string; fullName: string | null; classYear: number | null;
+  classLetter: string | null; schoolCode: string | null;
 }
 interface Achievement {
   id: string; title: string; description: string | null; category: string;
@@ -107,6 +108,15 @@ const DIRECTIONS: Record<string, { label: string; color: string }> = {
   COMMUNITY: { label: 'Сообщество', color: '#34C759' },
   MORALITY: { label: 'Нравственность', color: '#AF52DE' },
 }
+
+// Only the 5 real directions (no ALL) — used for radar chart & profile display
+const DIRECTIONS_PROFILE: { key: string; label: string; color: string }[] = [
+  { key: 'KNOWLEDGE', label: 'Знание', color: '#007AFF' },
+  { key: 'WILL', label: 'Воля', color: '#FF9F0A' },
+  { key: 'SKILLS', label: 'Навыки', color: '#5856D6' },
+  { key: 'COMMUNITY', label: 'Сообщество', color: '#34C759' },
+  { key: 'MORALITY', label: 'Нравственность', color: '#AF52DE' },
+]
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; dotColor: string }> = {
   APPROVED: { label: 'Одобрено', color: 'text-[#34C759]', dotColor: 'bg-[#34C759]' },
@@ -371,6 +381,82 @@ function AchievementTypeIcon({ type }: { type: string | null }) {
     case 'FREE_FORM': return <IconFreeForm />
     default: return <IconAchievements active={false} />
   }
+}
+
+/* ============================================================
+   RADAR CHART — 5-direction "wind rose" for profile
+   ============================================================ */
+
+function RadarChart({ values }: { values: { key: string; label: string; color: string; xp: number }[] }) {
+  const size = 220
+  const cx = size / 2
+  const cy = size / 2
+  const maxR = 85
+  const n = values.length
+
+  // Adaptive scale: max value rounded up to nearest nice number
+  const maxVal = Math.max(...values.map(v => v.xp), 1)
+  const niceMax = Math.ceil(maxVal / 5) * 5 || 5
+
+  // Pentagon vertices (start from top, go clockwise)
+  const angleStep = (2 * Math.PI) / n
+  const startAngle = -Math.PI / 2 // top
+  const getPoint = (i: number, r: number) => ({
+    x: cx + r * Math.cos(startAngle + i * angleStep),
+    y: cy + r * Math.sin(startAngle + i * angleStep),
+  })
+
+  // Grid rings (3 levels)
+  const rings = [0.25, 0.5, 1.0]
+
+  // Data polygon
+  const dataPoints = values.map((v, i) => {
+    const r = maxR * Math.min(v.xp / niceMax, 1)
+    return getPoint(i, r)
+  })
+  const dataPath = dataPoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ') + ' Z'
+
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="mx-auto">
+      {/* Grid rings */}
+      {rings.map((scale, ri) => {
+        const pts = values.map((_, i) => getPoint(i, maxR * scale))
+        const path = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ') + ' Z'
+        return <path key={ri} d={path} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={1} />
+      })}
+
+      {/* Axis lines */}
+      {values.map((_, i) => {
+        const p = getPoint(i, maxR)
+        return <line key={i} x1={cx} y1={cy} x2={p.x} y2={p.y} stroke="rgba(255,255,255,0.06)" strokeWidth={1} />
+      })}
+
+      {/* Data polygon fill */}
+      <path d={dataPath} fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.3)" strokeWidth={1.5} />
+
+      {/* Data points with color */}
+      {dataPoints.map((p, i) => (
+        <circle key={i} cx={p.x} cy={p.y} r={4} fill={values[i].color} stroke="rgba(0,0,0,0.3)" strokeWidth={1} />
+      ))}
+
+      {/* Labels */}
+      {values.map((v, i) => {
+        const labelR = maxR + 20
+        const p = getPoint(i, labelR)
+        const anchor = i === 0 ? 'middle' : i < n / 2 ? 'start' : i > n / 2 ? 'end' : 'middle'
+        return (
+          <g key={i}>
+            <text x={p.x} y={p.y - 4} textAnchor={i === 0 ? 'middle' : i === 1 ? 'start' : i === 2 ? 'start' : i === 3 ? 'end' : 'end'} fill="rgba(255,255,255,0.5)" fontSize={10} fontWeight={500}>
+              {v.label}
+            </text>
+            <text x={p.x} y={p.y + 8} textAnchor={i === 0 ? 'middle' : i === 1 ? 'start' : i === 2 ? 'start' : i === 3 ? 'end' : 'end'} fill={v.color} fontSize={11} fontWeight={700}>
+              {v.xp} XP
+            </text>
+          </g>
+        )
+      })}
+    </svg>
+  )
 }
 
 /* ============================================================
@@ -1950,7 +2036,20 @@ export default function Page() {
   /* ============================================================
      RENDER: PROFILE
      ============================================================ */
-  const renderProfile = () => (
+  const renderProfile = () => {
+    // School name lookup
+    const SCHOOL_NAMES: Record<string, string> = { '11607L': 'Лицей 7' }
+    const schoolName = profile?.schoolCode ? (SCHOOL_NAMES[profile.schoolCode] || profile.schoolCode) : null
+
+    // Radar chart data
+    const radarValues = DIRECTIONS_PROFILE.map(d => ({
+      key: d.key,
+      label: d.label,
+      color: d.color,
+      xp: directionXp[d.key] || 0,
+    }))
+
+    return (
     <div className="px-5 pb-6 space-y-5 ios-fade-in">
       <div className="pt-3">
         <h1 className="ios-large-title">Профиль</h1>
@@ -1985,18 +2084,47 @@ export default function Page() {
         </GlassCard>
       </div>
 
-      {/* Direction XP breakdown */}
+      {/* О себе — personal info block */}
+      {(profile?.fullName || profile?.classYear || schoolName) && (
+        <div>
+          <h3 className="ios-section-header mb-3">О себе</h3>
+          <GlassCard className="space-y-3">
+            {profile?.fullName && (
+              <div className="flex items-center gap-3">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="8" r="4" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
+                  <path d="M4 20C4 16.6863 7.58172 14 12 14C16.4183 14 20 16.6863 20 20" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+                <span className="text-[13px] text-white/70">{profile.fullName}</span>
+              </div>
+            )}
+            {profile?.classYear && (
+              <div className="flex items-center gap-3">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <rect x="3" y="5" width="18" height="14" rx="2" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
+                  <path d="M3 10H21" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
+                </svg>
+                <span className="text-[13px] text-white/70">{profile.classYear}{profile.classLetter || ''} класс</span>
+              </div>
+            )}
+            {schoolName && (
+              <div className="flex items-center gap-3">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M3 21H21M5 21V7L12 3L19 7V21M9 21V15H15V21" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span className="text-[13px] text-white/70">{schoolName}</span>
+              </div>
+            )}
+          </GlassCard>
+        </div>
+      )}
+
+      {/* Radar chart — direction XP */}
       <div>
         <h3 className="ios-section-header mb-3">Направления</h3>
-        <div className="space-y-2">
-          {Object.entries(DIRECTIONS).map(([key, dir]) => (
-            <div key={key} className="flex items-center gap-3 ios-list-item p-3">
-              <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: dir.color }} />
-              <span className="text-[13px] font-medium text-white flex-1">{dir.label}</span>
-              <span className="text-[13px] font-bold tabular-nums" style={{ color: dir.color }}>{directionXp[key] || 0} XP</span>
-            </div>
-          ))}
-        </div>
+        <GlassCard className="flex justify-center py-4">
+          <RadarChart values={radarValues} />
+        </GlassCard>
       </div>
 
       {/* Logout */}
@@ -2006,7 +2134,8 @@ export default function Page() {
         <span className="text-[14px] font-semibold">Выйти</span>
       </button>
     </div>
-  )
+    )
+  }
 
   /* ============================================================
      RENDER: ADD ACHIEVEMENT SHEET
