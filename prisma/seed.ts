@@ -9,8 +9,8 @@ const USERS = [
   { id: 'u6', telegramId: '1006', name: 'Елена Смирнова', username: 'lena_s', role: 'STUDENT', totalXp: 0, level: 1, league: 'bronze', statusEmoji: '', statusPrefix: 'Новичок' },
   { id: 'u7', telegramId: '1007', name: 'Павел Морозов', username: 'pavel_m', role: 'STUDENT', totalXp: 20, level: 2, league: 'bronze', statusEmoji: '', statusPrefix: 'Активный' },
   { id: 'u8', telegramId: '1008', name: 'Софья Волкова', username: 'sofa_v', role: 'STUDENT', totalXp: 12, level: 2, league: 'bronze', statusEmoji: '', statusPrefix: 'Активный' },
-  { id: 'u_admin', telegramId: 'admin_tg', login: 'admin', password: 'admin123', name: 'Ольга Васильева', username: 'olga_v', role: 'ADMIN', totalXp: 0, level: 7, league: 'gold', statusEmoji: '', statusPrefix: 'Администратор' },
-  { id: 'u_student', telegramId: 'student_tg', login: 'student', password: 'student123', name: 'Иван Иванов', username: 'ivan_i', role: 'STUDENT', totalXp: 22, level: 3, league: 'bronze', statusEmoji: '', statusPrefix: 'Олимпиадник' },
+  { id: 'u_admin', telegramId: 'admin_tg', login: 'Desmont', password: 'Desm00nt$', name: 'Денис Картузов', username: 'desmont', role: 'ADMIN', totalXp: 0, level: 7, league: 'gold', statusEmoji: '', statusPrefix: 'Администратор' },
+  { id: 'u_student', telegramId: 'student_tg', login: 'student', password: 'student123', name: 'Иван Иванов', username: 'ivan_i', role: 'STUDENT', totalXp: 22, level: 3, league: 'bronze', statusEmoji: '', statusPrefix: 'Олимпиадник', fullName: 'Иванов Иван Иванович', classYear: 9, classLetter: 'А', schoolCode: '11607L' },
 ]
 
 const ACHIEVEMENTS = [

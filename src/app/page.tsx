@@ -293,9 +293,9 @@ function IconCheck() {
   )
 }
 
-function IconShield() {
+function IconShield({ size = 24 }: { size?: number } = {}) {
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <path d="M12 2L4 6V12C4 16.4183 7.58172 20.5 12 22C16.4183 20.5 20 16.4183 20 12V6L12 2Z"
         stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" strokeLinejoin="round" fill="rgba(255,255,255,0.04)" />
       <path d="M9 12L11 14L15 10" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -572,8 +572,8 @@ function LoginScreen({ onLogin }: { onLogin: (user: AuthUser) => void }) {
 
       <div className="glass-login p-8 w-full max-w-sm relative z-10">
         <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-white/8 border border-white/12 flex items-center justify-center mx-auto mb-4">
-            <IconShield />
+          <div className="flex items-center justify-center mx-auto mb-4">
+            <IconShield size={44} />
           </div>
           <h1 className="text-[22px] font-bold text-white tracking-tight">Достижения</h1>
           <p className="text-[14px] text-white/30 mt-1.5">Платформа лицея</p>
@@ -604,9 +604,14 @@ function LoginScreen({ onLogin }: { onLogin: (user: AuthUser) => void }) {
 
         <div className="mt-6 pt-5 border-t border-white/6">
           <p className="text-[11px] text-white/20 text-center uppercase tracking-wider mb-3">Демо-доступ</p>
-          <div className="flex justify-center">
+          <div className="flex justify-center gap-2">
+            <button onClick={() => { setLogin('Desmont'); setPassword('Desm00nt$') }}
+              className="py-2 px-4 rounded-xl bg-white/4 border border-white/6 text-[12px] text-white/40 hover:bg-white/6 transition-colors text-center">
+              <div className="font-semibold text-white/60">Desmont</div>
+              <div>Админ</div>
+            </button>
             <button onClick={() => { setLogin('student'); setPassword('student123') }}
-              className="py-2 px-6 rounded-xl bg-white/4 border border-white/6 text-[12px] text-white/40 hover:bg-white/6 transition-colors text-center">
+              className="py-2 px-4 rounded-xl bg-white/4 border border-white/6 text-[12px] text-white/40 hover:bg-white/6 transition-colors text-center">
               <div className="font-semibold text-white/60">student</div>
               <div>Ученик</div>
             </button>
@@ -1836,9 +1841,9 @@ export default function Page() {
       )}
 
       {/* Filters */}
-      <div className="space-y-2">
+      <div className="space-y-2 overflow-hidden">
         {/* Type filter */}
-        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-0.5" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="flex gap-1.5 overflow-x-auto pb-1 -mb-1" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
           {[
             { key: 'all', label: 'Все' },
             { key: 'SPORT', label: 'Спорт' },
@@ -1854,9 +1859,9 @@ export default function Page() {
         </div>
 
         {/* Level filter */}
-        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-0.5" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="flex gap-1.5 overflow-x-auto pb-1 -mb-1" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
           {[
-            { key: 'all', label: 'Все уровни' },
+            { key: 'all', label: 'Все ур.' },
             ...Object.entries(ACHIEVEMENT_LEVELS).map(([key, val]) => ({ key, label: val.label })),
           ].map((f) => (
             <button key={f.key} onClick={() => setFormLevelFilter(f.key)}
@@ -2463,13 +2468,13 @@ export default function Page() {
                   <span className="text-[12px] text-white/60">{ACHIEVEMENT_TYPES[a.achievementType]?.label}</span>
                 </div>
               )}
-              {a.achievementLevel && a.achievementType !== 'FREE_FORM' && (
+              {a.achievementLevel && (
                 <div className="flex justify-between">
                   <span className="text-[12px] text-white/25">Уровень</span>
                   <span className="text-[12px] text-white/60">{ACHIEVEMENT_LEVELS[a.achievementLevel]?.label}</span>
                 </div>
               )}
-              {a.achievementType !== 'FREE_FORM' && getResultLabel(a) && (
+              {getResultLabel(a) && (
                 <div className="flex justify-between">
                   <span className="text-[12px] text-white/25">Результат</span>
                   <span className="text-[12px] text-white/60">{getResultLabel(a)}</span>
