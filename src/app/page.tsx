@@ -75,13 +75,16 @@ const ACHIEVEMENT_TYPES: Record<string, { label: string }> = {
 }
 
 const ACHIEVEMENT_LEVELS: Record<string, { label: string; baseXp: number }> = {
-  SCHOOL: { label: 'Школьный', baseXp: 2 },
-  DISTRICT: { label: 'Районный', baseXp: 4 },
-  CITY: { label: 'Городской', baseXp: 7 },
-  REGIONAL: { label: 'Региональный', baseXp: 12 },
-  ALL_RUSSIAN: { label: 'Всероссийский', baseXp: 20 },
-  INTERNATIONAL: { label: 'Международный', baseXp: 25 },
+  SCHOOL: { label: 'Школьный', baseXp: 8 },
+  DISTRICT: { label: 'Районный', baseXp: 16 },
+  CITY: { label: 'Городской', baseXp: 28 },
+  REGIONAL: { label: 'Региональный', baseXp: 48 },
+  ALL_RUSSIAN: { label: 'Всероссийский', baseXp: 80 },
+  INTERNATIONAL: { label: 'Международный', baseXp: 100 },
 }
+
+// Levels available for ВСОШ/РЭШ — max is Всероссийский (no Международный)
+const OLYMPIAD_LEVELS = ['SCHOOL', 'DISTRICT', 'CITY', 'REGIONAL', 'ALL_RUSSIAN'] as const
 
 const PLACEMENTS: Record<number, { label: string; multiplier: number }> = {
   1: { label: '1 место', multiplier: 1.0 },
@@ -388,10 +391,10 @@ function AchievementTypeIcon({ type }: { type: string | null }) {
    ============================================================ */
 
 function RadarChart({ values }: { values: { key: string; label: string; color: string; xp: number }[] }) {
-  const size = 220
+  const size = 280
   const cx = size / 2
   const cy = size / 2
-  const maxR = 85
+  const maxR = 80
   const n = values.length
 
   // Adaptive scale: max value rounded up to nearest nice number
@@ -416,8 +419,17 @@ function RadarChart({ values }: { values: { key: string; label: string; color: s
   })
   const dataPath = dataPoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ') + ' Z'
 
+  // Text anchor calculation per vertex
+  const getAnchor = (i: number): 'middle' | 'start' | 'end' => {
+    if (i === 0) return 'middle'      // top
+    if (i === 1) return 'start'       // top-right
+    if (i === 2) return 'start'       // bottom-right
+    if (i === 3) return 'end'         // bottom-left
+    return 'end'                       // top-left (i === 4)
+  }
+
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="mx-auto">
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="mx-auto" style={{ overflow: 'visible' }}>
       {/* Grid rings */}
       {rings.map((scale, ri) => {
         const pts = values.map((_, i) => getPoint(i, maxR * scale))
@@ -441,15 +453,18 @@ function RadarChart({ values }: { values: { key: string; label: string; color: s
 
       {/* Labels */}
       {values.map((v, i) => {
-        const labelR = maxR + 20
+        const labelR = maxR + 28
         const p = getPoint(i, labelR)
-        const anchor = i === 0 ? 'middle' : i < n / 2 ? 'start' : i > n / 2 ? 'end' : 'middle'
+        const anchor = getAnchor(i)
+        // Fine-tune vertical position
+        const yLabelOffset = i === 0 ? -6 : i === 1 ? -2 : i === 2 ? 4 : i === 3 ? 4 : -2
+        const yXpOffset = yLabelOffset + 13
         return (
           <g key={i}>
-            <text x={p.x} y={p.y - 4} textAnchor={i === 0 ? 'middle' : i === 1 ? 'start' : i === 2 ? 'start' : i === 3 ? 'end' : 'end'} fill="rgba(255,255,255,0.5)" fontSize={10} fontWeight={500}>
+            <text x={p.x} y={p.y + yLabelOffset} textAnchor={anchor} fill="rgba(255,255,255,0.5)" fontSize={10} fontWeight={500}>
               {v.label}
             </text>
-            <text x={p.x} y={p.y + 8} textAnchor={i === 0 ? 'middle' : i === 1 ? 'start' : i === 2 ? 'start' : i === 3 ? 'end' : 'end'} fill={v.color} fontSize={11} fontWeight={700}>
+            <text x={p.x} y={p.y + yXpOffset} textAnchor={anchor} fill={v.color} fontSize={11} fontWeight={700}>
               {v.xp} XP
             </text>
           </g>
@@ -589,14 +604,9 @@ function LoginScreen({ onLogin }: { onLogin: (user: AuthUser) => void }) {
 
         <div className="mt-6 pt-5 border-t border-white/6">
           <p className="text-[11px] text-white/20 text-center uppercase tracking-wider mb-3">Демо-доступ</p>
-          <div className="grid grid-cols-2 gap-2">
-            <button onClick={() => { setLogin('admin'); setPassword('admin123') }}
-              className="py-2 px-3 rounded-xl bg-white/4 border border-white/6 text-[12px] text-white/40 hover:bg-white/6 transition-colors text-center">
-              <div className="font-semibold text-white/60">admin</div>
-              <div>Администратор</div>
-            </button>
+          <div className="flex justify-center">
             <button onClick={() => { setLogin('student'); setPassword('student123') }}
-              className="py-2 px-3 rounded-xl bg-white/4 border border-white/6 text-[12px] text-white/40 hover:bg-white/6 transition-colors text-center">
+              className="py-2 px-6 rounded-xl bg-white/4 border border-white/6 text-[12px] text-white/40 hover:bg-white/6 transition-colors text-center">
               <div className="font-semibold text-white/60">student</div>
               <div>Ученик</div>
             </button>
@@ -885,6 +895,7 @@ export default function Page() {
   const [formFilePreview, setFormFilePreview] = useState<string | null>(null)
   const [uploadingFile, setUploadingFile] = useState(false)
   const [formAchievementFilter, setFormAchievementFilter] = useState('all')
+  const [formLevelFilter, setFormLevelFilter] = useState('all')
 
   // Achievement detail modal
   const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null)
@@ -1358,10 +1369,12 @@ export default function Page() {
     if (isAdmin && showAddSheet) fetchStudents()
   }, [isAdmin, showAddSheet, fetchStudents])
 
-  // Filtered achievements
-  const filteredAchievements = formAchievementFilter === 'all'
-    ? allAchievements
-    : allAchievements.filter(a => a.achievementType === formAchievementFilter)
+  // Filtered achievements — by type AND level
+  const filteredAchievements = allAchievements.filter(a => {
+    if (formAchievementFilter !== 'all' && a.achievementType !== formAchievementFilter) return false
+    if (formLevelFilter !== 'all' && a.achievementLevel !== formLevelFilter) return false
+    return true
+  })
 
   // Direction XP computed from approved achievements
   const directionXp: Record<string, number> = {}
@@ -1444,24 +1457,17 @@ export default function Page() {
         </div>
       </div>
 
-      {/* Stats — achievements + pending merged into one */}
-      <div className="glass-card p-4 flex items-center justify-between">
+      {/* Stats — achievements + pending in one unified block */}
+      <div className="glass-card p-4">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/7 flex items-center justify-center">
             <IconAchievements active={false} />
           </div>
           <div>
             <div className="text-[13px] font-bold text-white tabular-nums">{achievementCounts.APPROVED} <span className="text-white/20 font-normal">из {achievementCounts.total}</span></div>
-            <div className="text-[11px] text-white/25">достижений одобрено</div>
+            <div className="text-[11px] text-white/25">достижений одобрено{achievementCounts.PENDING > 0 ? ` · ${achievementCounts.PENDING} на проверке` : ''}</div>
           </div>
         </div>
-        {achievementCounts.PENDING > 0 && (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/4 border border-white/6">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#FF9F0A]" />
-            <span className="text-[12px] font-semibold text-[#FF9F0A] tabular-nums">{achievementCounts.PENDING}</span>
-            <span className="text-[10px] text-white/25">на проверке</span>
-          </div>
-        )}
       </div>
 
       {/* Quick actions */}
@@ -1838,7 +1844,7 @@ export default function Page() {
         </div>
       )}
 
-      {/* Filters */}
+      {/* Filters — Type */}
       <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
         {[
           { key: 'all', label: 'Все' },
@@ -1847,8 +1853,21 @@ export default function Page() {
           { key: 'OLYMPIAD', label: 'РЭШ/ВСОШ' },
           { key: 'FREE_FORM', label: 'Свободные' },
         ].map((f) => (
-          <button key={f.key} onClick={() => setFormAchievementFilter(f.key)}
+          <button key={f.key} onClick={() => { setFormAchievementFilter(f.key); setFormLevelFilter('all') }}
             className={`shrink-0 ios-pill ${formAchievementFilter === f.key ? 'ios-pill-active' : ''}`}>
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Filters — Level */}
+      <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
+        {[
+          { key: 'all', label: 'Все уровни' },
+          ...Object.entries(ACHIEVEMENT_LEVELS).map(([key, val]) => ({ key, label: val.label })),
+        ].map((f) => (
+          <button key={f.key} onClick={() => setFormLevelFilter(f.key)}
+            className={`shrink-0 ios-pill text-[11px] py-1 px-2.5 ${formLevelFilter === f.key ? 'ios-pill-active' : ''}`}>
             {f.label}
           </button>
         ))}
@@ -2075,7 +2094,7 @@ export default function Page() {
           <div className="text-[10px] text-white/25 mt-0.5">XP</div>
         </GlassCard>
         <GlassCard className="p-4 text-center">
-          <div className="text-[20px] font-bold text-[#34C759] tabular-nums">{achievementCounts.APPROVED}</div>
+          <div className="text-[20px] font-bold text-white tabular-nums">{achievementCounts.APPROVED}</div>
           <div className="text-[10px] text-white/25 mt-0.5">Одобрено</div>
         </GlassCard>
         <GlassCard className="p-4 text-center">
@@ -2273,7 +2292,9 @@ export default function Page() {
                   <div>
                     <label className="text-[12px] font-medium text-white/30 mb-1.5 block uppercase tracking-wider">Уровень</label>
                     <div className="flex gap-1.5 flex-wrap">
-                      {Object.entries(ACHIEVEMENT_LEVELS).map(([key, val]) => (
+                      {Object.entries(ACHIEVEMENT_LEVELS)
+                        .filter(([key]) => formAchievementType !== 'OLYMPIAD' || OLYMPIAD_LEVELS.includes(key as typeof OLYMPIAD_LEVELS[number]))
+                        .map(([key, val]) => (
                         <button key={key} onClick={() => setFormLevel(key as AchievementLevel)}
                           className={`ios-pill ${formLevel === key ? 'ios-pill-active' : ''}`}>
                           {val.label}
