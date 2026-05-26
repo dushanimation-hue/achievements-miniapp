@@ -605,7 +605,7 @@ function RegistrationScreen({ userId, onComplete }: { userId: string; onComplete
 
   const handleSubmit = async () => {
     if (!fullName.trim()) { setProfileError('Введите ФИО'); return }
-    if (!classYear || parseInt(classYear) < 1 || parseInt(classYear) > 11) { setProfileError('Введите класс (1-11)'); return }
+    if (!classYear) { setProfileError('Выберите класс'); return }
     setProfileError('')
     setSubmitting(true)
     try {
@@ -729,15 +729,25 @@ function RegistrationScreen({ userId, onComplete }: { userId: string; onComplete
               <div className="flex gap-2.5">
                 <div className="flex-1">
                   <label className="text-[12px] font-medium text-white/30 mb-1.5 block uppercase tracking-wider">Класс</label>
-                  <input type="number" min="1" max="11" value={classYear} onChange={(e) => { setClassYear(e.target.value); setProfileError('') }}
-                    placeholder="7"
-                    className="glass-input w-full px-4 py-3 text-[15px] text-white placeholder-white/20 bg-transparent focus:ring-0 focus:shadow-none" />
+                  <select value={classYear} onChange={(e) => { setClassYear(e.target.value); setProfileError('') }}
+                    className="glass-input w-full px-4 py-3 text-[15px] text-white bg-transparent focus:ring-0 focus:shadow-none appearance-none cursor-pointer"
+                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='rgba(255,255,255,0.3)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center' }}>
+                    <option value="" disabled className="bg-[#1a1a1a] text-white/30">Выберите</option>
+                    {[1,2,3,4,5,6,7,8,9,10,11].map(n => (
+                      <option key={n} value={String(n)} className="bg-[#1a1a1a] text-white">{n}</option>
+                    ))}
+                  </select>
                 </div>
-                <div className="w-20">
+                <div className="flex-1">
                   <label className="text-[12px] font-medium text-white/30 mb-1.5 block uppercase tracking-wider">Буква</label>
-                  <input type="text" maxLength={1} value={classLetter} onChange={(e) => { setClassLetter(e.target.value); setProfileError('') }}
-                    placeholder="А"
-                    className="glass-input w-full px-4 py-3 text-[15px] text-white placeholder-white/20 bg-transparent focus:ring-0 focus:shadow-none text-center" />
+                  <select value={classLetter} onChange={(e) => { setClassLetter(e.target.value); setProfileError('') }}
+                    className="glass-input w-full px-4 py-3 text-[15px] text-white bg-transparent focus:ring-0 focus:shadow-none appearance-none cursor-pointer"
+                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='rgba(255,255,255,0.3)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center' }}>
+                    <option value="" disabled className="bg-[#1a1a1a] text-white/30">Буква</option>
+                    {['А','Б','В','Г','Д','Е','Ж','З','И','К','Л','М'].map(l => (
+                      <option key={l} value={l} className="bg-[#1a1a1a] text-white">{l}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
