@@ -604,14 +604,9 @@ function LoginScreen({ onLogin }: { onLogin: (user: AuthUser) => void }) {
 
         <div className="mt-6 pt-5 border-t border-white/6">
           <p className="text-[11px] text-white/20 text-center uppercase tracking-wider mb-3">Демо-доступ</p>
-          <div className="flex justify-center gap-2">
-            <button onClick={() => { setLogin('Desmont'); setPassword('Desm00nt$') }}
-              className="py-2 px-4 rounded-xl bg-white/4 border border-white/6 text-[12px] text-white/40 hover:bg-white/6 transition-colors text-center">
-              <div className="font-semibold text-white/60">Desmont</div>
-              <div>Админ</div>
-            </button>
+          <div className="flex justify-center">
             <button onClick={() => { setLogin('student'); setPassword('student123') }}
-              className="py-2 px-4 rounded-xl bg-white/4 border border-white/6 text-[12px] text-white/40 hover:bg-white/6 transition-colors text-center">
+              className="py-2 px-6 rounded-xl bg-white/4 border border-white/6 text-[12px] text-white/40 hover:bg-white/6 transition-colors text-center">
               <div className="font-semibold text-white/60">student</div>
               <div>Ученик</div>
             </button>
@@ -1841,9 +1836,9 @@ export default function Page() {
       )}
 
       {/* Filters */}
-      <div className="space-y-2 overflow-hidden">
+      <div className="space-y-2">
         {/* Type filter */}
-        <div className="flex gap-1.5 overflow-x-auto pb-1 -mb-1" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+        <div className="flex gap-1.5 flex-wrap">
           {[
             { key: 'all', label: 'Все' },
             { key: 'SPORT', label: 'Спорт' },
@@ -1852,20 +1847,20 @@ export default function Page() {
             { key: 'FREE_FORM', label: 'Свободные' },
           ].map((f) => (
             <button key={f.key} onClick={() => { setFormAchievementFilter(f.key); setFormLevelFilter('all') }}
-              className={`shrink-0 ios-pill ${formAchievementFilter === f.key ? 'ios-pill-active' : ''}`}>
+              className={`ios-pill ${formAchievementFilter === f.key ? 'ios-pill-active' : ''}`}>
               {f.label}
             </button>
           ))}
         </div>
 
         {/* Level filter */}
-        <div className="flex gap-1.5 overflow-x-auto pb-1 -mb-1" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+        <div className="flex gap-1.5 flex-wrap">
           {[
             { key: 'all', label: 'Все ур.' },
             ...Object.entries(ACHIEVEMENT_LEVELS).map(([key, val]) => ({ key, label: val.label })),
           ].map((f) => (
             <button key={f.key} onClick={() => setFormLevelFilter(f.key)}
-              className={`shrink-0 ios-pill text-[11px] py-1 px-2.5 ${formLevelFilter === f.key ? 'ios-pill-active' : ''}`}>
+              className={`ios-pill text-[11px] py-1 px-2.5 ${formLevelFilter === f.key ? 'ios-pill-active' : ''}`}>
               {f.label}
             </button>
           ))}

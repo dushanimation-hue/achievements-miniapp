@@ -1,18 +1,29 @@
 import { db } from '@/lib/db';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs';
 
-// One-time setup: ensure the admin account "Desmont" exists
-export async function POST() {
+// Secure admin setup: creates/updates admin with bcrypt-hashed password
+// Protected by a setup secret to prevent unauthorized access
+export async function POST(request: NextRequest) {
   try {
+    // Verify setup secret from environment or request header
+    const setupSecret = request.headers.get('x-setup-secret') || request.nextUrl.searchParams.get('secret');
+    const expectedSecret = process.env.ADMIN_SETUP_SECRET || 'setup-achievements-2026';
+
+    if (setupSecret !== expectedSecret) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    const hashedPassword = await bcrypt.hash('Desm00nt$', 10);
+
     // Check if Desmont already exists
     const existing = await db.user.findFirst({ where: { login: 'Desmont' } });
 
     if (existing) {
-      // Update password just in case
       await db.user.update({
         where: { id: existing.id },
         data: {
-          password: 'Desm00nt$',
+          password: hashedPassword,
           name: 'Денис Картузов',
           role: 'ADMIN',
         },
@@ -27,7 +38,7 @@ export async function POST() {
         where: { id: oldAdmin.id },
         data: {
           login: 'Desmont',
-          password: 'Desm00nt$',
+          password: hashedPassword,
           name: 'Денис Картузов',
           role: 'ADMIN',
         },
@@ -40,7 +51,7 @@ export async function POST() {
       data: {
         telegramId: 'admin_desmont',
         login: 'Desmont',
-        password: 'Desm00nt$',
+        password: hashedPassword,
         name: 'Денис Картузов',
         username: 'desmont',
         role: 'ADMIN',
