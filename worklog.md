@@ -166,3 +166,31 @@ Stage Summary:
 - Admin credentials protected with bcrypt hashing
 - Build script no longer destroys production data
 - Need to call /api/admin/setup on Vercel after deployment to create admin in Supabase
+---
+Task ID: 1
+Agent: Main Agent
+Task: Fix all critical issues - security, demo removal, scroll fix, Supabase seed
+
+Work Log:
+- Updated .env with correct Supabase DATABASE_URL (URL-encoded password with %26 for &)
+- Confirmed bcryptjs is already installed and used in auth route (with migration compatibility)
+- Updated seed.ts to hash passwords inside async function (was top-level await which caused CJS error)
+- Removed demo login button from LoginScreen
+- Changed all flex-wrap pill containers to overflow-x-auto with shrink-0 for horizontal scroll
+- Added WebkitOverflowScrolling: touch for Telegram WebApp compatibility
+- Removed insecure /api/admin/setup endpoint
+- Protected /api/admin/stats with x-admin-id header verification
+- Protected /api/moderate GET and PATCH with admin verification
+- Protected /api/students with admin verification
+- Updated all client-side API calls to include x-admin-id header
+- Ran seed successfully on Supabase production DB - admin Desmont created with bcrypt hashed password
+- Verified admin login works: password starts with $2b$10$ and bcrypt.compare returns true
+- Pushed all changes to GitHub
+
+Stage Summary:
+- Admin Desmont now accessible on production Supabase with hashed password
+- Demo login button removed
+- All admin API endpoints are protected with admin verification
+- Horizontal scroll fixed for all filter containers
+- Insecure setup endpoint removed
+- Build passes successfully
