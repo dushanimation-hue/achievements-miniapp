@@ -889,8 +889,8 @@ export default function Page() {
   // Registration flow
   const [needsRegistration, setNeedsRegistration] = useState(false)
   const [adminStats, setAdminStats] = useState<Record<string, unknown> | null>(null)
-  const [adminDirections, setAdminDirections] = useState<Record<string, boolean>>({})
-  const [adminXp, setAdminXp] = useState(0)
+  const [adminDirections, setAdminDirections] = useState<Record<string, Record<string, boolean>>>({})
+  const [adminXp, setAdminXp] = useState<Record<string, number>>({})
   const [adminRejectReasons, setAdminRejectReasons] = useState<Record<string, string>>({})
 
   // Admin: student selector
@@ -1073,6 +1073,8 @@ export default function Page() {
 
   const fetchBadges = useCallback(async () => {
     if (!userId) return
+    // Admins don't participate in the badge system
+    if (isAdmin) return
     try {
       const res = await fetch(`/api/badges?userId=${userId}`)
       if (!res.ok) return
@@ -1401,7 +1403,7 @@ export default function Page() {
         <div>
           <h1 className="ios-large-title">{profile?.name || '...'}</h1>
           <p className="text-[14px] text-white/30 mt-0.5 font-medium">
-            {profile?.statusPrefix}
+            {isAdmin ? 'Администратор' : profile?.statusPrefix}
           </p>
         </div>
         <button onClick={handleLogout} className="w-9 h-9 rounded-xl bg-white/4 border border-white/6 flex items-center justify-center text-white/30 hover:bg-white/6 transition-colors">
@@ -1409,7 +1411,8 @@ export default function Page() {
         </button>
       </div>
 
-      {/* Level card with league inside */}
+      {/* Level card with league inside — only for students */}
+      {!isAdmin && (
       <div className="level-card-pro p-5 relative">
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-1">
@@ -1444,6 +1447,7 @@ export default function Page() {
           )}
         </div>
       </div>
+      )}
 
       {/* Stats — achievements + pending in one unified block */}
       <div className="glass-card p-4">
@@ -1629,6 +1633,24 @@ export default function Page() {
      RENDER: ACHIEVEMENTS TAB (now labeled "Ачивки" — Badge Cards)
      ============================================================ */
   const renderAchievements = () => {
+    // Admins don't participate in the badge/achievement system
+    if (isAdmin) {
+      return (
+        <div className="px-5 pb-6 space-y-5 ios-fade-in">
+          <div className="pt-3">
+            <h1 className="ios-large-title">Ачивки</h1>
+            <p className="text-[14px] text-white/30 mt-1">Администратор не участвует в системе достижений</p>
+          </div>
+          <div className="glass-card p-8 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-white/4 flex items-center justify-center mx-auto mb-3">
+              <IconShield size={28} />
+            </div>
+            <p className="text-[14px] text-white/20 font-medium">Ваша роль — модерация достижений учеников</p>
+          </div>
+        </div>
+      )
+    }
+
     const earnedCount = badges.filter(b => b.earned).length
 
     // Define badge card colors for visual variety
@@ -1835,7 +1857,7 @@ export default function Page() {
       {/* Filters */}
       <div className="space-y-2">
         {/* Type filter — horizontal scroll */}
-        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+        <div className="pill-scroll">
           {[
             { key: 'all', label: 'Все' },
             { key: 'SPORT', label: 'Спорт' },
@@ -1851,7 +1873,7 @@ export default function Page() {
         </div>
 
         {/* Level filter — horizontal scroll */}
-        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+        <div className="pill-scroll">
           {[
             { key: 'all', label: 'Все ур.' },
             ...Object.entries(ACHIEVEMENT_LEVELS).map(([key, val]) => ({ key, label: val.label })),
@@ -2254,7 +2276,7 @@ export default function Page() {
               {isAdmin && (
                 <div>
                   <label className="text-[12px] font-medium text-white/30 mb-1.5 block uppercase tracking-wider">Направления</label>
-                  <div className="flex gap-1.5 overflow-x-auto scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+                  <div className="pill-scroll">
                     {Object.entries(DIRECTIONS).map(([key, dir]) => (
                       <button key={key}
                         onClick={() => setFormDirections(prev => ({ ...prev, [key]: !prev[key] }))}
@@ -2287,7 +2309,7 @@ export default function Page() {
               {/* Achievement type */}
               <div>
                 <label className="text-[12px] font-medium text-white/30 mb-1.5 block uppercase tracking-wider">Тип</label>
-                <div className="flex gap-1.5 overflow-x-auto scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+                <div className="pill-scroll">
                   {Object.entries(ACHIEVEMENT_TYPES).map(([key, val]) => (
                     <button key={key} onClick={() => setFormAchievementType(key as AchievementType)}
                       className={`ios-pill shrink-0 ${formAchievementType === key ? 'ios-pill-active' : ''}`}>
@@ -2303,7 +2325,7 @@ export default function Page() {
                   {/* Level */}
                   <div>
                     <label className="text-[12px] font-medium text-white/30 mb-1.5 block uppercase tracking-wider">Уровень</label>
-                    <div className="flex gap-1.5 overflow-x-auto scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+                    <div className="pill-scroll">
                       {Object.entries(ACHIEVEMENT_LEVELS)
                         .filter(([key]) => formAchievementType !== 'OLYMPIAD' || OLYMPIAD_LEVELS.includes(key as typeof OLYMPIAD_LEVELS[number]))
                         .map(([key, val]) => (
@@ -2330,7 +2352,7 @@ export default function Page() {
                     </div>
 
                     {formResultType === 'PLACEMENT' ? (
-                      <div className="flex gap-1.5 overflow-x-auto scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+                      <div className="pill-scroll">
                         {Object.entries(PLACEMENTS).map(([key, val]) => (
                           <button key={key} onClick={() => setFormPlacement(Number(key))}
                             className={`ios-pill shrink-0 ${formPlacement === Number(key) ? 'ios-pill-active' : ''}`}>
@@ -2339,7 +2361,7 @@ export default function Page() {
                         ))}
                       </div>
                     ) : (
-                      <div className="flex gap-1.5 overflow-x-auto scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+                      <div className="pill-scroll">
                         {Object.entries(RESULT_STATUSES).map(([key, val]) => (
                           <button key={key} onClick={() => setFormResultStatus(key)}
                             className={`ios-pill shrink-0 ${formResultStatus === key ? 'ios-pill-active' : ''}`}>
@@ -2542,6 +2564,8 @@ export default function Page() {
               <div className="space-y-4">
                 {pendingAchievements.map((a) => {
                   const currentRejectReason = adminRejectReasons[a.id] || ''
+                  const currentXp = adminXp[a.id] ?? a.xpRequested
+                  const currentDirs = adminDirections[a.id] || {}
                   return (
                     <div key={a.id} className="glass-card p-4 space-y-3">
                       {/* Header */}
@@ -2575,23 +2599,23 @@ export default function Page() {
                         <p className="text-[13px] text-white/30 italic">«{a.comment}»</p>
                       )}
 
-                      {/* XP to award */}
+                      {/* XP to award — per-achievement */}
                       <div>
                         <label className="text-[11px] font-medium text-white/25 mb-1 block uppercase tracking-wider">XP начислить</label>
-                        <input type="number" value={adminXp || a.xpRequested}
-                          onChange={(e) => setAdminXp(Number(e.target.value))}
+                        <input type="number" value={currentXp}
+                          onChange={(e) => setAdminXp(prev => ({ ...prev, [a.id]: Number(e.target.value) }))}
                           className="glass-input w-full px-3 py-2 text-[14px] text-white bg-transparent focus:ring-0 focus:shadow-none"
                           min={0} />
                       </div>
 
-                      {/* Directions — multiple selection */}
+                      {/* Directions — per-achievement multiple selection */}
                       <div>
                         <label className="text-[11px] font-medium text-white/25 mb-1.5 block uppercase tracking-wider">Направления</label>
-                        <div className="flex gap-1.5 flex-wrap">
+                        <div className="pill-scroll">
                           {Object.entries(DIRECTIONS).map(([key, dir]) => (
                             <button key={key}
-                              onClick={() => setAdminDirections(prev => ({ ...prev, [key]: !prev[key] }))}
-                              className={`ios-pill flex items-center gap-1.5 ${adminDirections[key] ? 'ios-pill-active' : ''}`}>
+                              onClick={() => setAdminDirections(prev => ({ ...prev, [a.id]: { ...prev[a.id], [key]: !prev[a.id]?.[key] } }))}
+                              className={`ios-pill flex items-center gap-1.5 shrink-0 ${currentDirs[key] ? 'ios-pill-active' : ''}`}>
                               <span className="w-2 h-2 rounded-full" style={{ background: dir.color }} />
                               {dir.label}
                             </button>
@@ -2611,8 +2635,8 @@ export default function Page() {
                       {/* Action buttons */}
                       <div className="flex gap-2">
                         <button onClick={() => {
-                          const selectedDirs = Object.entries(adminDirections).filter(([, v]) => v).map(([k]) => k).join(',')
-                          handleModerate(a.id, 'approve', adminXp || a.xpRequested, selectedDirs || undefined)
+                          const selectedDirs = Object.entries(currentDirs).filter(([, v]) => v).map(([k]) => k).join(',')
+                          handleModerate(a.id, 'approve', currentXp, selectedDirs || undefined)
                         }}
                           className="flex-1 py-2.5 rounded-xl bg-[#34C759]/15 text-[#34C759] text-[13px] font-semibold flex items-center justify-center gap-1.5 active:scale-95 ios-spring">
                           <IconCheck /> Одобрить
@@ -2622,7 +2646,7 @@ export default function Page() {
                             toast.error('Укажите причину отклонения')
                             return
                           }
-                          const selectedDirs = Object.entries(adminDirections).filter(([, v]) => v).map(([k]) => k).join(',')
+                          const selectedDirs = Object.entries(currentDirs).filter(([, v]) => v).map(([k]) => k).join(',')
                           handleModerate(a.id, 'reject', undefined, selectedDirs || undefined, currentRejectReason)
                         }}
                           className="flex-1 py-2.5 rounded-xl bg-[#FF3B30]/15 text-[#FF3B30] text-[13px] font-semibold flex items-center justify-center gap-1.5 active:scale-95 ios-spring">

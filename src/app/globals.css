@@ -402,12 +402,27 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* Scrollbar — minimal */
-::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar { width: 3px; height: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.06); border-radius: 2px; }
 
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Horizontal pill scroll container — scrollable right-to-left with touch */
+.pill-scroll {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-snap-type: x proximity;
+  padding-bottom: 2px;
+}
+.pill-scroll::-webkit-scrollbar { display: none; }
+.pill-scroll > * { scroll-snap-align: start; }
 
 * { scroll-behavior: smooth; }
 

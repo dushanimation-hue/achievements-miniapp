@@ -2,14 +2,14 @@ import { db } from '@/lib/db';
 import { updateChallengeProgress } from '@/lib/challengeUtils';
 import { NextRequest, NextResponse } from 'next/server';
 
-// XP base values per achievement level
+// XP base values per achievement level (×4 multiplier already applied)
 const LEVEL_XP_BASE: Record<string, number> = {
-  SCHOOL: 2,
-  DISTRICT: 4,
-  CITY: 7,
-  REGIONAL: 12,
-  ALL_RUSSIAN: 20,
-  INTERNATIONAL: 25,
+  SCHOOL: 8,
+  DISTRICT: 16,
+  CITY: 28,
+  REGIONAL: 48,
+  ALL_RUSSIAN: 80,
+  INTERNATIONAL: 100,
 };
 
 // Placement multiplier
