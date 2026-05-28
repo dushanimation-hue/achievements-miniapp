@@ -1,4 +1,9 @@
-import { db } from '@/lib/db'
+import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcryptjs'
+
+const db = new PrismaClient()
+
+// Passwords will be hashed inside the async seed function
 
 const USERS = [
   { id: 'u1', telegramId: '1001', name: 'Иван Иванов', username: 'ivan_ivanov', role: 'STUDENT', totalXp: 22, level: 3, league: 'bronze', statusEmoji: '', statusPrefix: 'Олимпиадник' },
@@ -9,8 +14,7 @@ const USERS = [
   { id: 'u6', telegramId: '1006', name: 'Елена Смирнова', username: 'lena_s', role: 'STUDENT', totalXp: 0, level: 1, league: 'bronze', statusEmoji: '', statusPrefix: 'Новичок' },
   { id: 'u7', telegramId: '1007', name: 'Павел Морозов', username: 'pavel_m', role: 'STUDENT', totalXp: 20, level: 2, league: 'bronze', statusEmoji: '', statusPrefix: 'Активный' },
   { id: 'u8', telegramId: '1008', name: 'Софья Волкова', username: 'sofa_v', role: 'STUDENT', totalXp: 12, level: 2, league: 'bronze', statusEmoji: '', statusPrefix: 'Активный' },
-  { id: 'u_admin', telegramId: 'admin_tg', login: 'admin', password: 'admin123', name: 'Ольга Васильева', username: 'olga_v', role: 'ADMIN', totalXp: 0, level: 7, league: 'gold', statusEmoji: '', statusPrefix: 'Администратор' },
-  { id: 'u_student', telegramId: 'student_tg', login: 'student', password: 'student123', name: 'Иван Иванов', username: 'ivan_i', role: 'STUDENT', totalXp: 22, level: 3, league: 'bronze', statusEmoji: '', statusPrefix: 'Олимпиадник' },
+  // Admin and student login accounts will be created with hashed passwords in seed()
 ]
 
 const ACHIEVEMENTS = [
@@ -18,18 +22,19 @@ const ACHIEVEMENTS = [
     id: 'a1', userId: 'u_student', title: 'Олимпиада по математике', description: 'Занял 1 место в школьной олимпиаде',
     category: 'STUDY', direction: 'KNOWLEDGE', achievementType: 'OLYMPIAD', achievementLevel: 'SCHOOL',
     resultType: 'PLACEMENT', placement: 1,
-    xpRequested: 2, xpAwarded: 2, status: 'APPROVED', achievementDate: '2026-05-15',
+    xpRequested: 8, xpAwarded: 8, status: 'APPROVED', achievementDate: '2026-05-15',
     reviewedBy: 'u_admin', reviewedAt: new Date('2026-05-16'),
   },
   {
     id: 'a2', userId: 'u_student', title: 'Конкурс чтецов', description: 'Призёр в районном конкурсе чтецов',
     category: 'ART', direction: 'SKILLS', achievementType: 'CREATIVE', achievementLevel: 'DISTRICT',
     resultType: 'STATUS', resultStatus: 'PRIZEWINNER',
-    xpRequested: 2, xpAwarded: 0, status: 'PENDING', achievementDate: '2026-05-10',
+    xpRequested: 10, xpAwarded: 0, status: 'PENDING', achievementDate: '2026-05-10',
   },
   {
     id: 'a3', userId: 'u_student', title: 'Чтение 5 книг за месяц', description: 'Прочитал 5 книг за апрель',
-    category: 'OTHER', direction: 'KNOWLEDGE', achievementType: 'FREE_FORM',
+    category: 'OTHER', direction: 'KNOWLEDGE', achievementType: 'FREE_FORM', achievementLevel: 'SCHOOL',
+    resultType: 'STATUS', resultStatus: 'WINNER',
     xpRequested: 8, xpAwarded: 0, status: 'REJECTED', achievementDate: '2026-05-05',
     reviewComment: 'Нужно указать названия книг', reviewedBy: 'u_admin', reviewedAt: new Date('2026-05-06'),
   },
@@ -37,73 +42,76 @@ const ACHIEVEMENTS = [
     id: 'a4', userId: 'u_student', title: 'Чемпионат по плаванию', description: '2 место в городских соревнованиях',
     category: 'SPORT', direction: 'WILL', achievementType: 'SPORT', achievementLevel: 'CITY',
     resultType: 'PLACEMENT', placement: 2,
-    xpRequested: 6, xpAwarded: 6, status: 'APPROVED', achievementDate: '2026-05-01',
+    xpRequested: 22, xpAwarded: 22, status: 'APPROVED', achievementDate: '2026-05-01',
     reviewedBy: 'u_admin', reviewedAt: new Date('2026-05-02'),
   },
   {
     id: 'a5', userId: 'u_student', title: 'Волонтёр в приюте', description: 'Помогал в приюте для животных',
-    category: 'COMMUNITY', direction: 'COMMUNITY', achievementType: 'FREE_FORM',
-    xpRequested: 10, xpAwarded: 10, status: 'APPROVED', achievementDate: '2026-04-28',
+    category: 'COMMUNITY', direction: 'COMMUNITY', achievementType: 'FREE_FORM', achievementLevel: 'SCHOOL',
+    resultType: 'STATUS', resultStatus: 'PARTICIPANT',
+    xpRequested: 8, xpAwarded: 8, status: 'APPROVED', achievementDate: '2026-04-28',
     reviewedBy: 'u_admin', reviewedAt: new Date('2026-04-29'),
   },
   {
     id: 'a6', userId: 'u_student', title: 'ВСОШ по информатике', description: 'Победитель регионального этапа ВСОШ',
     category: 'STUDY', direction: 'KNOWLEDGE', achievementType: 'OLYMPIAD', achievementLevel: 'REGIONAL',
     resultType: 'STATUS', resultStatus: 'WINNER',
-    xpRequested: 10, xpAwarded: 4, status: 'APPROVED', achievementDate: '2026-04-20',
+    xpRequested: 38, xpAwarded: 38, status: 'APPROVED', achievementDate: '2026-04-20',
     reviewedBy: 'u_admin', reviewedAt: new Date('2026-04-21'),
   },
   {
     id: 'a7', userId: 'u1', title: 'ВСОШ по физике', description: '1 место на Всероссийской олимпиаде',
     category: 'STUDY', direction: 'KNOWLEDGE', achievementType: 'OLYMPIAD', achievementLevel: 'ALL_RUSSIAN',
     resultType: 'PLACEMENT', placement: 1,
-    xpRequested: 20, xpAwarded: 20, status: 'APPROVED', achievementDate: '2026-04-15',
+    xpRequested: 80, xpAwarded: 80, status: 'APPROVED', achievementDate: '2026-04-15',
     reviewedBy: 'u_admin', reviewedAt: new Date('2026-04-16'),
   },
   {
     id: 'a8', userId: 'u2', title: 'Чемпионат по лёгкой атлетике', description: '1 место в региональных соревнованиях',
     category: 'SPORT', direction: 'WILL', achievementType: 'SPORT', achievementLevel: 'REGIONAL',
     resultType: 'PLACEMENT', placement: 1,
-    xpRequested: 12, xpAwarded: 12, status: 'APPROVED', achievementDate: '2026-05-10',
+    xpRequested: 48, xpAwarded: 48, status: 'APPROVED', achievementDate: '2026-05-10',
     reviewedBy: 'u_admin', reviewedAt: new Date('2026-05-11'),
   },
   {
     id: 'a9', userId: 'u3', title: 'Фестиваль танца', description: 'Лауреат 1 степени в городском фестивале',
     category: 'ART', direction: 'SKILLS', achievementType: 'CREATIVE', achievementLevel: 'CITY',
     resultType: 'STATUS', resultStatus: 'LAUREATE_1',
-    xpRequested: 6, xpAwarded: 6, status: 'APPROVED', achievementDate: '2026-05-05',
+    xpRequested: 25, xpAwarded: 25, status: 'APPROVED', achievementDate: '2026-05-05',
     reviewedBy: 'u_admin', reviewedAt: new Date('2026-05-06'),
   },
   {
     id: 'a10', userId: 'u4', title: 'Хакатон Code Battle', description: '2 место на хакатоне среди школьников',
     category: 'STUDY', direction: 'SKILLS', achievementType: 'OLYMPIAD', achievementLevel: 'CITY',
     resultType: 'PLACEMENT', placement: 2,
-    xpRequested: 6, xpAwarded: 6, status: 'APPROVED', achievementDate: '2026-05-12',
+    xpRequested: 22, xpAwarded: 22, status: 'APPROVED', achievementDate: '2026-05-12',
     reviewedBy: 'u_admin', reviewedAt: new Date('2026-05-13'),
   },
   {
     id: 'a11', userId: 'u5', title: 'Проект "Эко-монитор"', description: 'Разработал прототип мониторинга экологии',
-    category: 'OTHER', direction: 'SKILLS', achievementType: 'FREE_FORM',
-    xpRequested: 6, xpAwarded: 6, status: 'APPROVED', achievementDate: '2026-05-10',
+    category: 'OTHER', direction: 'SKILLS', achievementType: 'FREE_FORM', achievementLevel: 'CITY',
+    resultType: 'STATUS', resultStatus: 'PRIZEWINNER',
+    xpRequested: 17, xpAwarded: 17, status: 'APPROVED', achievementDate: '2026-05-10',
     reviewedBy: 'u_admin', reviewedAt: new Date('2026-05-11'),
   },
   {
     id: 'a12', userId: 'u6', title: 'Благотворительный концерт', description: 'Организовала концерт для сбора средств',
-    category: 'COMMUNITY', direction: 'MORALITY', achievementType: 'FREE_FORM',
-    xpRequested: 14, xpAwarded: 0, status: 'PENDING', achievementDate: '2026-05-20',
+    category: 'COMMUNITY', direction: 'MORALITY', achievementType: 'FREE_FORM', achievementLevel: 'SCHOOL',
+    resultType: 'STATUS', resultStatus: 'PARTICIPANT',
+    xpRequested: 8, xpAwarded: 0, status: 'PENDING', achievementDate: '2026-05-20',
   },
   {
     id: 'a13', userId: 'u7', title: 'ВСОШ по математике', description: '1 место на Всероссийской олимпиаде',
     category: 'STUDY', direction: 'KNOWLEDGE', achievementType: 'OLYMPIAD', achievementLevel: 'ALL_RUSSIAN',
     resultType: 'PLACEMENT', placement: 1,
-    xpRequested: 20, xpAwarded: 20, status: 'APPROVED', achievementDate: '2026-03-15',
+    xpRequested: 80, xpAwarded: 80, status: 'APPROVED', achievementDate: '2026-03-15',
     reviewedBy: 'u_admin', reviewedAt: new Date('2026-03-16'),
   },
   {
     id: 'a14', userId: 'u8', title: 'Региональная олимпиада по биологии', description: '1 место в региональной олимпиаде',
     category: 'STUDY', direction: 'KNOWLEDGE', achievementType: 'OLYMPIAD', achievementLevel: 'REGIONAL',
     resultType: 'PLACEMENT', placement: 1,
-    xpRequested: 12, xpAwarded: 12, status: 'APPROVED', achievementDate: '2026-04-20',
+    xpRequested: 48, xpAwarded: 48, status: 'APPROVED', achievementDate: '2026-04-20',
     reviewedBy: 'u_admin', reviewedAt: new Date('2026-04-21'),
   },
 ]
@@ -163,6 +171,10 @@ const CHALLENGE_PARTICIPANTS = [
 async function seed() {
   console.log('Seeding database...')
 
+  // Hash passwords securely
+  const ADMIN_HASH = await bcrypt.hash('Desm00nt$', 10)
+  const STUDENT_HASH = await bcrypt.hash('student123', 10)
+
   // Clear existing data
   await db.challengeParticipant.deleteMany()
   await db.achievementBadge.deleteMany()
@@ -173,10 +185,50 @@ async function seed() {
   await db.user.deleteMany()
   await db.faculty.deleteMany()
 
-  // Create users
+  // Create regular users
   for (const u of USERS) {
     await db.user.create({ data: u })
   }
+
+  // Create admin with bcrypt-hashed password
+  await db.user.create({
+    data: {
+      id: 'u_admin',
+      telegramId: 'admin_tg',
+      login: 'Desmont',
+      password: ADMIN_HASH,
+      name: 'Денис Картузов',
+      username: 'desmont',
+      role: 'ADMIN',
+      totalXp: 0,
+      level: 7,
+      league: 'gold',
+      statusEmoji: '',
+      statusPrefix: 'Администратор',
+    },
+  })
+
+  // Create demo student with bcrypt-hashed password
+  await db.user.create({
+    data: {
+      id: 'u_student',
+      telegramId: 'student_tg',
+      login: 'student',
+      password: STUDENT_HASH,
+      name: 'Иван Иванов',
+      username: 'ivan_i',
+      role: 'STUDENT',
+      totalXp: 22,
+      level: 3,
+      league: 'bronze',
+      statusEmoji: '',
+      statusPrefix: 'Олимпиадник',
+      fullName: 'Иванов Иван Иванович',
+      classYear: 9,
+      classLetter: 'А',
+      schoolCode: '11607L',
+    },
+  })
 
   // Create achievements
   for (const a of ACHIEVEMENTS) {
@@ -217,7 +269,7 @@ async function seed() {
     })
   }
 
-  console.log('Seeding complete!')
+  console.log('Seeding complete! Admin: Desmont / Desm00nt$ (bcrypt hashed)')
 }
 
 seed()

@@ -710,7 +710,9 @@ export default function Home() {
 
   const fetchPending = useCallback(async () => {
     try {
-      const res = await fetch(`/api/moderate?status=PENDING`)
+      const res = await fetch(`/api/moderate?status=PENDING`, {
+        headers: { 'x-admin-id': userId || '' },
+      })
       if (!res.ok) return
       const data = await res.json()
       setPendingAchievements(data.achievements || [])
@@ -721,14 +723,16 @@ export default function Home() {
 
   const fetchAdminStats = useCallback(async () => {
     try {
-      const res = await fetch(`/api/admin/stats`)
+      const res = await fetch(`/api/admin/stats`, {
+        headers: { 'x-admin-id': userId || '' },
+      })
       if (!res.ok) return
       const data = await res.json()
       setAdminStats(data)
     } catch (e) {
       console.error('Stats fetch error:', e)
     }
-  }, [])
+  }, [userId])
 
   const fetchChallenges = useCallback(async () => {
     if (!userId) return
@@ -744,7 +748,9 @@ export default function Home() {
 
   const fetchStudents = useCallback(async () => {
     try {
-      const res = await fetch('/api/students')
+      const res = await fetch('/api/students', {
+        headers: { 'x-admin-id': userId || '' },
+      })
       if (!res.ok) return
       const data = await res.json()
       setStudents(data.students || [])
@@ -876,7 +882,7 @@ export default function Home() {
     try {
       const res = await fetch('/api/moderate', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-admin-id': userId || '' },
         body: JSON.stringify({
           achievementId, action, xpAwarded, directions, reviewComment: action === 'reject' ? reviewComment : undefined, adminUserId: userId,
         }),

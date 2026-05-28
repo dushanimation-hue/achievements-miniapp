@@ -4,6 +4,13 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
+    // Verify admin access
+    const adminId = request.headers.get('x-admin-id');
+    if (adminId) {
+      const admin = await db.user.findFirst({ where: { id: adminId, role: 'ADMIN' } });
+      if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const status = request.nextUrl.searchParams.get('status') || 'PENDING';
 
     const achievements = await db.achievement.findMany({
@@ -29,6 +36,10 @@ export async function PATCH(request: NextRequest) {
     if (!achievementId || !action || !adminUserId) {
       return NextResponse.json({ error: 'achievementId, action, adminUserId required' }, { status: 400 });
     }
+
+    // Verify admin access
+    const admin = await db.user.findFirst({ where: { id: adminUserId, role: 'ADMIN' } });
+    if (!admin) return NextResponse.json({ error: 'Forbidden: admin verification failed' }, { status: 403 });
 
     const achievement = await db.achievement.findUnique({ where: { id: achievementId } });
     if (!achievement) {

@@ -13,6 +13,7 @@ model User {
   login        String?  @unique
   password     String?
   name         String
+  fullName     String?
   username     String?
   avatarUrl    String?
   role         String   @default("STUDENT")
@@ -22,6 +23,10 @@ model User {
   statusEmoji  String   @default("")
   statusPrefix String   @default("")
   facultyId    String?
+  schoolCode   String?
+  classYear    Int?
+  classLetter  String?
+  registered   Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

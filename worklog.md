@@ -143,3 +143,26 @@ Stage Summary:
   5. Awards rewardXp to the user's totalXp
 - Users can now join challenges via the "Участвовать" button
 - Completed challenges show a success message with the reward XP
+---
+Task ID: 1-6
+Agent: main
+Task: Fix 5 bugs from user + secure admin data
+
+Work Log:
+- Fixed registration SVG icon: removed from separate square block, now displayed inline with larger size (44px)
+- Fixed admin login: updated seed.ts to create Desmont / Desm00nt$ admin account
+- Fixed FREE_FORM achievement detail view: removed condition that hid level and result fields
+- Fixed filter scroll: replaced overflow-x-auto with flex-wrap for reliable display in Telegram WebApp
+- Secured admin data: installed bcryptjs, all passwords now hashed with bcrypt
+- Updated auth API: supports both bcrypt and plaintext (for migration), auto-upgrades plaintext to bcrypt on login
+- Secured admin setup API: requires x-setup-secret header to prevent unauthorized access
+- Removed admin demo button from login screen (only student demo remains)
+- Fixed build script: removed destructive `prisma db push --accept-data-loss` from build command
+- Updated seed.ts: all passwords pre-hashed with bcrypt, FREE_FORM achievements now include level and result
+- Added school data (fullName, classYear, classLetter, schoolCode) to demo student user
+
+Stage Summary:
+- All 5 reported bugs fixed
+- Admin credentials protected with bcrypt hashing
+- Build script no longer destroys production data
+- Need to call /api/admin/setup on Vercel after deployment to create admin in Supabase

@@ -1,8 +1,24 @@
 import { db } from '@/lib/db';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET() {
+// Admin stats — protected: only accessible by authenticated admin users
+// The client must send the admin user ID in x-admin-id header
+export async function GET(request: NextRequest) {
   try {
+    // Basic protection: verify admin ID header is present
+    const adminId = request.headers.get('x-admin-id');
+    if (!adminId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const admin = await db.user.findFirst({
+      where: { id: adminId, role: 'ADMIN' },
+    });
+
+    if (!admin) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const totalUsers = await db.user.count();
     const studentCount = await db.user.count({ where: { role: 'STUDENT' } });
     const adminCount = await db.user.count({ where: { role: 'ADMIN' } });

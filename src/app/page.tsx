@@ -12,7 +12,8 @@ interface UserProfile {
   totalXp: number; level: number; levelName: string; xpInLevel: number;
   xpToNextLevel: number; nextLevelXp: number | null; nextLevelName: string | null;
   statusEmoji: string; statusPrefix: string; facultyId: string | null;
-  league: string;
+  league: string; fullName: string | null; classYear: number | null;
+  classLetter: string | null; schoolCode: string | null;
 }
 interface Achievement {
   id: string; title: string; description: string | null; category: string;
@@ -32,7 +33,7 @@ interface LeaderboardEntry {
   faculty: null; achievementCount: number; league: string;
 }
 interface LevelInfo { level: number; name: string; min: number; max: number }
-interface AuthUser { id: string; name: string; login: string; role: string; faculty: null }
+interface AuthUser { id: string; name: string; login: string; role: string; faculty: null; registered?: boolean; schoolCode?: string | null; classYear?: number | null; classLetter?: string | null; fullName?: string | null }
 interface BadgeItem {
   id: string; name: string; description: string; emoji: string;
   conditionType: string; conditionValue: number;
@@ -74,13 +75,16 @@ const ACHIEVEMENT_TYPES: Record<string, { label: string }> = {
 }
 
 const ACHIEVEMENT_LEVELS: Record<string, { label: string; baseXp: number }> = {
-  SCHOOL: { label: 'Школьный', baseXp: 2 },
-  DISTRICT: { label: 'Районный', baseXp: 4 },
-  CITY: { label: 'Городской', baseXp: 7 },
-  REGIONAL: { label: 'Региональный', baseXp: 12 },
-  ALL_RUSSIAN: { label: 'Всероссийский', baseXp: 20 },
-  INTERNATIONAL: { label: 'Международный', baseXp: 25 },
+  SCHOOL: { label: 'Школьный', baseXp: 8 },
+  DISTRICT: { label: 'Районный', baseXp: 16 },
+  CITY: { label: 'Городской', baseXp: 28 },
+  REGIONAL: { label: 'Региональный', baseXp: 48 },
+  ALL_RUSSIAN: { label: 'Всероссийский', baseXp: 80 },
+  INTERNATIONAL: { label: 'Международный', baseXp: 100 },
 }
+
+// Levels available for ВСОШ/РЭШ — max is Всероссийский (no Международный)
+const OLYMPIAD_LEVELS = ['SCHOOL', 'DISTRICT', 'CITY', 'REGIONAL', 'ALL_RUSSIAN'] as const
 
 const PLACEMENTS: Record<number, { label: string; multiplier: number }> = {
   1: { label: '1 место', multiplier: 1.0 },
@@ -107,6 +111,15 @@ const DIRECTIONS: Record<string, { label: string; color: string }> = {
   COMMUNITY: { label: 'Сообщество', color: '#34C759' },
   MORALITY: { label: 'Нравственность', color: '#AF52DE' },
 }
+
+// Only the 5 real directions (no ALL) — used for radar chart & profile display
+const DIRECTIONS_PROFILE: { key: string; label: string; color: string }[] = [
+  { key: 'KNOWLEDGE', label: 'Знание', color: '#007AFF' },
+  { key: 'WILL', label: 'Воля', color: '#FF9F0A' },
+  { key: 'SKILLS', label: 'Навыки', color: '#5856D6' },
+  { key: 'COMMUNITY', label: 'Сообщество', color: '#34C759' },
+  { key: 'MORALITY', label: 'Нравственность', color: '#AF52DE' },
+]
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; dotColor: string }> = {
   APPROVED: { label: 'Одобрено', color: 'text-[#34C759]', dotColor: 'bg-[#34C759]' },
@@ -280,9 +293,9 @@ function IconCheck() {
   )
 }
 
-function IconShield() {
+function IconShield({ size = 24 }: { size?: number } = {}) {
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <path d="M12 2L4 6V12C4 16.4183 7.58172 20.5 12 22C16.4183 20.5 20 16.4183 20 12V6L12 2Z"
         stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" strokeLinejoin="round" fill="rgba(255,255,255,0.04)" />
       <path d="M9 12L11 14L15 10" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -371,6 +384,94 @@ function AchievementTypeIcon({ type }: { type: string | null }) {
     case 'FREE_FORM': return <IconFreeForm />
     default: return <IconAchievements active={false} />
   }
+}
+
+/* ============================================================
+   RADAR CHART — 5-direction "wind rose" for profile
+   ============================================================ */
+
+function RadarChart({ values }: { values: { key: string; label: string; color: string; xp: number }[] }) {
+  const size = 280
+  const cx = size / 2
+  const cy = size / 2
+  const maxR = 80
+  const n = values.length
+
+  // Adaptive scale: max value rounded up to nearest nice number
+  const maxVal = Math.max(...values.map(v => v.xp), 1)
+  const niceMax = Math.ceil(maxVal / 5) * 5 || 5
+
+  // Pentagon vertices (start from top, go clockwise)
+  const angleStep = (2 * Math.PI) / n
+  const startAngle = -Math.PI / 2 // top
+  const getPoint = (i: number, r: number) => ({
+    x: cx + r * Math.cos(startAngle + i * angleStep),
+    y: cy + r * Math.sin(startAngle + i * angleStep),
+  })
+
+  // Grid rings (3 levels)
+  const rings = [0.25, 0.5, 1.0]
+
+  // Data polygon
+  const dataPoints = values.map((v, i) => {
+    const r = maxR * Math.min(v.xp / niceMax, 1)
+    return getPoint(i, r)
+  })
+  const dataPath = dataPoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ') + ' Z'
+
+  // Text anchor calculation per vertex
+  const getAnchor = (i: number): 'middle' | 'start' | 'end' => {
+    if (i === 0) return 'middle'      // top
+    if (i === 1) return 'start'       // top-right
+    if (i === 2) return 'start'       // bottom-right
+    if (i === 3) return 'end'         // bottom-left
+    return 'end'                       // top-left (i === 4)
+  }
+
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="mx-auto" style={{ overflow: 'visible' }}>
+      {/* Grid rings */}
+      {rings.map((scale, ri) => {
+        const pts = values.map((_, i) => getPoint(i, maxR * scale))
+        const path = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ') + ' Z'
+        return <path key={ri} d={path} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={1} />
+      })}
+
+      {/* Axis lines */}
+      {values.map((_, i) => {
+        const p = getPoint(i, maxR)
+        return <line key={i} x1={cx} y1={cy} x2={p.x} y2={p.y} stroke="rgba(255,255,255,0.06)" strokeWidth={1} />
+      })}
+
+      {/* Data polygon fill */}
+      <path d={dataPath} fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.3)" strokeWidth={1.5} />
+
+      {/* Data points with color */}
+      {dataPoints.map((p, i) => (
+        <circle key={i} cx={p.x} cy={p.y} r={4} fill={values[i].color} stroke="rgba(0,0,0,0.3)" strokeWidth={1} />
+      ))}
+
+      {/* Labels */}
+      {values.map((v, i) => {
+        const labelR = maxR + 28
+        const p = getPoint(i, labelR)
+        const anchor = getAnchor(i)
+        // Fine-tune vertical position
+        const yLabelOffset = i === 0 ? -6 : i === 1 ? -2 : i === 2 ? 4 : i === 3 ? 4 : -2
+        const yXpOffset = yLabelOffset + 13
+        return (
+          <g key={i}>
+            <text x={p.x} y={p.y + yLabelOffset} textAnchor={anchor} fill="rgba(255,255,255,0.5)" fontSize={10} fontWeight={500}>
+              {v.label}
+            </text>
+            <text x={p.x} y={p.y + yXpOffset} textAnchor={anchor} fill={v.color} fontSize={11} fontWeight={700}>
+              {v.xp} XP
+            </text>
+          </g>
+        )
+      })}
+    </svg>
+  )
 }
 
 /* ============================================================
@@ -471,8 +572,8 @@ function LoginScreen({ onLogin }: { onLogin: (user: AuthUser) => void }) {
 
       <div className="glass-login p-8 w-full max-w-sm relative z-10">
         <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-white/8 border border-white/12 flex items-center justify-center mx-auto mb-4">
-            <IconShield />
+          <div className="flex items-center justify-center mx-auto mb-4">
+            <IconShield size={44} />
           </div>
           <h1 className="text-[22px] font-bold text-white tracking-tight">Достижения</h1>
           <p className="text-[14px] text-white/30 mt-1.5">Платформа лицея</p>
@@ -501,21 +602,242 @@ function LoginScreen({ onLogin }: { onLogin: (user: AuthUser) => void }) {
           </button>
         </div>
 
-        <div className="mt-6 pt-5 border-t border-white/6">
-          <p className="text-[11px] text-white/20 text-center uppercase tracking-wider mb-3">Демо-доступ</p>
-          <div className="grid grid-cols-2 gap-2">
-            <button onClick={() => { setLogin('admin'); setPassword('admin123') }}
-              className="py-2 px-3 rounded-xl bg-white/4 border border-white/6 text-[12px] text-white/40 hover:bg-white/6 transition-colors text-center">
-              <div className="font-semibold text-white/60">admin</div>
-              <div>Администратор</div>
+
+      </div>
+    </div>
+  )
+}
+
+/* ============================================================
+   REGISTRATION SCREEN — Shown when Telegram user has no school info
+   Step 1: Enter 6-char school code (11607L)
+   Step 2: Enter ФИО + class (year + letter)
+   ============================================================ */
+
+function RegistrationScreen({ userId, onComplete }: { userId: string; onComplete: (user: AuthUser) => void }) {
+  const [step, setStep] = useState<'code' | 'profile'>('code')
+  const [code, setCode] = useState(['', '', '', '', '', ''])
+  const [codeError, setCodeError] = useState('')
+  const [verifying, setVerifying] = useState(false)
+  const codeRefs = useRef<(HTMLInputElement | null)[]>([])
+  const [fullName, setFullName] = useState('')
+  const [classYear, setClassYear] = useState('')
+  const [classLetter, setClassLetter] = useState('')
+  const [profileError, setProfileError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [schoolName, setSchoolName] = useState('')
+
+  // Handle code input — one char per square
+  const handleCodeChange = (index: number, value: string) => {
+    if (value.length > 1) return
+    const newCode = [...code]
+    newCode[index] = value.toUpperCase()
+    setCode(newCode)
+    setCodeError('')
+
+    // Auto-advance to next input
+    if (value && index < 5) {
+      codeRefs.current[index + 1]?.focus()
+    }
+
+    // Auto-submit when all 6 chars are filled
+    if (value && index === 5) {
+      const fullCode = newCode.join('')
+      verifyCode(fullCode)
+    }
+  }
+
+  const handleCodeKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && !code[index] && index > 0) {
+      codeRefs.current[index - 1]?.focus()
+    }
+  }
+
+  const handleCodePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault()
+    const pasted = e.clipboardData.getData('text').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6)
+    const newCode = [...code]
+    for (let i = 0; i < pasted.length; i++) {
+      newCode[i] = pasted[i]
+    }
+    setCode(newCode)
+    if (pasted.length === 6) {
+      verifyCode(pasted.join(''))
+    } else if (pasted.length > 0) {
+      codeRefs.current[Math.min(pasted.length, 5)]?.focus()
+    }
+  }
+
+  const verifyCode = async (fullCode: string) => {
+    if (fullCode.length !== 6) return
+    setVerifying(true)
+    setCodeError('')
+    try {
+      const res = await fetch(`/api/auth/register?code=${fullCode}`)
+      const data = await res.json()
+      if (data.valid) {
+        setSchoolName(data.schoolName)
+        setStep('profile')
+      } else {
+        setCodeError('Неверный код школы')
+        setCode(['', '', '', '', '', ''])
+        codeRefs.current[0]?.focus()
+      }
+    } catch {
+      setCodeError('Ошибка проверки')
+    } finally {
+      setVerifying(false)
+    }
+  }
+
+  const handleSubmit = async () => {
+    if (!fullName.trim()) { setProfileError('Введите ФИО'); return }
+    if (!classYear) { setProfileError('Выберите класс'); return }
+    setProfileError('')
+    setSubmitting(true)
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          schoolCode: code.join(''),
+          fullName: fullName.trim(),
+          classYear: parseInt(classYear),
+          classLetter: classLetter.trim(),
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setProfileError(data.error || 'Ошибка регистрации')
+        return
+      }
+      // Update auth user and clear registration flag
+      const updatedUser = data.user as AuthUser
+      localStorage.setItem('auth_user', JSON.stringify(updatedUser))
+      onComplete(updatedUser)
+    } catch {
+      setProfileError('Ошибка сети')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-5 relative overflow-hidden">
+      <div className="bg-orb bg-orb-1" />
+      <div className="bg-orb bg-orb-2" />
+      <div className="bg-orb bg-orb-3" />
+
+      <div className="glass-login p-8 w-full max-w-sm relative z-10">
+        {step === 'code' ? (
+          <>
+            <div className="text-center mb-8">
+              <h1 className="text-[22px] font-bold text-white tracking-tight">Регистрация</h1>
+              <p className="text-[14px] text-white/30 mt-1.5">Введите код вашей школы</p>
+            </div>
+
+            {/* 6 square code inputs */}
+            <div className="flex justify-center gap-2.5 mb-5">
+              {code.map((char, i) => (
+                <input
+                  key={i}
+                  ref={el => { codeRefs.current[i] = el }}
+                  type="text"
+                  inputMode="text"
+                  maxLength={1}
+                  value={char}
+                  onChange={(e) => handleCodeChange(i, e.target.value)}
+                  onKeyDown={(e) => handleCodeKeyDown(i, e)}
+                  onPaste={i === 0 ? handleCodePaste : undefined}
+                  className={`w-11 h-13 text-center text-[18px] font-bold rounded-xl border transition-all duration-200 outline-none
+                    ${char
+                      ? 'bg-white/8 border-white/20 text-white'
+                      : 'bg-white/3 border-white/8 text-white'
+                    }
+                    ${codeError ? 'border-[#FF3B30]/50' : ''}
+                    focus:border-white/30 focus:bg-white/6
+                  `}
+                  style={{ caretColor: 'transparent' }}
+                />
+              ))}
+            </div>
+
+            {/* Empty square dot indicators */}
+            <div className="flex justify-center gap-2.5 mb-4 -mt-3">
+              {code.map((char, i) => (
+                <div key={i} className="w-11 flex justify-center">
+                  {!char && <div className="w-1.5 h-1.5 rounded-full bg-white/10" />}
+                </div>
+              ))}
+            </div>
+
+            {codeError && (
+              <p className="text-[13px] text-[#FF3B30] text-center mb-3">{codeError}</p>
+            )}
+
+            {verifying && (
+              <div className="flex justify-center mb-3">
+                <div className="w-5 h-5 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+              </div>
+            )}
+
+            <button
+              onClick={() => verifyCode(code.join(''))}
+              disabled={code.some(c => !c) || verifying}
+              className="ios-button-primary w-full disabled:opacity-30"
+            >
+              Проверить код
             </button>
-            <button onClick={() => { setLogin('student'); setPassword('student123') }}
-              className="py-2 px-3 rounded-xl bg-white/4 border border-white/6 text-[12px] text-white/40 hover:bg-white/6 transition-colors text-center">
-              <div className="font-semibold text-white/60">student</div>
-              <div>Ученик</div>
-            </button>
-          </div>
-        </div>
+          </>
+        ) : (
+          <>
+            <div className="text-center mb-6">
+              <h1 className="text-[22px] font-bold text-white tracking-tight">Профиль</h1>
+              <p className="text-[14px] text-white/30 mt-1.5">{schoolName}</p>
+            </div>
+
+            <div className="space-y-3.5">
+              <div>
+                <label className="text-[12px] font-medium text-white/30 mb-1.5 block uppercase tracking-wider">ФИО</label>
+                <input type="text" value={fullName} onChange={(e) => { setFullName(e.target.value); setProfileError('') }}
+                  placeholder="Иванов Иван Иванович"
+                  className="glass-input w-full px-4 py-3 text-[15px] text-white placeholder-white/20 bg-transparent focus:ring-0 focus:shadow-none" />
+              </div>
+              <div className="flex gap-2.5">
+                <div className="flex-1">
+                  <label className="text-[12px] font-medium text-white/30 mb-1.5 block uppercase tracking-wider">Класс</label>
+                  <select value={classYear} onChange={(e) => { setClassYear(e.target.value); setProfileError('') }}
+                    className="glass-input w-full px-4 py-3 text-[15px] text-white bg-transparent focus:ring-0 focus:shadow-none appearance-none cursor-pointer"
+                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='rgba(255,255,255,0.3)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center' }}>
+                    <option value="" disabled className="bg-[#1a1a1a] text-white/30">Выберите</option>
+                    {[1,2,3,4,5,6,7,8,9,10,11].map(n => (
+                      <option key={n} value={String(n)} className="bg-[#1a1a1a] text-white">{n}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <label className="text-[12px] font-medium text-white/30 mb-1.5 block uppercase tracking-wider">Буква</label>
+                  <select value={classLetter} onChange={(e) => { setClassLetter(e.target.value); setProfileError('') }}
+                    className="glass-input w-full px-4 py-3 text-[15px] text-white bg-transparent focus:ring-0 focus:shadow-none appearance-none cursor-pointer"
+                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='rgba(255,255,255,0.3)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center' }}>
+                    <option value="" disabled className="bg-[#1a1a1a] text-white/30">Буква</option>
+                    {['А','Б','В','Г','Д','Е','Ж','З','И','К','Л','М'].map(l => (
+                      <option key={l} value={l} className="bg-[#1a1a1a] text-white">{l}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {profileError && <p className="text-[13px] text-[#FF3B30] text-center">{profileError}</p>}
+
+              <button onClick={handleSubmit} disabled={submitting}
+                className="ios-button-primary w-full disabled:opacity-50 mt-2">
+                {submitting ? 'Сохранение...' : 'Завершить регистрацию'}
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
@@ -555,6 +877,7 @@ export default function Page() {
   const [formFilePreview, setFormFilePreview] = useState<string | null>(null)
   const [uploadingFile, setUploadingFile] = useState(false)
   const [formAchievementFilter, setFormAchievementFilter] = useState('all')
+  const [formLevelFilter, setFormLevelFilter] = useState('all')
 
   // Achievement detail modal
   const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null)
@@ -562,6 +885,9 @@ export default function Page() {
   // Admin panel
   const [showAdmin, setShowAdmin] = useState(false)
   const [pendingAchievements, setPendingAchievements] = useState<Achievement[]>([])
+
+  // Registration flow
+  const [needsRegistration, setNeedsRegistration] = useState(false)
   const [adminStats, setAdminStats] = useState<Record<string, unknown> | null>(null)
   const [adminDirections, setAdminDirections] = useState<Record<string, boolean>>({})
   const [adminXp, setAdminXp] = useState(0)
@@ -649,9 +975,13 @@ export default function Page() {
         })
         const data = await res.json()
         if (res.ok && data.user) {
-          console.log('[TG] Auth successful:', data.user.name)
+          console.log('[TG] Auth successful:', data.user.name, 'registered:', data.user.registered)
           setAuthUser(data.user)
           localStorage.setItem('auth_user', JSON.stringify(data.user))
+          // Check if user needs registration (no school info yet)
+          if (!data.user.registered) {
+            setNeedsRegistration(true)
+          }
           return true
         } else {
           console.error('[TG] Auth failed:', data.error)
@@ -681,7 +1011,14 @@ export default function Page() {
       // Fallback: check localStorage
       const stored = localStorage.getItem('auth_user')
       if (stored) {
-        try { setAuthUser(JSON.parse(stored)) } catch { /* ignore */ }
+        try {
+          const parsed = JSON.parse(stored)
+          setAuthUser(parsed)
+          // Check if this stored user needs registration
+          if (!parsed.registered) {
+            setNeedsRegistration(true)
+          }
+        } catch { /* ignore */ }
       }
       setAuthChecked(true)
     }
@@ -693,10 +1030,16 @@ export default function Page() {
     localStorage.setItem('auth_user', JSON.stringify(user))
   }
 
+  const handleRegistrationComplete = (user: AuthUser) => {
+    setAuthUser(user)
+    setNeedsRegistration(false)
+  }
+
   const handleLogout = () => {
     setAuthUser(null)
     setProfile(null)
     setUserFacultyId(null)
+    setNeedsRegistration(false)
     localStorage.removeItem('auth_user')
   }
 
@@ -758,7 +1101,9 @@ export default function Page() {
 
   const fetchPending = useCallback(async () => {
     try {
-      const res = await fetch(`/api/moderate?status=PENDING`)
+      const res = await fetch(`/api/moderate?status=PENDING`, {
+        headers: { 'x-admin-id': userId || '' },
+      })
       if (!res.ok) return
       const data = await res.json()
       setPendingAchievements(data.achievements || [])
@@ -769,14 +1114,16 @@ export default function Page() {
 
   const fetchAdminStats = useCallback(async () => {
     try {
-      const res = await fetch(`/api/admin/stats`)
+      const res = await fetch(`/api/admin/stats`, {
+        headers: { 'x-admin-id': userId || '' },
+      })
       if (!res.ok) return
       const data = await res.json()
       setAdminStats(data)
     } catch (e) {
       console.error('Stats fetch error:', e)
     }
-  }, [])
+  }, [userId])
 
   const fetchChallenges = useCallback(async () => {
     if (!userId) return
@@ -792,7 +1139,9 @@ export default function Page() {
 
   const fetchStudents = useCallback(async () => {
     try {
-      const res = await fetch('/api/students')
+      const res = await fetch('/api/students', {
+        headers: { 'x-admin-id': userId || '' },
+      })
       if (!res.ok) return
       const data = await res.json()
       setStudents(data.students || [])
@@ -824,7 +1173,7 @@ export default function Page() {
 
   // Auto-calculate XP
   useEffect(() => {
-    if (formAchievementType && formAchievementType !== 'FREE_FORM' && formLevel) {
+    if (formAchievementType && formLevel) {
       setFormXp(calculateAutoXp(formLevel, formResultType, formPlacement, formResultStatus))
     }
   }, [formAchievementType, formLevel, formResultType, formPlacement, formResultStatus])
@@ -911,7 +1260,7 @@ export default function Page() {
       toast.error('Заполните название и тип достижения')
       return
     }
-    if (formAchievementType !== 'FREE_FORM' && !formLevel) {
+    if (!formLevel) {
       toast.error('Выберите уровень достижения')
       return
     }
@@ -933,10 +1282,10 @@ export default function Page() {
         title: formTitle.trim(),
         description: formDesc?.trim() || null,
         achievementType: formAchievementType,
-        achievementLevel: formAchievementType !== 'FREE_FORM' ? formLevel : null,
-        resultType: formAchievementType !== 'FREE_FORM' ? formResultType : null,
-        placement: formAchievementType !== 'FREE_FORM' && formResultType === 'PLACEMENT' ? formPlacement : null,
-        resultStatus: formAchievementType !== 'FREE_FORM' && formResultType === 'STATUS' ? formResultStatus : null,
+        achievementLevel: formLevel || null,
+        resultType: formResultType || null,
+        placement: formResultType === 'PLACEMENT' ? formPlacement : null,
+        resultStatus: formResultType === 'STATUS' ? formResultStatus : null,
         xpRequested: formXp,
         achievementDate: formDate || null,
         comment: formComment?.trim() || null,
@@ -979,7 +1328,7 @@ export default function Page() {
     try {
       const res = await fetch('/api/moderate', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-admin-id': userId || '' },
         body: JSON.stringify({
           achievementId, action, xpAwarded, directions, reviewComment: action === 'reject' ? reviewComment : undefined, adminUserId: userId,
         }),
@@ -1008,10 +1357,12 @@ export default function Page() {
     if (isAdmin && showAddSheet) fetchStudents()
   }, [isAdmin, showAddSheet, fetchStudents])
 
-  // Filtered achievements
-  const filteredAchievements = formAchievementFilter === 'all'
-    ? allAchievements
-    : allAchievements.filter(a => a.achievementType === formAchievementFilter)
+  // Filtered achievements — by type AND level
+  const filteredAchievements = allAchievements.filter(a => {
+    if (formAchievementFilter !== 'all' && a.achievementType !== formAchievementFilter) return false
+    if (formLevelFilter !== 'all' && a.achievementLevel !== formLevelFilter) return false
+    return true
+  })
 
   // Direction XP computed from approved achievements
   const directionXp: Record<string, number> = {}
@@ -1035,6 +1386,7 @@ export default function Page() {
   if (!mounted) return null
   if (!authChecked) return null
   if (!authUser && !isTelegram) return <LoginScreen onLogin={handleLogin} />
+  if (needsRegistration && authUser) return <RegistrationScreen userId={authUser.id} onComplete={handleRegistrationComplete} />
 
   /* ============================================================
      RENDER: HOME
@@ -1093,24 +1445,17 @@ export default function Page() {
         </div>
       </div>
 
-      {/* Stats — achievements + pending merged into one */}
-      <div className="glass-card p-4 flex items-center justify-between">
+      {/* Stats — achievements + pending in one unified block */}
+      <div className="glass-card p-4">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/7 flex items-center justify-center">
             <IconAchievements active={false} />
           </div>
           <div>
             <div className="text-[13px] font-bold text-white tabular-nums">{achievementCounts.APPROVED} <span className="text-white/20 font-normal">из {achievementCounts.total}</span></div>
-            <div className="text-[11px] text-white/25">достижений одобрено</div>
+            <div className="text-[11px] text-white/25">достижений одобрено{achievementCounts.PENDING > 0 ? ` · ${achievementCounts.PENDING} на проверке` : ''}</div>
           </div>
         </div>
-        {achievementCounts.PENDING > 0 && (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/4 border border-white/6">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#FF9F0A]" />
-            <span className="text-[12px] font-semibold text-[#FF9F0A] tabular-nums">{achievementCounts.PENDING}</span>
-            <span className="text-[10px] text-white/25">на проверке</span>
-          </div>
-        )}
       </div>
 
       {/* Quick actions */}
@@ -1488,19 +1833,35 @@ export default function Page() {
       )}
 
       {/* Filters */}
-      <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
-        {[
-          { key: 'all', label: 'Все' },
-          { key: 'SPORT', label: 'Спорт' },
-          { key: 'CREATIVE', label: 'Творчество' },
-          { key: 'OLYMPIAD', label: 'РЭШ/ВСОШ' },
-          { key: 'FREE_FORM', label: 'Свободные' },
-        ].map((f) => (
-          <button key={f.key} onClick={() => setFormAchievementFilter(f.key)}
-            className={`shrink-0 ios-pill ${formAchievementFilter === f.key ? 'ios-pill-active' : ''}`}>
-            {f.label}
-          </button>
-        ))}
+      <div className="space-y-2">
+        {/* Type filter — horizontal scroll */}
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+          {[
+            { key: 'all', label: 'Все' },
+            { key: 'SPORT', label: 'Спорт' },
+            { key: 'CREATIVE', label: 'Творчество' },
+            { key: 'OLYMPIAD', label: 'РЭШ/ВСОШ' },
+            { key: 'FREE_FORM', label: 'Свободные' },
+          ].map((f) => (
+            <button key={f.key} onClick={() => { setFormAchievementFilter(f.key); setFormLevelFilter('all') }}
+              className={`ios-pill shrink-0 ${formAchievementFilter === f.key ? 'ios-pill-active' : ''}`}>
+              {f.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Level filter — horizontal scroll */}
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+          {[
+            { key: 'all', label: 'Все ур.' },
+            ...Object.entries(ACHIEVEMENT_LEVELS).map(([key, val]) => ({ key, label: val.label })),
+          ].map((f) => (
+            <button key={f.key} onClick={() => setFormLevelFilter(f.key)}
+              className={`ios-pill text-[11px] py-1 px-2.5 shrink-0 ${formLevelFilter === f.key ? 'ios-pill-active' : ''}`}>
+              {f.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Achievement list */}
@@ -1518,7 +1879,7 @@ export default function Page() {
                   <span className="text-[11px] text-white font-medium">{a.user.name}</span>
                 )}
                 <StatusDot status={a.status} />
-                {a.achievementLevel && a.achievementType !== 'FREE_FORM' && (
+                {a.achievementLevel && (
                   <span className="text-[10px] text-white/20">
                     {ACHIEVEMENT_LEVELS[a.achievementLevel]?.label || a.achievementLevel}
                     {getResultLabel(a) && ` · ${getResultLabel(a)}`}
@@ -1685,7 +2046,20 @@ export default function Page() {
   /* ============================================================
      RENDER: PROFILE
      ============================================================ */
-  const renderProfile = () => (
+  const renderProfile = () => {
+    // School name lookup
+    const SCHOOL_NAMES: Record<string, string> = { '11607L': 'Лицей 7' }
+    const schoolName = profile?.schoolCode ? (SCHOOL_NAMES[profile.schoolCode] || profile.schoolCode) : null
+
+    // Radar chart data
+    const radarValues = DIRECTIONS_PROFILE.map(d => ({
+      key: d.key,
+      label: d.label,
+      color: d.color,
+      xp: directionXp[d.key] || 0,
+    }))
+
+    return (
     <div className="px-5 pb-6 space-y-5 ios-fade-in">
       <div className="pt-3">
         <h1 className="ios-large-title">Профиль</h1>
@@ -1711,7 +2085,7 @@ export default function Page() {
           <div className="text-[10px] text-white/25 mt-0.5">XP</div>
         </GlassCard>
         <GlassCard className="p-4 text-center">
-          <div className="text-[20px] font-bold text-[#34C759] tabular-nums">{achievementCounts.APPROVED}</div>
+          <div className="text-[20px] font-bold text-white tabular-nums">{achievementCounts.APPROVED}</div>
           <div className="text-[10px] text-white/25 mt-0.5">Одобрено</div>
         </GlassCard>
         <GlassCard className="p-4 text-center">
@@ -1720,18 +2094,68 @@ export default function Page() {
         </GlassCard>
       </div>
 
-      {/* Direction XP breakdown */}
+      {/* О себе — personal info block (always visible) */}
+      <div>
+        <h3 className="ios-section-header mb-3">О себе</h3>
+        <GlassCard className="space-y-3">
+          {profile?.fullName ? (
+            <div className="flex items-center gap-3">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="8" r="4" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
+                <path d="M4 20C4 16.6863 7.58172 14 12 14C16.4183 14 20 16.6863 20 20" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+              <span className="text-[13px] text-white/70">{profile.fullName}</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="8" r="4" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
+                <path d="M4 20C4 16.6863 7.58172 14 12 14C16.4183 14 20 16.6863 20 20" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+              <span className="text-[13px] text-white/20">ФИО не указано</span>
+            </div>
+          )}
+          {profile?.classYear ? (
+            <div className="flex items-center gap-3">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="5" width="18" height="14" rx="2" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
+                <path d="M3 10H21" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
+              </svg>
+              <span className="text-[13px] text-white/70">{profile.classYear}{profile.classLetter || ''} класс</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="5" width="18" height="14" rx="2" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
+                <path d="M3 10H21" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
+              </svg>
+              <span className="text-[13px] text-white/20">Класс не указан</span>
+            </div>
+          )}
+          {schoolName ? (
+            <div className="flex items-center gap-3">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M3 21H21M5 21V7L12 3L19 7V21M9 21V15H15V21" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span className="text-[13px] text-white/70">{schoolName}</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M3 21H21M5 21V7L12 3L19 7V21M9 21V15H15V21" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span className="text-[13px] text-white/20">Школа не указана</span>
+            </div>
+          )}
+        </GlassCard>
+      </div>
+
+      {/* Radar chart — direction XP */}
       <div>
         <h3 className="ios-section-header mb-3">Направления</h3>
-        <div className="space-y-2">
-          {Object.entries(DIRECTIONS).map(([key, dir]) => (
-            <div key={key} className="flex items-center gap-3 ios-list-item p-3">
-              <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: dir.color }} />
-              <span className="text-[13px] font-medium text-white flex-1">{dir.label}</span>
-              <span className="text-[13px] font-bold tabular-nums" style={{ color: dir.color }}>{directionXp[key] || 0} XP</span>
-            </div>
-          ))}
-        </div>
+        <GlassCard className="flex justify-center py-4">
+          <RadarChart values={radarValues} />
+        </GlassCard>
       </div>
 
       {/* Logout */}
@@ -1741,7 +2165,8 @@ export default function Page() {
         <span className="text-[14px] font-semibold">Выйти</span>
       </button>
     </div>
-  )
+    )
+  }
 
   /* ============================================================
      RENDER: ADD ACHIEVEMENT SHEET
@@ -1829,11 +2254,11 @@ export default function Page() {
               {isAdmin && (
                 <div>
                   <label className="text-[12px] font-medium text-white/30 mb-1.5 block uppercase tracking-wider">Направления</label>
-                  <div className="flex gap-1.5 flex-wrap">
+                  <div className="flex gap-1.5 overflow-x-auto scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
                     {Object.entries(DIRECTIONS).map(([key, dir]) => (
                       <button key={key}
                         onClick={() => setFormDirections(prev => ({ ...prev, [key]: !prev[key] }))}
-                        className={`ios-pill flex items-center gap-1.5 ${formDirections[key] ? 'ios-pill-active' : ''}`}>
+                        className={`ios-pill flex items-center gap-1.5 shrink-0 ${formDirections[key] ? 'ios-pill-active' : ''}`}>
                         <span className="w-2 h-2 rounded-full" style={{ background: dir.color }} />
                         {dir.label}
                       </button>
@@ -1862,26 +2287,28 @@ export default function Page() {
               {/* Achievement type */}
               <div>
                 <label className="text-[12px] font-medium text-white/30 mb-1.5 block uppercase tracking-wider">Тип</label>
-                <div className="flex gap-1.5 flex-wrap">
+                <div className="flex gap-1.5 overflow-x-auto scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
                   {Object.entries(ACHIEVEMENT_TYPES).map(([key, val]) => (
                     <button key={key} onClick={() => setFormAchievementType(key as AchievementType)}
-                      className={`ios-pill ${formAchievementType === key ? 'ios-pill-active' : ''}`}>
+                      className={`ios-pill shrink-0 ${formAchievementType === key ? 'ios-pill-active' : ''}`}>
                       {val.label}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Level + Result (only for non-FREE_FORM) */}
-              {formAchievementType && formAchievementType !== 'FREE_FORM' && (
+              {/* Level + Result */}
+              {formAchievementType && (
                 <>
                   {/* Level */}
                   <div>
                     <label className="text-[12px] font-medium text-white/30 mb-1.5 block uppercase tracking-wider">Уровень</label>
-                    <div className="flex gap-1.5 flex-wrap">
-                      {Object.entries(ACHIEVEMENT_LEVELS).map(([key, val]) => (
+                    <div className="flex gap-1.5 overflow-x-auto scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+                      {Object.entries(ACHIEVEMENT_LEVELS)
+                        .filter(([key]) => formAchievementType !== 'OLYMPIAD' || OLYMPIAD_LEVELS.includes(key as typeof OLYMPIAD_LEVELS[number]))
+                        .map(([key, val]) => (
                         <button key={key} onClick={() => setFormLevel(key as AchievementLevel)}
-                          className={`ios-pill ${formLevel === key ? 'ios-pill-active' : ''}`}>
+                          className={`ios-pill shrink-0 ${formLevel === key ? 'ios-pill-active' : ''}`}>
                           {val.label}
                         </button>
                       ))}
@@ -1903,19 +2330,19 @@ export default function Page() {
                     </div>
 
                     {formResultType === 'PLACEMENT' ? (
-                      <div className="flex gap-1.5 flex-wrap">
+                      <div className="flex gap-1.5 overflow-x-auto scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
                         {Object.entries(PLACEMENTS).map(([key, val]) => (
                           <button key={key} onClick={() => setFormPlacement(Number(key))}
-                            className={`ios-pill ${formPlacement === Number(key) ? 'ios-pill-active' : ''}`}>
+                            className={`ios-pill shrink-0 ${formPlacement === Number(key) ? 'ios-pill-active' : ''}`}>
                             {val.label}
                           </button>
                         ))}
                       </div>
                     ) : (
-                      <div className="flex gap-1.5 flex-wrap">
+                      <div className="flex gap-1.5 overflow-x-auto scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
                         {Object.entries(RESULT_STATUSES).map(([key, val]) => (
                           <button key={key} onClick={() => setFormResultStatus(key)}
-                            className={`ios-pill ${formResultStatus === key ? 'ios-pill-active' : ''}`}>
+                            className={`ios-pill shrink-0 ${formResultStatus === key ? 'ios-pill-active' : ''}`}>
                             {val.label}
                           </button>
                         ))}
@@ -2003,7 +2430,7 @@ export default function Page() {
                 <h2 className="text-[18px] font-bold text-white">{a.title}</h2>
                 <div className="flex items-center gap-2 mt-1">
                   <StatusDot status={a.status} />
-                  {a.achievementLevel && a.achievementType !== 'FREE_FORM' && (
+                  {a.achievementLevel && (
                     <span className="text-[11px] text-white/25">
                       {ACHIEVEMENT_LEVELS[a.achievementLevel]?.label}
                     </span>
@@ -2033,13 +2460,13 @@ export default function Page() {
                   <span className="text-[12px] text-white/60">{ACHIEVEMENT_TYPES[a.achievementType]?.label}</span>
                 </div>
               )}
-              {a.achievementLevel && a.achievementType !== 'FREE_FORM' && (
+              {a.achievementLevel && (
                 <div className="flex justify-between">
                   <span className="text-[12px] text-white/25">Уровень</span>
                   <span className="text-[12px] text-white/60">{ACHIEVEMENT_LEVELS[a.achievementLevel]?.label}</span>
                 </div>
               )}
-              {a.achievementType !== 'FREE_FORM' && getResultLabel(a) && (
+              {getResultLabel(a) && (
                 <div className="flex justify-between">
                   <span className="text-[12px] text-white/25">Результат</span>
                   <span className="text-[12px] text-white/60">{getResultLabel(a)}</span>
