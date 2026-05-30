@@ -416,13 +416,17 @@ input[type="range"]::-moz-range-thumb {
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.12) transparent;
   -ms-overflow-style: none;
   scroll-snap-type: x proximity;
   overscroll-behavior: contain;
-  padding-bottom: 2px;
+  padding-bottom: 4px;
 }
-.pill-scroll::-webkit-scrollbar { display: none; }
+.pill-scroll::-webkit-scrollbar { height: 4px; }
+.pill-scroll::-webkit-scrollbar-track { background: transparent; }
+.pill-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
+.pill-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
 .pill-scroll > * { scroll-snap-align: start; }
 
 * { scroll-behavior: smooth; }

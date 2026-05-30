@@ -541,11 +541,21 @@ function getAvatarColor(name: string): string {
    ============================================================ */
 
 function ScrollableRow({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    if (ref.current) {
+      // Convert vertical scroll to horizontal
+      ref.current.scrollLeft += e.deltaY
+      e.preventDefault()
+    }
+  }, [])
   return (
     <div
+      ref={ref}
       className={`pill-scroll ${className}`}
       onTouchStart={(e) => e.stopPropagation()}
       onTouchMove={(e) => e.stopPropagation()}
+      onWheel={handleWheel}
     >
       {children}
     </div>
@@ -1314,13 +1324,15 @@ export default function Page() {
     }
     setUploadingFile(true)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      const res = await fetch('/api/upload', { method: 'POST', body: formData })
-      if (!res.ok) { toast.error('Ошибка загрузки файла'); return }
-      const data = await res.json()
-      setFormFileUrl(data.url)
-      setFormFilePreview(data.url)
+      // Convert to base64 data URL — works on Vercel (no filesystem needed)
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.onerror = () => reject(new Error('Failed to read file'))
+        reader.readAsDataURL(file)
+      })
+      setFormFileUrl(dataUrl)
+      setFormFilePreview(dataUrl)
       toast.success('Файл загружен')
     } catch {
       toast.error('Ошибка загрузки')
@@ -1493,6 +1505,20 @@ export default function Page() {
     })
   })
 
+  // Global horizontal scroll for pill-scroll containers on PC (mouse wheel → horizontal)
+  useEffect(() => {
+    const handler = (e: WheelEvent) => {
+      const target = e.target as HTMLElement
+      const scrollContainer = target.closest('.pill-scroll') as HTMLElement | null
+      if (scrollContainer) {
+        e.preventDefault()
+        scrollContainer.scrollLeft += e.deltaY
+      }
+    }
+    window.addEventListener('wheel', handler, { passive: false })
+    return () => window.removeEventListener('wheel', handler)
+  }, [])
+
   // Mounted guard — must be after all hooks
   useEffect(() => { setMounted(true) }, [])
 
@@ -1577,14 +1603,16 @@ export default function Page() {
       </div>
 
       {/* Quick actions */}
-      <div className="grid grid-cols-2 gap-2">
-        <button onClick={() => { setCurrentTab('milestones'); setTimeout(() => setShowAddSheet(true), 100) }}
-          className="glass-card flex items-center gap-3 py-3 px-4 active:scale-[0.97] ios-spring">
-          <div className="w-9 h-9 rounded-xl bg-white/6 border border-white/8 flex items-center justify-center">
-            <IconPlus size={16} />
-          </div>
-          <span className="text-[13px] text-white/50 font-semibold">Добавить</span>
-        </button>
+      <div className={`grid ${isAdmin ? 'grid-cols-1' : 'grid-cols-2'} gap-2`}>
+        {!isAdmin && (
+          <button onClick={() => { setCurrentTab('milestones'); setTimeout(() => setShowAddSheet(true), 100) }}
+            className="glass-card flex items-center gap-3 py-3 px-4 active:scale-[0.97] ios-spring">
+            <div className="w-9 h-9 rounded-xl bg-white/6 border border-white/8 flex items-center justify-center">
+              <IconPlus size={16} />
+            </div>
+            <span className="text-[13px] text-white/50 font-semibold">Добавить</span>
+          </button>
+        )}
         <button onClick={() => setCurrentTab('rating')}
           className="glass-card flex items-center gap-3 py-3 px-4 active:scale-[0.97] ios-spring">
           <div className="w-9 h-9 rounded-xl bg-white/6 border border-white/8 flex items-center justify-center">
@@ -1953,10 +1981,12 @@ export default function Page() {
     <div className="px-5 pb-6 space-y-4 ios-fade-in">
       <div className="pt-3 flex items-center justify-between">
         <h1 className="ios-large-title">Достижения</h1>
-        <button onClick={() => setShowAddSheet(true)}
-          className="w-9 h-9 rounded-xl bg-white flex items-center justify-center active:scale-95 ios-spring">
-          <IconPlus size={18} />
-        </button>
+        {!isAdmin && (
+          <button onClick={() => setShowAddSheet(true)}
+            className="w-9 h-9 rounded-xl bg-white flex items-center justify-center active:scale-95 ios-spring">
+            <IconPlus size={18} />
+          </button>
+        )}
       </div>
 
       {/* Admin badge */}
@@ -2055,8 +2085,10 @@ export default function Page() {
               <IconAchievements active={false} />
             </div>
             <p className="text-[14px] text-white/20 font-medium">Пока нет достижений</p>
-            <button onClick={() => setShowAddSheet(true)}
-              className="mt-3 text-[13px] text-white font-semibold">Добавить первую</button>
+            {!isAdmin && (
+              <button onClick={() => setShowAddSheet(true)}
+                className="mt-3 text-[13px] text-white font-semibold">Добавить первую</button>
+            )}
           </div>
         )}
       </div>
