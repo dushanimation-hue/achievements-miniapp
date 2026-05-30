@@ -419,6 +419,7 @@ input[type="range"]::-moz-range-thumb {
   scrollbar-width: none;
   -ms-overflow-style: none;
   scroll-snap-type: x proximity;
+  overscroll-behavior: contain;
   padding-bottom: 2px;
 }
 .pill-scroll::-webkit-scrollbar { display: none; }

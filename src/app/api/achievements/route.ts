@@ -121,11 +121,14 @@ export async function POST(request: NextRequest) {
       finalDirection = categoryDirectionMap[finalCategory];
     }
 
-    // Calculate XP automatically for non-free-form types
-    let finalXpRequested: number;
+    // Use client-provided xpRequested to ensure student sees same value as stored
+    // Fall back to server calculation only if client didn't provide a value
     const finalResultType = resultType || 'PLACEMENT';
-    if (achievementType === 'FREE_FORM') {
-      finalXpRequested = xpRequested || 5;
+    let finalXpRequested: number;
+    if (xpRequested && xpRequested > 0) {
+      finalXpRequested = xpRequested;
+    } else if (achievementType === 'FREE_FORM') {
+      finalXpRequested = 5;
     } else {
       const level = achievementLevel || 'SCHOOL';
       const place = placement ?? 1;
