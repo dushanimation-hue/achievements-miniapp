@@ -391,10 +391,10 @@ function AchievementTypeIcon({ type }: { type: string | null }) {
    ============================================================ */
 
 function RadarChart({ values }: { values: { key: string; label: string; color: string; xp: number }[] }) {
-  const size = 280
+  const size = 300
   const cx = size / 2
   const cy = size / 2
-  const maxR = 80
+  const maxR = 68
   const n = values.length
 
   // Adaptive scale: max value rounded up to nearest nice number
@@ -429,7 +429,7 @@ function RadarChart({ values }: { values: { key: string; label: string; color: s
   }
 
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="mx-auto" style={{ overflow: 'visible' }}>
+    <svg width="100%" viewBox={`0 0 ${size} ${size}`} className="mx-auto" style={{ overflow: 'visible', minWidth: 260, maxWidth: 340 }}>
       {/* Grid rings */}
       {rings.map((scale, ri) => {
         const pts = values.map((_, i) => getPoint(i, maxR * scale))
@@ -453,7 +453,7 @@ function RadarChart({ values }: { values: { key: string; label: string; color: s
 
       {/* Labels */}
       {values.map((v, i) => {
-        const labelR = maxR + 28
+        const labelR = maxR + 34
         const p = getPoint(i, labelR)
         const anchor = getAnchor(i)
         // Fine-tune vertical position
@@ -2321,7 +2321,7 @@ export default function Page() {
       {/* Radar chart — direction XP */}
       <div>
         <h3 className="ios-section-header mb-3">Направления</h3>
-        <GlassCard className="flex justify-center py-4">
+        <GlassCard className="flex justify-center py-4 overflow-visible">
           <RadarChart values={radarValues} />
         </GlassCard>
       </div>
